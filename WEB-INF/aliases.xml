@@ -1,0 +1,469 @@
+<!-- 
+ This file contain aliases for timezone identifiers.
+  -->
+
+<aliases>
+  <tzid></tzid>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+</aliases>
+
+<aliases>
+  <tzid>Africa/Casablanca</tzid>
+  <alias>(GMT) Casablanca, Monrovia</alias>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+</aliases>
+
+<aliases>
+  <tzid>Africa/Casablanca</tzid>
+  <alias>(GMT) Casablanca, Monrovia</alias>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+  <alias></alias>
+</aliases>
+# Here we have the Exchange timezones (or so I believe).
+# As far as I can tell they can occur with the "." in the time or the ":"
+
+#(UTC) Universal Coordinated Time
+
+<aliases>
+  <alias>(GMT) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London<alias><tzid>Europe/Lisbon</tzid>
+
+<aliases>
+  <alias>(GMT) Greenwich Mean Time; Dublin, Edinburgh, London<alias><tzid>Europe/London</tzid>
+
+<aliases>
+  <alias>(GMT+01\:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna<alias><tzid>Europe/Berlin</tzid>
+
+<aliases>
+  <tzid>Europe/Paris</tzid>
+(GMT+01\:00) Brussels, Copenhagen, Madrid, Paris<alias>
+
+(GMT+01\:00) Paris, Madrid, Brussels, Copenhagen<alias><tzid>Europe/Paris</tzid>
+
+<aliases>
+  <alias>(GMT+01\:00) Prague, Central Europen<alias><tzid>Europe/Prague</tzid>
+
+(GMT+01\:00) Belgrade, Pozsony, Budapest, Ljubljana, Prague<alias><tzid>Europe/Prague</tzid>
+
+<aliases>
+  <alias>(GMT+01\:00) Sarajevo, Skopje, Sofija, Vilnius, Warsaw, Zagrebn<alias><tzid>Europe/Sarajevo</tzid>
+
+#(GMT+01\:00) West Central Africa
+<aliases>
+  <alias>(GMT+02\:00) Athens, Istanbul, Minskn<alias><tzid>Europe/Athens</tzid>
+<aliases>
+  <alias>(GMT+02\:00) Bucharest<alias><tzid>Europe/Bucharest</tzid>
+<aliases>
+  <alias>(GMT+02\:00) Cairo<alias><tzid>Africa/Cairo</tzid>
+<aliases>
+  <alias>(GMT+02\:00) Harare, Pretoria<alias><tzid>Africa/Harare</tzid>
+<aliases>
+  <alias>(GMT+02\:00) Helsinki, Riga, Tallinn<alias><tzid>Europe/Helsinki</tzid>
+
+#(GMT+02\:00) Israel, Jerusalem Standard Time
+#(GMT+03\:00) Baghdad
+#(GMT+03\:00) Arab, Kuwait, Riyadh
+
+<aliases>
+  <alias>(GMT+03\:00) Moscow, St. Petersburg, Volgograd<alias><tzid>Europe/Moscow</tzid>
+
+#(GMT+03\:00) East Africa, Nairobi
+#(GMT+03\:30) Tehran
+#(GMT+04\:00) Abu Dhabi, Muscat
+#(GMT+04\:00) Baku, Tbilisi, Yerevan
+<aliases>
+  <alias>(GMT+04\:30) Kabul<alias><tzid>Asia/Kabul</tzid>
+<aliases>
+  <alias>(GMT+05\:00) Ekaterinburg<alias><tzid>Asia/Yekaterinburg</tzid>
+
+#(GMT+05\:00) Islamabad, Karachi, Tashkent<alias><tzid>Asia/Tashkent</tzid>
+#(GMT+05\:30) Kolkata, Chennai, Mumbai, New Delhi, India Standard Time
+
+<aliases>
+  <alias>(GMT+05\:45) Kathmandu, Nepal<alias><tzid>Asia/Katmandu</tzid>
+<aliases>
+  <alias>(GMT+06\:00) Almaty, Novosibirsk, North Central Asia<alias><tzid>Asia/Almaty</tzid>
+<aliases>
+  <alias>(GMT+06\:00) Astana, Dhaka<alias><tzid>Asia/Dhaka</tzid>
+
+#(GMT+06\:00) Sri Jayawardenepura, Sri Lanka
+
+<aliases>
+  <alias>(GMT+06\:30) Rangoon<alias><tzid>Asia/Rangoon</tzid>
+<aliases>
+  <alias>(GMT+07\:00) Bangkok, Hanoi, Jakarta<alias><tzid>Asia/Bangkok</tzid>
+#(GMT+07\:00) Krasnoyarsk
+#(GMT+08\:00) Beijing, Chongqing, Hong Kong SAR, Urumqi
+
+<aliases>
+  <alias>(GMT+08\:00) Irkutsk, Ulaan Bataar<alias><tzid>Asia/Irkutsk</tzid>
+<aliases>
+  <alias>(GMT+08\:00) Kuala Lumpur, Singapore<alias><tzid>Asia/<alias><tzid>Asia/Kuala_Lumpur</tzid>
+<aliases>
+  <alias>(GMT+08\:00) Perth, Western Australia<alias><tzid>Australia/Perth</tzid>
+
+#(GMT+08\:00) Taipei
+#(GMT+09\:00) Osaka, Sapporo, Tokyo
+
+<aliases>
+  <alias>(GMT+09\:00) Seoul, Korea Standard time<alias><tzid>Asia/Seoul</tzid>
+<aliases>
+  <alias>(GMT+09\:00) Yakutsk<alias><tzid>Asia/Yakutsk
+<aliases>
+  <alias>(GMT+09\:30) Adelaide, Central Australia<alias><tzid>Australia/Adelaide</tzid>
+<aliases>
+  <alias>(GMT+09\:30) Darwin<alias><tzid>Australia/Darwin
+<aliases>
+  <alias>(GMT+10\:00) Brisbane, East Australia<alias><tzid>Australia/Brisbane</tzid>
+(GMT+10\:00) Canberra, Melbourne, Sydney, Hobart (year 2000 only<alias><tzid>Australia/Melbourne</tzid>
+(GMT+10\:00) Guam, Port Moresby<alias><tzid>Pacific/Guam</tzid>
+(GMT+10\:00) Hobart, Tasmania<alias><tzid>Australia/Hobart</tzid>
+(GMT+10\:00) Vladivostok<alias><tzid>Asia/Vladivostok</tzid>
+#(GMT+11\:00) Magadan, Solomon Is., New Caledonia
+(GMT+12\:00) Auckland, Wellington<alias><tzid>Pacific/Auckland</tzid>
+#(GMT+12\:00) Fiji Islands, Kamchatka, Marshall Is.
+(GMT+13\:00) Nuku'alofa, Tonga<alias><tzid>Pacific/Tongatapu</tzid>
+(GMT-01\:00) Azores<alias><tzid>Atlantic/Azores</tzid>
+(GMT-01\:00) Cape Verde Is.<alias><tzid>Atlantic/Cape_Verde</tzid>
+#(GMT-02\:00) Mid-Atlantic
+(GMT-03\:00) Brasilia<alias><tzid>America/Sao_Paulo</tzid>
+(GMT-03\:00) Buenos Aires, Georgetown<alias><tzid>America/Argentina/Buenos_Aires</tzid>
+(GMT-03\:00) Greenland<alias><tzid>America/Godthab</tzid>
+(GMT-03\:30) Newfoundland<alias><tzid>America/St_Johns</tzid>
+(GMT-04\:00) Atlantic Time (Canada)<alias><tzid>America/Halifax</tzid>
+(GMT-04\:00) Caracas, La Paz<alias><tzid>America/Caracas</tzid>
+(GMT-04\:00) Santiago<alias><tzid>America/Santiago</tzid>
+(GMT-05\:00) Bogota, Lima, Quito<alias><tzid>America/Lima</tzid>
+(GMT-05\:00) Eastern Time (US & Canada)<alias><tzid>America/New_York</tzid>
+(GMT-05\:00) Indiana (East)<alias><tzid>America/Indiana/Knox</tzid>
+(GMT-06\:00) Central America<alias><tzid>America/Chicago</tzid>
+(GMT-06\:00) Central Time (US & Canada)<alias><tzid>America/Chicago</tzid>
+(GMT-06\:00) Mexico City, Tegucigalpa<alias><tzid>America/Mexico_City</tzid>
+(GMT-06\:00) Saskatchewan<alias><tzid>America/Regina</tzid>
+(GMT-07\:00) Arizona<alias><tzid>America/Phoenix</tzid>
+(GMT-07\:00) Mountain Time (US & Canada)<alias><tzid>America/Denver</tzid>
+(GMT-08\:00) Pacific Time (US & Canada); Tijuana<alias><tzid>America/Vancouver</tzid>
+(GMT-09\:00) Alaska<alias><tzid>America/Anchorage</tzid>
+(GMT-10\:00) Hawaii<alias><tzid>Pacific/Honolulu</tzid>
+(GMT-11\:00) Midway Island, Samoa<alias><tzid>Pacific/Pago_Pago</tzid>
+(GMT-12\:00) Eniwetok, Kwajalein, Dateline Time<alias><tzid>Pacific/Kwajalein</tzid>
+
+# The "." form
+
+(GMT+01.00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna<alias><tzid>Europe/Berlin</tzid>
+(GMT+01.00) Belgrade, Pozsony, Budapest, Ljubljana, Prague<alias><tzid>Europe/Prague</tzid>
+(GMT+01.00) Brussels, Copenhagen, Madrid, Paris<alias><tzid>Europe/Paris</tzid>
+(GMT+01.00) Paris, Madrid, Brussels, Copenhagen<alias><tzid>Europe/Paris</tzid>
+(GMT+01.00) Prague, Central Europen<alias><tzid>Europe/Prague</tzid>
+(GMT+01.00) Sarajevo, Skopje, Sofija, Vilnius, Warsaw, Zagrebn<alias><tzid>Europe/Sarajevo</tzid>
+#(GMT+01.00) West Central Africa
+(GMT+02.00) Athens, Istanbul, Minskn<alias><tzid>Europe/Athens</tzid>
+(GMT+02.00) Bucharest<alias><tzid>Europe/Bucharest</tzid>
+(GMT+02.00) Cairo<alias><tzid>Africa/Cairo</tzid>
+(GMT+02.00) Harare, Pretoria<alias><tzid>Africa/Harare</tzid>
+(GMT+02.00) Helsinki, Riga, Tallinn<alias><tzid>Europe/Helsinki</tzid>
+#(GMT+02.00) Israel, Jerusalem Standard Time
+#(GMT+03.00) Baghdad
+#(GMT+03.00) Arab, Kuwait, Riyadh
+(GMT+03.00) Moscow, St. Petersburg, Volgograd<alias><tzid>Europe/Moscow</tzid>
+#(GMT+03.00) East Africa, Nairobi
+#(GMT+03.30) Tehran
+#(GMT+04.00) Abu Dhabi, Muscat
+#(GMT+04.00) Baku, Tbilisi, Yerevan
+(GMT+04.30) Kabul<alias><tzid>Asia/Kabul</tzid>
+(GMT+05.00) Ekaterinburg<alias><tzid>Asia/Yekaterinburg</tzid>
+(GMT+05.00) Islamabad, Karachi, Tashkent<alias><tzid>Asia/Tashkent</tzid>
+#(GMT+05.30) Kolkata, Chennai, Mumbai, New Delhi, India Standard Time
+(GMT+05.45) Kathmandu, Nepal<alias><tzid>Asia/Katmandu</tzid>
+(GMT+06.00) Almaty, Novosibirsk, North Central Asia<alias><tzid>Asia/Almaty</tzid>
+(GMT+06.00) Astana, Dhaka<alias><tzid>Asia/Dhaka</tzid>
+#(GMT+06.00) Sri Jayawardenepura, Sri Lanka
+(GMT+06.30) Rangoon<alias><tzid>Asia/Rangoon</tzid>
+(GMT+07.00) Bangkok, Hanoi, Jakarta<alias><tzid>Asia/Bangkok</tzid>
+#(GMT+07.00) Krasnoyarsk
+#(GMT+08.00) Beijing, Chongqing, Hong Kong SAR, Urumqi
+(GMT+08.00) Irkutsk, Ulaan Bataar<alias><tzid>Asia/Irkutsk</tzid>
+(GMT+08.00) Kuala Lumpur, Singapore<alias><tzid>Asia/Kuala_Lumpur</tzid>
+(GMT+08.00) Perth, Western Australia<alias><tzid>Australia/Perth</tzid>
+#(GMT+08.00) Taipei
+#(GMT+09.00) Osaka, Sapporo, Tokyo
+(GMT+09.00) Seoul, Korea Standard time<alias><tzid>Asia/Seoul</tzid>
+(GMT+09.00) Yakutsk<alias><tzid>Asia/Yakutsk</tzid>
+(GMT+09.30) Adelaide, Central Australia<alias><tzid>Australia/Adelaide</tzid>
+(GMT+09.30) Darwin<alias><tzid>Australia/Darwin</tzid>
+(GMT+10.00) Brisbane, East Australia<alias><tzid>Australia/Brisbane</tzid>
+(GMT+10.00) Canberra, Melbourne, Sydney, Hobart (year 2000 only<alias><tzid>Australia/Melbourne</tzid>
+(GMT+10.00) Guam, Port Moresby<alias><tzid>Pacific/Guam</tzid>
+(GMT+10.00) Hobart, Tasmania<alias><tzid>Australia/Hobart</tzid>
+(GMT+10.00) Vladivostok<alias><tzid>Asia/Vladivostok</tzid>
+#(GMT+11.00) Magadan, Solomon Is., New Caledonia
+(GMT+12.00) Auckland, Wellington<alias><tzid>Pacific/Auckland</tzid>
+#(GMT+12.00) Fiji Islands, Kamchatka, Marshall Is.
+(GMT+13.00) Nuku'alofa, Tonga<alias><tzid>Pacific/Tongatapu</tzid>
+(GMT-01.00) Azores<alias><tzid>Atlantic/Azores</tzid>
+(GMT-01.00) Cape Verde Is.<alias><tzid>Atlantic/Cape_Verde</tzid>
+#(GMT-02.00) Mid-Atlantic
+(GMT-03.00) Brasilia<alias><tzid>America/Sao_Paulo</tzid>
+(GMT-03.00) Buenos Aires, Georgetown<alias><tzid>America/Argentina/Buenos_Aires</tzid>
+(GMT-03.00) Greenland<alias><tzid>America/Godthab</tzid>
+(GMT-03.30) Newfoundland<alias><tzid>America/St_Johns</tzid>
+(GMT-04.00) Atlantic Time (Canada)<alias><tzid>America/Halifax</tzid>
+(GMT-04.00) Caracas, La Paz<alias><tzid>America/Caracas</tzid>
+(GMT-04.00) Santiago<alias><tzid>America/Santiago</tzid>
+(GMT-05.00) Bogota, Lima, Quito<alias><tzid>America/Lima</tzid>
+(GMT-05.00) Eastern Time (US & Canada)<alias><tzid>America/New_York</tzid>
+(GMT-05.00) Indiana (East)<alias><tzid>America/Indiana/Knox</tzid>
+(GMT-06.00) Central America<alias><tzid>America/Chicago</tzid>
+(GMT-06.00) Central Time (US & Canada)<alias><tzid>America/Chicago</tzid>
+(GMT-06.00) Mexico City, Tegucigalpa<alias><tzid>America/Mexico_City</tzid>
+(GMT-06.00) Saskatchewan<alias><tzid>America/Regina</tzid>
+(GMT-07.00) Arizona<alias><tzid>America/Phoenix</tzid>
+(GMT-07.00) Mountain Time (US & Canada)<alias><tzid>America/Denver</tzid>
+(GMT-08.00) Pacific Time (US & Canada); Tijuana<alias><tzid>America/Vancouver</tzid>
+(GMT-09.00) Alaska<alias><tzid>America/Anchorage</tzid>
+(GMT-10.00) Hawaii<alias><tzid>Pacific/Honolulu</tzid>
+(GMT-11.00) Midway Island, Samoa<alias><tzid>Pacific/Pago_Pago</tzid>
+(GMT-12.00) Eniwetok, Kwajalein, Dateline Time<alias><tzid>Pacific/Kwajalein</tzid>
+
+# Events exported from Outlook appear to have their own names for events they
+# are fetching from Exchange
+
+Eastern Standard Time<alias><tzid>America/New_York
+
+# The following is a copy of the ical4j tz.alias file
+
+Pacific/Samoa<alias><tzid>Pacific/Pago_Pago</tzid>
+US/Samoa<alias><tzid>Pacific/Pago_Pago</tzid>
+
+America/Atka<alias><tzid>America/Adak</tzid>
+US/Aleutian<alias><tzid>America/Adak</tzid>
+
+US/Hawaii<alias><tzid>Pacific/Honolulu</tzid>
+
+US/Alaska<alias><tzid>America/Anchorage</tzid>
+
+US/Pacific<alias><tzid>America/Los_Angeles</tzid>
+US/Pacific-New<alias><tzid>America/Los_Angeles</tzid>
+
+America/Ensenada<alias><tzid>America/Tijuana</tzid>
+Mexico/BajaNorte<alias><tzid>America/Tijuana</tzid>
+
+Canada/Pacific<alias><tzid>America/Vancouver</tzid>
+
+Canada/Yukon<alias><tzid>America/Whitehorse</tzid>
+
+America/Shiprock<alias><tzid>America/Denver</tzid>
+Navajo<alias><tzid>America/Denver</tzid>
+US/Mountain<alias><tzid>America/Denver</tzid>
+
+Canada/Mountain<alias><tzid>America/Edmonton</tzid>
+
+Mexico/BajaSur<alias><tzid>America/Mazatlan</tzid>
+
+US/Arizona<alias><tzid>America/Phoenix</tzid>
+
+US/Central<alias><tzid>America/Chicago</tzid>
+
+America/Knox_IN<alias><tzid>America/Indiana/Knox</tzid>
+US/Indiana-Starke<alias><tzid>America/Indiana/Knox</tzid>
+
+Mexico/General<alias><tzid>America/Mexico_City</tzid>
+
+Canada/East-Saskatchewan<alias><tzid>America/Regina</tzid>
+Canada/Saskatchewan<alias><tzid>America/Regina</tzid>
+
+Canada/Central<alias><tzid>America/Winnipeg</tzid>
+
+Chile/EasterIsland<alias><tzid>Pacific/Easter</tzid>
+
+America/Coral_Harbour<alias><tzid>America/Atikokan</tzid>
+
+US/Michigan<alias><tzid>America/Detroit</tzid>
+
+Cuba<alias><tzid>America/Havana</tzid>
+
+America/Fort_Wayne<alias><tzid>America/Indiana/Indianapolis</tzid>
+America/Indianapolis<alias><tzid>America/Indiana/Indianapolis</tzid>
+US/East-Indiana<alias><tzid>America/Indiana/Indianapolis</tzid>
+
+Jamaica<alias><tzid>America/Jamaica</tzid>
+
+America/Louisville<alias><tzid>America/Kentucky/Louisville</tzid>
+
+US/Eastern<alias><tzid>America/New_York</tzid>
+
+America/Porto_Acre<alias><tzid>America/Rio_Branco</tzid>
+Brazil/Acre<alias><tzid>America/Rio_Branco</tzid>
+
+Canada/Eastern<alias><tzid>America/Toronto</tzid>
+
+Canada/Atlantic<alias><tzid>America/Halifax</tzid>
+
+Brazil/West<alias><tzid>America/Manaus</tzid>
+
+Chile/Continental<alias><tzid>America/Santiago</tzid>
+
+America/Virgin<alias><tzid>America/St_Thomas</tzid>
+
+Canada/Newfoundland<alias><tzid>America/St_Johns</tzid>
+
+America/Buenos_Aires<alias><tzid>America/Argentina/Buenos_Aires</tzid>
+
+America/Argentina/ComodRivadavia<alias><tzid>America/Argentina/Catamarca</tzid>
+America/Catamarca<alias><tzid>America/Argentina/Catamarca</tzid>
+
+America/Cordoba<alias><tzid>America/Argentina/Cordoba</tzid>
+America/Rosario<alias><tzid>America/Argentina/Cordoba</tzid>
+
+America/Jujuy<alias><tzid>America/Argentina/Jujuy</tzid>
+
+America/Mendoza<alias><tzid>America/Argentina/Mendoza</tzid>
+
+Brazil/East<alias><tzid>America/Sao_Paulo</tzid>
+
+Brazil/DeNoronha<alias><tzid>America/Noronha</tzid>
+
+Africa/Timbuktu<alias><tzid>Africa/Bamako</tzid>
+
+Iceland<alias><tzid>Atlantic/Reykjavik</tzid>
+
+## Unsupported timezone identifiers..
+Etc/GMT+0<alias><tzid>Etc/GMT</tzid>
+Etc/GMT-0<alias><tzid>Etc/GMT</tzid>
+Etc/GMT0<alias><tzid>Etc/GMT</tzid>
+Etc/Greenwich<alias><tzid>Etc/GMT</tzid>
+GMT<alias><tzid>Etc/GMT</tzid>
+GMT+0<alias><tzid>Etc/GMT</tzid>
+GMT-0<alias><tzid>Etc/GMT</tzid>
+GMT0<alias><tzid>Etc/GMT</tzid>
+Greenwich<alias><tzid>Etc/GMT</tzid>
+
+UCT<alias><tzid>Etc/UCT</tzid>
+
+Etc/Universal<alias><tzid>Etc/UTC</tzid>
+Etc/Zulu<alias><tzid>Etc/UTC</tzid>
+Universal<alias><tzid>Etc/UTC</tzid>
+Zulu<alias><tzid>Etc/UTC</tzid>
+##
+
+### Temporary hack to support above timezones..
+Etc/UTC<alias><tzid>Europe/London</tzid>
+Etc/GMT<alias><tzid>Europe/London</tzid>
+Etc/UCT<alias><tzid>Europe/London</tzid>
+###
+
+Eire<alias><tzid>Europe/Dublin</tzid>
+
+Portugal<alias><tzid>Europe/Lisbon</tzid>
+
+Europe/Belfast<alias><tzid>Europe/London</tzid>
+Europe/Guernsey<alias><tzid>Europe/London</tzid>
+Europe/Isle_of_Man<alias><tzid>Europe/London</tzid>
+Europe/Jersey<alias><tzid>Europe/London</tzid>
+GB<alias><tzid>Europe/London</tzid>
+GB-Eire<alias><tzid>Europe/London</tzid>
+
+Europe/Ljubljana<alias><tzid>Europe/Belgrade</tzid>
+Europe/Podgorica<alias><tzid>Europe/Belgrade</tzid>
+Europe/Sarajevo<alias><tzid>Europe/Belgrade</tzid>
+Europe/Skopje<alias><tzid>Europe/Belgrade</tzid>
+Europe/Zagreb<alias><tzid>Europe/Belgrade</tzid>
+
+Arctic/Longyearbyen<alias><tzid>Europe/Oslo</tzid>
+Atlantic/Jan_Mayen<alias><tzid>Europe/Oslo</tzid>
+
+Europe/Bratislava<alias><tzid>Europe/Prague</tzid>
+
+Europe/San_Marino<alias><tzid>Europe/Rome</tzid>
+Europe/Vatican<alias><tzid>Europe/Rome</tzid>
+
+Poland<alias><tzid>Europe/Warsaw</tzid>
+
+Egypt<alias><tzid>Africa/Cairo</tzid>
+
+Libya<alias><tzid>Africa/Tripoli</tzid>
+
+Asia/Tel_Aviv<alias><tzid>Asia/Jerusalem</tzid>
+Israel<alias><tzid>Asia/Jerusalem</tzid>
+
+Europe/Nicosia<alias><tzid>Asia/Nicosia</tzid>
+
+Europe/Tiraspol<alias><tzid>Europe/Chisinau</tzid>
+
+Europe/Mariehamn<alias><tzid>Europe/Helsinki</tzid>
+
+Asia/Istanbul<alias><tzid>Europe/Istanbul</tzid>
+Turkey<alias><tzid>Europe/Istanbul</tzid>
+
+W-SU<alias><tzid>Europe/Moscow</tzid>
+
+Iran<alias><tzid>Asia/Tehran</tzid>
+
+Asia/Ashkhabad<alias><tzid>Asia/Ashgabat</tzid>
+
+Asia/Dacca<alias><tzid>Asia/Dhaka</tzid>
+
+Asia/Thimbu<alias><tzid>Asia/Thimphu</tzid>
+
+Asia/Chungking<alias><tzid>Asia/Chongqing</tzid>
+
+Hongkong<alias><tzid>Asia/Hong_Kong</tzid>
+
+Asia/Macao<alias><tzid>Asia/Macau</tzid>
+
+Asia/Ujung_Pandang<alias><tzid>Asia/Makassar</tzid>
+
+PRC<alias><tzid>Asia/Shanghai</tzid>
+
+Singapore<alias><tzid>Asia/Singapore</tzid>
+
+ROC<alias><tzid>Asia/Taipei</tzid>
+
+Asia/Ulan_Bator<alias><tzid>Asia/Ulaanbaatar</tzid>
+
+Australia/West<alias><tzid>Australia/Perth</tzid>
+
+ROK<alias><tzid>Asia/Seoul</tzid>
+
+Japan<alias><tzid>Asia/Tokyo</tzid>
+
+Australia/South<alias><tzid>Australia/Adelaide</tzid>
+
+Australia/Yancowinna<alias><tzid>Australia/Broken_Hill</tzid>
+
+Australia/North<alias><tzid>Australia/Darwin</tzid>
+
+Australia/Queensland<alias><tzid>Australia/Brisbane</tzid>
+
+Australia/Tasmania<alias><tzid>Australia/Hobart</tzid>
+
+Australia/Victoria<alias><tzid>Australia/Melbourne</tzid>
+
+Australia/ACT<alias><tzid>Australia/Sydney</tzid>
+Australia/Canberra<alias><tzid>Australia/Sydney</tzid>
+Australia/NSW<alias><tzid>Australia/Sydney</tzid>
+
+Pacific/Yap<alias><tzid>Pacific/Truk</tzid>
+
+Australia/LHI<alias><tzid>Australia/Lord_Howe</tzid>
+
+Antarctica/South_Pole<alias><tzid>Antarctica/McMurdo</tzid>
+
+NZ<alias><tzid>Pacific/Auckland</tzid>
+
+Kwajalein<alias><tzid>Pacific/Kwajalein</tzid>
+
+NZ-CHAT<alias><tzid>Pacific/Chatham</tzid>
+
+# Changes as of tzdata2008e
+Asia/Calcutta<alias><tzid>Asia/Kolkata</tzid>
+Asia/Saigon<alias><tzid>Asia/Ho_Chi_Minh</tzid>
+Atlantic/Jan_Mayen<alias><tzid>Arctic/Longyearbyen</tzid>

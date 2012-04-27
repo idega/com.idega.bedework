@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent a card.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.timezones.common.db.TzDbInfo"
+         table="bwtzinfo" >
+    <cache usage="read-write"/>
+    <id name="id" type="long" column="bw_id">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwcd_seq" type="integer" />
+
+    <property name="dtstamp" column="bw_dtstamp" type="string" length="20" />
+
+    <property name="version" column="bw_version" type="string" length="50" />
+    
+    <property name="serverProperties" column="bwtz_svrprops" 
+              type="string" length="3000" />
+  </class>
+</hibernate-mapping>

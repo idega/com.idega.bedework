@@ -1,0 +1,31 @@
+Please don't use this now. It not works.
+
+FOR DEVELOPERS:
+First, you must copy/paste configurations of context.xml and <GlobalNamingResources> 
+of server.xml into Tomcat/conf directory, otherwise JNDI and JMS won't work. Also, you 
+should put web-inf/activemq.xml to your-app/web-inf/activemq.xml
+
+Second, to get first exception of Bedework, you should add BedeworkPersonalCalendarView
+component. If you get NotImplementedException for
+"com.idega.bedework.data.BedeworkCalendarEntry.getLedgerID(BedeworkCalendarEntry.java:262)"
+it means that something was done fine.
+
+Third. Class BwAPI will give you handlers, which should be used for event managing, 
+UserAdapter will help you manage users between idega and bedework one.
+Examples of events and calendar creation should be visible on BwCalBussinessBean, but
+still they are not tested, although they worker few times.
+
+What is problematic but should be done:
+
+1) Integrate timezone server - the one is used now: http://stable.bedework.org/tzsvr;
+2) Fix efcache.xml usage, it seems it is not used now;
+3) Exclude duplicates of jar files between bedework and idega systems;
+4) Place content of context.xml to web.xml and server.xml to ROOT.xml;
+5) Find way, that applicationContext.xml use activeMQ.xml in current /web-inf directory, 
+but not in your-webapp/web-inf;
+6) Move options.xml to web-inf;
+7) Fix JmsConnectionHandler in way, that "sysevents" JMS Queue would be found from 
+context, but not created dynamically. (at 94 row).
+
+What is not so problematic:
+1) Implement unimplemented methods in BwCalBussinessBean.

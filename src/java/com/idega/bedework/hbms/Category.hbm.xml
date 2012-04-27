@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A category in Bedework
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwCategory"
+         table="bw_categories">
+    <cache usage="read-write"/>
+
+    <id name="id" type="integer" column="categoryid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="creatorHref" column="bw_creator" type="string"
+              index="bwidx_cat_creator" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              index="bwidx_cat_owner" />
+
+    <property name="access" column="bwaccess" type="string"
+              length="3900" />
+
+    <property name="publick" type="true_false" >
+      <column name="publick" not-null="true" />
+    </property>
+
+    <many-to-one name="word"
+                 class="org.bedework.calfacade.BwString"
+                 column="bw_catwdid"
+                 unique="true"
+                 not-null="true"
+                 cascade="all"
+                 foreign-key="bw_cat_wd_fk"
+                 fetch="join" />
+
+    <many-to-one name="description"
+                 class="org.bedework.calfacade.BwString"
+                 column="bw_catdescid"
+                 unique="true"
+                 not-null="false"
+                 fetch="join"
+                 cascade="all"
+                 foreign-key="bw_cat_desc_fk" />
+
+    <property name="uid" column="bw_uid" type="string" length="50"
+              unique="true"
+              not-null="true"
+              index="bwidx_category_uid" />
+  </class>
+
+  <!-- =================================================================
+       Category queries
+       ================================================================= -->
+
+  <query name="getCategoryRefs"><![CDATA[
+    select new org.bedework.calsvci.EventProperties$PropertyRef(
+            ev.colPath,ev.uid) 
+      from org.bedework.calfacade.BwEvent as ev
+      where :ent in elements(ev.categories)
+  ]]></query>
+
+  <query name="getCategoryRefsCol"><![CDATA[
+    select new org.bedework.calsvci.EventProperties$PropertyRef(
+            col.path)
+      from org.bedework.calfacade.BwCalendar as col
+      where :ent in elements(col.categories)
+  ]]></query>
+
+  <query name="getCategoryRefsCount"><![CDATA[
+    select count(*) from org.bedework.calfacade.BwEvent as ev
+      where :ent in elements(ev.categories)
+  ]]></query>
+
+  <query name="getCategoryRefsColCount"><![CDATA[
+    select count(*) from org.bedework.calfacade.BwCalendar as col
+      where :ent in elements(col.categories)
+  ]]></query>
+</hibernate-mapping>
+

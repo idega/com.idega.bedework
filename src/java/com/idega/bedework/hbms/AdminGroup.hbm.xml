@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Administrative groups..
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.svc.BwAdminGroup"
+         table="bw_adminGroups">
+    <id name="id" type="integer" column="bw_groupid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="account" column="account" type="string"
+              length="255" not-null="true"
+              unique-key="ag-key" />
+
+    <property name="principalRef" column="bw_principal_ref" type="string"
+              index="bwidx_ag_href" not-null="true" />
+
+    <!--
+    <set name="groupMembers" table="bw_adminGroupMembers"
+         lazy="true" >
+      <key>
+        <column name="groupname" not-null="true" />
+      </key>
+      <many-to-many class="org.bedework.calfacade.BwUser"
+                    column="userid" />
+    </set>
+    -->
+
+    <property name="description" column="description" type="string"
+              length="2000" />
+
+    <property name="groupOwnerHref" column="bw_group_owner" type="string"
+              index="bwidx_ag_group_owner" not-null="true" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              index="bwidx_ag_owner" not-null="true" />
+  </class>
+
+  <!-- This is a cheat to get around some problems.
+
+       I was unable to execute that query. Hibernate 3.1 may allow it.
+       Rather than build the table names into the java and use direct jdbc
+       I added a bogus class and mapped it here.
+    -->
+
+  <class name="org.bedework.calfacade.svc.BwAdminGroupEntry"
+         table="bw_adminGroupMembers">
+    <composite-id>
+      <key-many-to-one name="grp" column="bw_groupid"
+                       class="org.bedework.calfacade.svc.BwAdminGroup"
+                       foreign-key="bw_agm_ag_fk" />
+      <key-property name="memberId" column="memberid"
+                    type="integer"/>
+      <key-property name="memberIsGroup" column="member_is_group"
+                    type="true_false" />
+    </composite-id>
+
+    <property name="groupId" column="bw_groupid"
+              type="integer" insert="false" update="false"/>
+
+    <!--
+    <id name="groupId" column="groupid" unsaved-value="-1">
+      <generator class="foreign">
+        <param name="property">grp</param>
+      </generator>
+    </id>
+
+    <many-to-one name="grp" column="groupid"
+                 class="org.bedework.calfacade.svc.BwAdminGroup"
+                 not-null="true"
+                 insert="false" update="false" />
+
+    <property name="memberId" column="memberid" type="integer"
+              unique-key="agmembers_key" />
+
+    <property name="memberIsGroup" type="true_false"
+              unique-key="agmembers_key"  >
+      <column name="member_is_group" not-null="true" />
+    </property>
+    -->
+  </class>
+
+  <!-- =================================================================
+       Administrative groups queries
+       ================================================================= -->
+
+  <query name="getAllAdminGroups"><![CDATA[
+    from org.bedework.calfacade.svc.BwAdminGroup ag
+      order by ag.account
+  ]]></query>
+
+  <!-- Groups principal is a member of -->
+  <query name="getAdminGroups"><![CDATA[
+    select ag.grp from org.bedework.calfacade.svc.BwAdminGroupEntry ag
+      where ag.memberId=:entId and ag.memberIsGroup=:isgroup
+  ]]></query>
+
+  <!-- Groups principal is a event owner for -->
+  <query name="getAdminGroupsByEventOwner"><![CDATA[
+    from org.bedework.calfacade.svc.BwAdminGroup ag
+      where ag.ownerHref=:ownerHref
+  ]]></query>
+
+  <query name="getAdminGroupUserMembers"><![CDATA[
+    select u from
+          org.bedework.calfacade.svc.BwAdminGroupEntry age,
+          org.bedework.calfacade.BwUser u
+        where u.id = age.memberId and
+             age.grp=:gr and age.memberIsGroup=false
+  ]]></query>
+
+  <query name="getAdminGroupParents"><![CDATA[
+    select ag from
+          org.bedework.calfacade.svc.BwAdminGroupEntry age,
+          org.bedework.calfacade.svc.BwAdminGroup ag
+        where ag.id = age.groupId and
+             age.memberId=:grpid and age.memberIsGroup=true
+  ]]></query>
+
+  <query name="getAdminGroupGroupMembers"><![CDATA[
+    select ag from
+          org.bedework.calfacade.svc.BwAdminGroupEntry age,
+          org.bedework.calfacade.svc.BwAdminGroup ag
+        where ag.id = age.memberId and
+              age.grp=:gr and age.memberIsGroup=true
+  ]]></query>
+
+  <query name="removeAllAdminGroupMemberRefs"><![CDATA[
+    delete from
+          org.bedework.calfacade.svc.BwAdminGroupEntry
+        where grp=:gr
+  ]]></query>
+
+  <query name="removeFromAllAdminGroups"><![CDATA[
+    delete from
+          org.bedework.calfacade.svc.BwAdminGroupEntry
+        where memberId=:mbrId and memberIsGroup=:isgroup
+  ]]></query>
+
+  <query name="findAdminGroupEntry"><![CDATA[
+    from org.bedework.calfacade.svc.BwAdminGroupEntry
+        where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup
+  ]]></query>
+</hibernate-mapping>
+

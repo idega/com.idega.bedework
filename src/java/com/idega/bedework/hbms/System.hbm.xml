@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object representing the system parameters
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwSystem"
+         table="bw_settings">
+    <cache usage="read-write"/>
+    <id name="id" type="integer" column="id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="name" column="bwname" type="string"
+              length="200" />
+    <property name="tzid" column="tzid" type="string" />
+    <property name="systemid" column="systemid" type="string" />
+
+    <property name="publicCalendarRoot" column="publicCalendarRoot"
+              type="string" length="100" />
+    <property name="userCalendarRoot" column="userCalendarRoot"
+              type="string" length="100" />
+    <property name="userDefaultCalendar" column="userDefaultCalendar"
+              type="string" length="100" />
+    <property name="defaultTrashCalendar" column="defaultTrashCalendar"
+              type="string" length="100" />
+    <property name="userInbox" column="userInbox"
+              type="string" length="100" />
+    <property name="userOutbox" column="userOutbox"
+              type="string" length="100" />
+    <property name="deletedCalendar" column="deletedCalendar"
+              type="string" length="100" />
+    <property name="busyCalendar" column="busyCalendar"
+              type="string" length="100" />
+    <property name="defaultUserViewName" column="defaultUserViewName"
+              type="string" length="100" />
+
+    <property name="defaultUserHour24"
+              column="default_user_hour24" type="true_false" />
+
+    <property name="publicUser" column="public_user"
+              type="string" length="100" />
+
+    <property name="httpConnectionsPerUser" column="http_connections_per_user"
+              type="integer" />
+    <property name="httpConnectionsPerHost" column="http_connections_per_host"
+              type="integer" />
+    <property name="httpConnections" column="http_connections" type="integer" />
+
+    <property name="maxPublicDescriptionLength"
+              column="maxPublicDescriptionLength" type="integer" />
+    <property name="maxUserDescriptionLength"
+              column="maxUserDescriptionLength" type="integer" />
+    <property name="maxUserEntitySize" column="maxUserEntitySize"
+              type="integer" />
+    <property name="defaultUserQuota" column="defaultUserQuota" type="long" />
+
+    <property name="maxInstances" column="bwmax_instances" type="integer" />
+    <property name="maxYears" column="bwmax_years" type="integer" />
+
+    <property name="userauthClass" column="userauth_class"
+              type="string" length="200" />
+    <property name="mailerClass" column="mailer_class"
+              type="string" length="200" />
+    <property name="admingroupsClass" column="admingroups_class"
+              type="string" length="200" />
+    <property name="usergroupsClass" column="usergroups_class"
+              type="string" length="200" />
+
+    <property name="directoryBrowsingDisallowed"
+              column="directory_browsing_disallowed"
+              type="true_false" />
+
+    <property name="indexRoot" column="bwindex_root"
+              type="string" length="500" />
+
+    <property name="localeList" column="bwlocales"
+              type="string" length="1000" />
+
+    <property name="rootUsers" column="bwroot_users"
+              type="string" length="500" />
+
+    <set name="properties" table="bw_system_properties"
+         cascade="all,delete-orphan"
+         lazy="false">
+      <key column="bwid" foreign-key="bw_sysprp_pid_fk" />
+      <composite-element class="org.bedework.calfacade.BwProperty">
+        <property name="name" type="string" length="200"
+                  column="bw_name"  />
+
+        <property name="value" column="bw_value" type="text"/>
+      </composite-element>
+    </set>
+  </class>
+
+  <!-- =================================================================
+       System parameters queries
+       ================================================================= -->
+
+  <query name="getSystemPars"><![CDATA[
+    from org.bedework.calfacade.BwSystem as sys
+      where sys.name = :name
+  ]]></query>
+</hibernate-mapping>
+

@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Groups stored in the db - most sites will probably use an external
+     directory but this is useful for debugging
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwGroup"
+         table="bw_groups">
+    <id name="id" type="integer" column="bw_group_id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="account"
+              column="bw_account" type="string" length="200" not-null="true"
+              unique-key="group-key" />
+
+    <property name="principalRef" column="bw_principal_ref" type="string"
+              index="bwidx_grp_href" not-null="true" />
+
+    <!--
+    <set name="groupMembers" table="bw_Group_Members"
+         lazy="true" >
+      <key>
+        <column name="groupname" not-null="true" />
+      </key>
+      <many-to-many class="org.bedework.calfacade.BwUser"
+                    column="userid" />
+    </set>
+    -->
+  </class>
+
+  <!-- This is a cheat to get around some problems.
+
+       I was unable to execute that query. Hibernate 3.1 may allow it.
+       Rather than build the table names into the java and use direct jdbc
+       I added a bogus class and mapped it here.
+    -->
+
+  <class name="org.bedework.calfacade.BwGroupEntry"
+         table="bw_group_Members">
+    <composite-id>
+      <key-many-to-one name="grp" column="groupid"
+                       class="org.bedework.calfacade.BwGroup"
+                       foreign-key="bw_grp_grp_fk" />
+      <key-property name="memberId" column="memberid"
+                    type="integer"/>
+      <key-property name="memberIsGroup" column="member_is_group"
+                    type="true_false" />
+    </composite-id>
+
+    <property name="groupId" column="groupid"
+              type="integer" insert="false" update="false"/>
+
+    <!--
+    <id name="groupId" column="groupid" unsaved-value="-1">
+      <generator class="foreign">
+        <param name="property">grp</param>
+      </generator>
+    </id>
+
+    <many-to-one name="grp" column="groupid"
+                 class="org.bedework.calfacade.BwGroup"
+                 not-null="true"
+                 insert="false" update="false" />
+
+    <property name="memberId" column="memberid" type="integer"
+              unique-key="agmembers_key" />
+
+    <property name="memberIsGroup" type="true_false"
+              unique-key="agmembers_key"  >
+      <column name="member_is_group" not-null="true" />
+    </property>
+    -->
+  </class>
+
+  <!-- =================================================================
+       Groups queries
+       ================================================================= -->
+
+  <query name="getAllGroups"><![CDATA[
+    from org.bedework.calfacade.BwGroup g
+      order by g.account
+  ]]></query>
+
+  <!-- Groups principal is a member of -->
+  <query name="getGroups"><![CDATA[
+    select g.grp from org.bedework.calfacade.BwGroupEntry g
+      where g.memberId=:entId and g.memberIsGroup=:isgroup
+  ]]></query>
+
+  <query name="getGroupUserMembers"><![CDATA[
+    select u from
+          org.bedework.calfacade.BwGroupEntry ge,
+          org.bedework.calfacade.BwUser u
+        where u.id = ge.memberId and
+             ge.grp=:gr and ge.memberIsGroup=false
+  ]]></query>
+
+  <query name="getGroupParents"><![CDATA[
+    select g from
+          org.bedework.calfacade.BwGroupEntry ge,
+          org.bedework.calfacade.BwGroup g
+        where g.id = ge.groupId and
+             ge.memberId=:grpid and ge.memberIsGroup=true
+  ]]></query>
+
+  <query name="getGroupGroupMembers"><![CDATA[
+    select g from
+          org.bedework.calfacade.BwGroupEntry ge,
+          org.bedework.calfacade.BwGroup g
+        where g.id = ge.memberId and
+              ge.grp=:gr and ge.memberIsGroup=true
+  ]]></query>
+
+  <query name="removeAllGroupMembers"><![CDATA[
+    delete from
+          org.bedework.calfacade.BwGroupEntry
+        where grp=:gr
+  ]]></query>
+
+  <query name="removeFromAllGroups"><![CDATA[
+    delete from
+          org.bedework.calfacade.BwGroupEntry
+        where memberId=:mbrId and memberIsGroup=:isgroup
+  ]]></query>
+
+  <query name="findGroupEntry"><![CDATA[
+    from org.bedework.calfacade.BwGroupEntry
+        where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup
+  ]]></query>
+</hibernate-mapping>
+

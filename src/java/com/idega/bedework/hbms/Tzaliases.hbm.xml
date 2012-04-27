@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent a timezone spec.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.timezones.common.db.TzAlias"
+         table="bwtz_alias" >
+    <cache usage="read-write"/>
+    <id name="id" type="long" column="bw_id">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bw_seq" type="integer" />
+
+    <property name="fromId" column="bw_from" type="string" length="500"
+              index="bwidx_tz_aliasfrom" />
+
+    <property name="toId" column="bw_to" type="string" length="500"
+              index="bwidx_tz_aliasto" />
+  </class>
+</hibernate-mapping>

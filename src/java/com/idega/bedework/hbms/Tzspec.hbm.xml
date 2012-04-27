@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent a timezone spec.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.timezones.common.db.TzDbSpec"
+         table="bwtz_spec" >
+    <cache usage="read-write"/>
+    <id name="id" type="long" column="bw_id">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bw_seq" type="integer" />
+
+    <property name="name" column="bw_name" type="string" length="500"
+              index="bwidx_tz_name" />
+
+    <property name="etag" column="bw_etag" type="string" length="200" />
+
+    <property name="dtstamp" column="bw_dtstamp" type="string" length="20" />
+
+    <property name="active" column="bw_active" type="true_false"
+              not-null="true" />
+
+    <property name="vtimezone" column="bw_vtimezone" type="text"/>
+
+    <set name="displayNames" table="bw_tz_dnames">
+      <key column="id" foreign-key="bw_tz_dname_fk" />
+      <composite-element
+                 class="org.bedework.timezones.common.db.LocalizedString" >
+        <property name="lang" column="bw_dname_lang" type="string" length="16"
+                  not-null="true" />
+
+        <property name="value" column="bwdname_val" type="text"/>
+      </composite-element>
+    </set>
+  </class>
+</hibernate-mapping>

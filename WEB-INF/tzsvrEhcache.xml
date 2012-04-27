@@ -1,0 +1,34 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="ehcache.xsd">
+  <diskStore path="java.io.tmpdir"/>
+
+  <!--
+    Sample cache named sampleCache2
+    This cache has a maximum of 1000 elements in memory. There is no overflow to disk, so 1000
+    is also the maximum cache size. Note that when a cache is eternal, timeToLive and
+    timeToIdle are not used and do not need to be specified.
+    -->
+  <defaultCache maxElementsInMemory="10000"
+                eternal="false"
+                timeToIdleSeconds="120"
+                timeToLiveSeconds="120"
+                overflowToDisk="true"
+                diskPersistent="false"
+                diskExpiryThreadIntervalSeconds="120"
+                memoryStoreEvictionPolicy="LRU"
+                />
+
+  <cache name="vtz"
+         maxElementsInMemory="1000"
+         eternal="true"
+         overflowToDisk="false"
+         memoryStoreEvictionPolicy="FIFO"
+         />
+
+  <cache name="zoneinfo"
+         maxElementsInMemory="1000"
+         eternal="true"
+         overflowToDisk="false"
+         memoryStoreEvictionPolicy="FIFO"
+         />
+</ehcache>
