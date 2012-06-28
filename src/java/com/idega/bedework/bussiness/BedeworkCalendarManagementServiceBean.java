@@ -302,7 +302,7 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 	}
 
 	@Override
-	public List<BwCalendar> getAvailableCalendars(
+	public List<CalDAVCalendar> getAvailableCalendars(
 			com.idega.user.data.User user, int maxResults, int firstResult)
 			throws Exception {
 		// TODO Auto-generated method stub

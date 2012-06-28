@@ -150,7 +150,7 @@ public interface BedeworkCalendarManagementService {
 	*  from 0 result else starts from firstResult result. Returns empty collection if no calendars
 	*  found.
 	*/
-	public List<BwCalendar> getAvailableCalendars(com.idega.user.data.User user, int maxResults, int firstResult) throws Exception;
+	public List<CalDAVCalendar> getAvailableCalendars(com.idega.user.data.User user, int maxResults, int firstResult) throws Exception;
 
 	/**
 	* Sets that user will get data from this calendar.
