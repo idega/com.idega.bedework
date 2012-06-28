@@ -82,11 +82,17 @@
  */
 package com.idega.bedework.presentation;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
+import com.idega.bedework.bussiness.BedeworkCalendarManagementServiceBean;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
+import com.idega.presentation.ui.DropdownMenu;
+import com.idega.util.expression.ELUtil;
 
 /**
- * Class description goes here.
+ * <p>Class will be used to add, delete calendars.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
@@ -94,8 +100,25 @@ import com.idega.presentation.IWContext;
  * @version 1.0.0 Apr 19, 2012
  * @author martynasstake
  */
-public class BedeworkPersonalCalendarEventsManager extends Block {
+public class BedeworkCalendarsManager extends Block {
 
+	@Autowired
+	BedeworkCalendarManagementService bcms;
+	
+	/**
+	 * <p>Initializes service if down.</p>
+	 * @return {@link BedeworkCalendarManagementServiceBean} instance or 
+	 * <code>null</code>.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private BedeworkCalendarManagementService getBedeworkCalendarManagementService() {
+		if (this.bcms == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		
+		return this.bcms;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see com.idega.presentation.PresentationObject#main(com.idega.presentation.IWContext)
@@ -103,5 +126,9 @@ public class BedeworkPersonalCalendarEventsManager extends Block {
 	@Override
 	public void main(IWContext iwc) throws Exception {
 		super.main(iwc);
+	}
+	
+	public DropdownMenu getCalendarsDropdown(IWContext iwc) {
+		return null;
 	}
 }

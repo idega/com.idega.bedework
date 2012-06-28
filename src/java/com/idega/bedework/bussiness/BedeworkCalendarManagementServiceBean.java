@@ -1,5 +1,5 @@
 /**
- * @(#)UserAdapter.java    1.0.0 1:21:28 PM
+ * @(#)CalendarManagementBean.java    1.0.0 3:37:13 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -83,179 +83,45 @@
 package com.idega.bedework.bussiness;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ejb.EJBException;
-
-import org.bedework.calfacade.BwPrincipalInfo;
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.UsersI;
 
+import com.idega.bedework.BedeworkConstants;
+import com.idega.block.cal.data.CalDAVCalendar;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.user.data.User;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
-
+import com.idega.user.business.UserBusinessBean;
+import com.idega.util.CoreConstants;
+import com.idega.util.StringUtil;
 
 /**
- * <p>Adapter to communicate between Idega and Bedework users.</p>
+ * <p>Implementation of {@link BedeworkCalendarManagementService}.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Apr 24, 2012
+ * @version 1.0.0 Apr 27, 2012
  * @author martynasstake
  */
-public class UserAdapter {
-	private static final Logger LOGGER = Logger.getLogger(UserAdapter.class.getName());
-	
-	private org.bedework.calfacade.BwUser bedeworkUser = null;
-	private com.idega.user.data.User idegaUser = null;
+public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarManagementService{
+
+	private static final Logger LOGGER = Logger.getLogger(BedeworkCalendarManagementServiceBean.class.getName());
 	
 	private UserBusiness userBusiness = null;
 	
-	public UserAdapter(org.bedework.calfacade.BwUser user) {
-		this.bedeworkUser = user;
-	}
-	
-	public UserAdapter(com.idega.user.data.User user) {
-		this.idegaUser = user;
-	}
-
 	/**
-	 * <p>We use this id for calendar and directory names.</p>
-	 * @return id for names of directories.
+	 * <p>Gets {@link UserBusinessBean} for managing users.</p>
+	 * @return {@link UserBusinessBean} or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public String getID() {
-		com.idega.user.data.User user = getIdegaSystemUser();
-		if (user == null) {
-			return null;
-		}
-		
-		return String.valueOf(user.getPrimaryKey());
-	}
-	
-	/**
-	 * <p>Returns given user in Bedework framework representation.</p>
-	 * @return Bedework framework user. <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public org.bedework.calfacade.BwUser getBedeworkSystemUser() {
-		if (this.bedeworkUser != null) {
-			return this.bedeworkUser;
-		}
-		
-		BwAPI bwAPI = new BwAPI(idegaUser);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
-		}
-		
-		UsersI usersHandler = bwAPI.getUsersHandler();
-		
-		try {
-			this.bedeworkUser = usersHandler.getUser(getID());
-		} catch (EJBException e) {
-			LOGGER.log(Level.WARNING, "Unable to find primary key of user.");
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.INFO, "Unable to get such user from Bedework. " +
-					"User data will be automatically syncronized with Bedework system.");
-		}
-		
-		if (this.bedeworkUser == null) {
-			synchronizeUser();
-		}
-		
-		bwAPI.closeBedeworkAPI();
-		return this.bedeworkUser;
-	}
-
-	/**
-	 * <p>Returns given user in Idega framework representation.</p>
-	 * @return Idega framework user. <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public com.idega.user.data.User getIdegaSystemUser() {
-		if (this.idegaUser != null) {
-			return this.idegaUser;
-		}
-		
-		try {
-			this.idegaUser = getUserBusiness().getUser(this.bedeworkUser.getId());
-		} catch (RemoteException e) {
-			LOGGER.log(Level.WARNING, "Unable to get idega user.");
-		}
-		
-		return this.idegaUser;
-	}
-	
-	/**
-	 * <p>Creates or updates user in bedework framework, as it is on Idega framework.
-	 * Only changes on Idega framework are synchronized to Bedework. 
-	 * </p>
-	 * @return <code>true</code> if synchronization successful, <code>false</code> 
-	 * otherwise.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean synchronizeUser() {
-		BwAPI bwAPI = new BwAPI(getIdegaSystemUser());
-		if (!bwAPI.openBedeworkAPI()) {
-			return Boolean.FALSE;
-		}
-		
-		UsersI usersHandler = bwAPI.getUsersHandler();
-		if (usersHandler  == null) {
-			return Boolean.FALSE;
-		}
-
-		try {
-			if (usersHandler.getUser(getID()) == null) {
-				usersHandler.add(getID());
-			}
-
-			this.bedeworkUser = usersHandler.getUser(getID());
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to initialize user.", e);
-			return Boolean.FALSE;
-		}
-		
-		BwPrincipalInfo bwpi = new BwPrincipalInfo();
-		try {
-			com.idega.core.contact.data.Email email = getIdegaSystemUser().getUsersEmail();
-			if (email != null) {
-				bwpi.setEmail(email.getEmailAddress());
-			}
-			
-			com.idega.core.contact.data.Phone phone = getIdegaSystemUser().getUsersHomePhone();
-			if (phone != null) {
-				bwpi.setPhone(phone.getNumber());
-			}
-		} catch (EJBException e) {
-			LOGGER.log(Level.WARNING, "Unable to find idega user metadata.");
-		} catch (RemoteException e) {
-			LOGGER.log(Level.WARNING, "Unable to get idega user metadata.");
-		}
-		
-		bwpi.setFirstname(getIdegaSystemUser().getFirstName());
-		bwpi.setLastname(getIdegaSystemUser().getLastName());
-		bwpi.setPrincipalHref(this.bedeworkUser.getPrincipalRef());
-		
-		this.bedeworkUser.setCreated(getIdegaSystemUser().getCreated());
-		this.bedeworkUser.setLastAccess(getIdegaSystemUser().getCreated());
-		this.bedeworkUser.setLastModify(getIdegaSystemUser().getCreated());
-		this.bedeworkUser.setPrincipalInfo(bwpi);
-		
-		try {
-			usersHandler.update(getBedeworkSystemUser());
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.SEVERE, "Unable to update user in Bedework system", e);
-			return Boolean.FALSE;
-		}
-		
-		return Boolean.TRUE;
-	}
-	
 	private UserBusiness getUserBusiness() {
 		if (this.userBusiness == null) {
 			try {
@@ -268,5 +134,192 @@ public class UserAdapter {
 		}
 		
 		return this.userBusiness;
+	}
+	
+	/**
+	 * <p>Local method for making access to {@link User} easier.</p>
+	 * @param userID {@link User#getID()}
+	 * @return {@link User} by id or null on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private User getUser(String userID) {
+		if (StringUtil.isEmpty(userID)) {
+			return null;
+		}
+		
+		try {
+			int userIDInteger = Integer.valueOf(userID);
+			return this.userBusiness.getUser(userIDInteger);
+		} catch (RemoteException e) {
+			LOGGER.log(Level.WARNING, "Unable to find such user.");
+		} catch (NumberFormatException e) {
+			LOGGER.log(Level.WARNING, "User id is not a number.");
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public Collection<BwCalendar> getAllUserCalendars(String userID) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * <p>Creates calendar for given {@link User}.</p>
+	 * @param user user, which has to contain calendar.
+	 * @param calendarName
+	 * @return <code>true</code> on success, <code>false</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean createCalendar(com.idega.user.data.User user, String calendarName) {
+		if (user == null || StringUtil.isEmpty(calendarName)) {
+			LOGGER.log(Level.INFO, "User or calendar name not defined.");
+			return Boolean.FALSE;
+		}
+		
+		BwCalendar calendar = getUserCalendar(user, calendarName);
+		if (calendar != null) {
+			LOGGER.log(Level.INFO, "Such calendar already exists, not creating.");
+			return Boolean.FALSE;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return Boolean.FALSE;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
+		
+		UserAdapter userAdapter = new UserAdapter(user);
+		
+		calendar = new BwCalendar();
+		calendar.setName(calendarName);
+		calendar.setCreatorEnt(userAdapter.getBedeworkSystemUser());
+		calendar.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+		calendar.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+		calendar.setPublick(Boolean.FALSE);
+		calendar.setAffectsFreeBusy(Boolean.TRUE);
+		
+		String calPath = getHomeCalendarPath(user);
+		if (calPath == null) {
+			return Boolean.FALSE;
+		}
+		
+		calendar.setColPath(calPath);
+		calendar.setPath(calPath + CoreConstants.SLASH + calendarName);
+		calendar.setCalType(BwCalendar.calTypeCalendarCollection);
+		
+		try {
+			calendarsHandler.add(calendar, calPath);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to add calendar: ", e);
+			return Boolean.FALSE;
+		}
+		
+		return Boolean.TRUE;
+	}
+	
+	/**
+	 * <p>Searches database for given {@link User} calendar in database.</p>
+	 * @param user who's calendar should be found.
+	 * @param calendarName which should be found.
+	 * @return {@link BwCalendar} or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName) {
+		if (user == null || StringUtil.isEmpty(calendarName)) {
+			return null;
+		}
+		
+		String calendarPath = getHomeCalendarPath(user);
+		if (StringUtil.isEmpty(calendarPath)) {
+			return null;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+
+		BwCalendar calendar = null;
+		try {
+			calendar = calendarsHandler.get(calendarPath + CoreConstants.SLASH + calendarName);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.INFO, "Calendar " + calendarPath + " not found.");
+		}
+		
+		bwAPI.closeBedeworkAPI();
+		return calendar;
+	}
+	
+	/**
+	 * <p>Searches for home directory of user calendars.</p>
+	 * @param user
+	 * @return Directory of user calendars root, where are or should calendars to be placed.
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public String getHomeCalendarPath(com.idega.user.data.User user) {
+		if (user == null) {
+			return null;
+		}
+		
+		UserAdapter userAdapter = new UserAdapter(user);
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+
+		BwCalendar homeCalendar = null;
+		try {
+			homeCalendar = calendarsHandler.getHome(
+					userAdapter.getBedeworkSystemUser(), Boolean.FALSE);
+		} catch (CalFacadeException e1) {
+			LOGGER.log(Level.INFO, "Unable to get home calendar.");
+		}
+		
+		bwAPI.closeBedeworkAPI();
+
+		if (homeCalendar == null) {
+			StringBuffer path = new StringBuffer();
+			path.append(BedeworkConstants.BW_USER_CALENDAR_ROOT_PATH)
+			.append(userAdapter.getID());
+			
+			return path.toString();
+		} else {
+			return homeCalendar.getPath();
+		}
+	}
+
+	@Override
+	public List<BwCalendar> getAvailableCalendars(
+			com.idega.user.data.User user, int maxResults, int firstResult)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean subscribeCalendar(com.idega.user.data.User user,
+			CalDAVCalendar calendar) throws Exception {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean unSubscribeCalendar(com.idega.user.data.User user,
+			CalDAVCalendar calendar) throws Exception {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

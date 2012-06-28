@@ -1,5 +1,5 @@
 /**
- * @(#)UserAdapter.java    1.0.0 1:21:28 PM
+ * @(#)BedeworkCalendarManagementService.java    1.0.0 3:39:06 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -82,191 +82,87 @@
  */
 package com.idega.bedework.bussiness;
 
-import java.rmi.RemoteException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import javax.ejb.EJBException;
+import org.bedework.calfacade.BwCalendar;
 
-import org.bedework.calfacade.BwPrincipalInfo;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.UsersI;
-
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
-import com.idega.presentation.IWContext;
-import com.idega.user.business.UserBusiness;
-
+import com.idega.block.cal.data.CalDAVCalendar;
+import com.idega.business.SpringBeanName;
+import com.idega.core.user.data.User;
 
 /**
- * <p>Adapter to communicate between Idega and Bedework users.</p>
+ * <p>Provides services from bedework API.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Apr 24, 2012
+ * @version 1.0.0 Apr 27, 2012
  * @author martynasstake
  */
-public class UserAdapter {
-	private static final Logger LOGGER = Logger.getLogger(UserAdapter.class.getName());
-	
-	private org.bedework.calfacade.BwUser bedeworkUser = null;
-	private com.idega.user.data.User idegaUser = null;
-	
-	private UserBusiness userBusiness = null;
-	
-	public UserAdapter(org.bedework.calfacade.BwUser user) {
-		this.bedeworkUser = user;
-	}
-	
-	public UserAdapter(com.idega.user.data.User user) {
-		this.idegaUser = user;
-	}
-
-	/**
-	 * <p>We use this id for calendar and directory names.</p>
-	 * @return id for names of directories.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public String getID() {
-		com.idega.user.data.User user = getIdegaSystemUser();
-		if (user == null) {
-			return null;
-		}
-		
-		return String.valueOf(user.getPrimaryKey());
-	}
+@SpringBeanName("bedeworkCalendarManagementService")
+public interface BedeworkCalendarManagementService {
 	
 	/**
-	 * <p>Returns given user in Bedework framework representation.</p>
-	 * @return Bedework framework user. <code>null</code> on failure.
+	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
+	 * @param userid {@link User#getPrimaryKey()};
+	 * @return {@link Collection} of {@link BwCalendar}s or {@link Collections#EMPTY_SET} 
+	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public org.bedework.calfacade.BwUser getBedeworkSystemUser() {
-		if (this.bedeworkUser != null) {
-			return this.bedeworkUser;
-		}
-		
-		BwAPI bwAPI = new BwAPI(idegaUser);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
-		}
-		
-		UsersI usersHandler = bwAPI.getUsersHandler();
-		
-		try {
-			this.bedeworkUser = usersHandler.getUser(getID());
-		} catch (EJBException e) {
-			LOGGER.log(Level.WARNING, "Unable to find primary key of user.");
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.INFO, "Unable to get such user from Bedework. " +
-					"User data will be automatically syncronized with Bedework system.");
-		}
-		
-		if (this.bedeworkUser == null) {
-			synchronizeUser();
-		}
-		
-		bwAPI.closeBedeworkAPI();
-		return this.bedeworkUser;
-	}
-
-	/**
-	 * <p>Returns given user in Idega framework representation.</p>
-	 * @return Idega framework user. <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public com.idega.user.data.User getIdegaSystemUser() {
-		if (this.idegaUser != null) {
-			return this.idegaUser;
-		}
-		
-		try {
-			this.idegaUser = getUserBusiness().getUser(this.bedeworkUser.getId());
-		} catch (RemoteException e) {
-			LOGGER.log(Level.WARNING, "Unable to get idega user.");
-		}
-		
-		return this.idegaUser;
-	}
+	public Collection<org.bedework.calfacade.BwCalendar> getAllUserCalendars(String userid);
 	
 	/**
-	 * <p>Creates or updates user in bedework framework, as it is on Idega framework.
-	 * Only changes on Idega framework are synchronized to Bedework. 
-	 * </p>
-	 * @return <code>true</code> if synchronization successful, <code>false</code> 
-	 * otherwise.
+	 * <p>Creates calendar for given {@link User}.</p>
+	 * @param user user, which has to contain calendar.
+	 * @param calendarName
+	 * @return <code>true</code> on success, <code>false</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public boolean synchronizeUser() {
-		BwAPI bwAPI = new BwAPI(getIdegaSystemUser());
-		if (!bwAPI.openBedeworkAPI()) {
-			return Boolean.FALSE;
-		}
-		
-		UsersI usersHandler = bwAPI.getUsersHandler();
-		if (usersHandler  == null) {
-			return Boolean.FALSE;
-		}
-
-		try {
-			if (usersHandler.getUser(getID()) == null) {
-				usersHandler.add(getID());
-			}
-
-			this.bedeworkUser = usersHandler.getUser(getID());
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to initialize user.", e);
-			return Boolean.FALSE;
-		}
-		
-		BwPrincipalInfo bwpi = new BwPrincipalInfo();
-		try {
-			com.idega.core.contact.data.Email email = getIdegaSystemUser().getUsersEmail();
-			if (email != null) {
-				bwpi.setEmail(email.getEmailAddress());
-			}
-			
-			com.idega.core.contact.data.Phone phone = getIdegaSystemUser().getUsersHomePhone();
-			if (phone != null) {
-				bwpi.setPhone(phone.getNumber());
-			}
-		} catch (EJBException e) {
-			LOGGER.log(Level.WARNING, "Unable to find idega user metadata.");
-		} catch (RemoteException e) {
-			LOGGER.log(Level.WARNING, "Unable to get idega user metadata.");
-		}
-		
-		bwpi.setFirstname(getIdegaSystemUser().getFirstName());
-		bwpi.setLastname(getIdegaSystemUser().getLastName());
-		bwpi.setPrincipalHref(this.bedeworkUser.getPrincipalRef());
-		
-		this.bedeworkUser.setCreated(getIdegaSystemUser().getCreated());
-		this.bedeworkUser.setLastAccess(getIdegaSystemUser().getCreated());
-		this.bedeworkUser.setLastModify(getIdegaSystemUser().getCreated());
-		this.bedeworkUser.setPrincipalInfo(bwpi);
-		
-		try {
-			usersHandler.update(getBedeworkSystemUser());
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.SEVERE, "Unable to update user in Bedework system", e);
-			return Boolean.FALSE;
-		}
-		
-		return Boolean.TRUE;
-	}
+	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
 	
-	private UserBusiness getUserBusiness() {
-		if (this.userBusiness == null) {
-			try {
-				this.userBusiness= IBOLookup.getServiceInstance(
-						IWContext.getCurrentInstance().getApplicationContext(), 
-						UserBusiness.class);
-			} catch (IBOLookupException e) {
-				LOGGER.log(Level.WARNING, "Unable to get UserBusiness.");
-			}
-		}
-		
-		return this.userBusiness;
-	}
+	/**
+	 * <p>Searches database for given {@link User} calendar in database.</p>
+	 * @param user who's calendar should be found.
+	 * @param calendarName which should be found.
+	 * @return {@link BwCalendar} or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
+	
+	/**
+	 * <p>Searches for home directory of user calendars.</p>
+	 * @param user
+	 * @return Directory of user calendars root, where are or should calendars to be placed.
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public String getHomeCalendarPath(com.idega.user.data.User user);
+	
+	/**
+	* Finds calendars that are available for provided user.
+	* @param User			User to which calendars should be available.
+	* @param maxResults	maximum amount of results
+	* @param firstResult	result number from which all results will be returned
+	* @return List of calendars that are available for provided user. If maxResults <=  0 than
+	* returns all found calendars, else maxResults of calendars. If firstResult < 0 than starts
+	*  from 0 result else starts from firstResult result. Returns empty collection if no calendars
+	*  found.
+	*/
+	public List<BwCalendar> getAvailableCalendars(com.idega.user.data.User user, int maxResults, int firstResult) throws Exception;
+
+	/**
+	* Sets that user will get data from this calendar.
+	* @param user		user that will get data from Calendar
+	* @param calendar	calendar that will send data for user
+	*/
+	public boolean subscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
+
+	/**
+	* Sets that user will not get data from this calendar.
+	* @param user		user that will not get data from Calendar
+	* @param calendar	calendar that will not send data for user
+	*/
+	public boolean unSubscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
 }

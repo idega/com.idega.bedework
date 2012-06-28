@@ -95,10 +95,8 @@ import javax.ejb.RemoveException;
 
 import org.apache.myfaces.dateformat.DateFormatSymbols;
 import org.apache.myfaces.dateformat.SimpleDateFormatter;
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -106,7 +104,6 @@ import org.bedework.calsvci.EventsI;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.data.BedeworkCalendarEntry;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.data.AttendanceEntity;
@@ -115,6 +112,7 @@ import com.idega.block.cal.data.CalendarEntry;
 import com.idega.block.cal.data.CalendarEntryGroup;
 import com.idega.block.cal.data.CalendarEntryType;
 import com.idega.block.cal.data.CalendarLedger;
+import com.idega.block.cal.presentation.CalendarEntryCreator;
 import com.idega.business.IBOServiceBean;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.presentation.IWContext;
@@ -123,7 +121,6 @@ import com.idega.user.business.GroupBusiness;
 import com.idega.user.business.UserGroupPlugInBusiness;
 import com.idega.user.data.Group;
 import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
@@ -359,203 +356,203 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 			String startMinute, String endDate, String endHour,
 			String endMinute, String attendees, String ledger,
 			String description, String location) {
-
-		if (user == null) {
-			return;
+		
+		boolean reccur = Boolean.FALSE;
+		if (StringUtil.isEmpty(repeat)) {
+			reccur = Boolean.FALSE;
+		} else {
+			reccur = Boolean.valueOf(repeat);
 		}
-
-		BwCalendar calendar = getUserCalendar(user, 
-				"kitas4");
-		if (calendar == null) {
-			if (!createCalendar(user, "kitas4")) {
-				LOGGER.log(Level.WARNING, "Unable to create default calendar for user.");
-				return;
-			} else {
-				calendar = getUserCalendar(user, 
-						"kitas4");
+		
+		java.util.Date begining = null;
+		if (!StringUtil.isEmpty(startDate)) {
+			begining = DATE_FORMATTER.parse(startDate);
+			
+			if (begining != null) {
+				if (!StringUtil.isEmpty(startHour)) {
+					try {
+						long time = begining.getTime();
+						time = time + Integer.parseInt(startHour)*60*60*1000; //From hour to milliseconds
+						begining.setTime(time);
+					} catch (NumberFormatException e) {
+						LOGGER.log(Level.WARNING, "Unrecognizable number of hours: " + startHour);
+					}
+				}
+				
+				if (!StringUtil.isEmpty(startMinute)) {
+					try {
+						long time = begining.getTime();
+						time = time + Integer.parseInt(startMinute)*60*1000; //From minute to milliseconds
+						begining.setTime(time);
+					} catch (NumberFormatException e) {
+						LOGGER.log(Level.WARNING, "Unrecognizable number of minutes: " + startMinute);
+					}
+				}
 			}
 		}
 		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return;
-		}
-		
-		EventsI eventsHandler = bwAPI.getEventsHandler();
-		if (eventsHandler == null) {
-			return;
-		}
-
-		UserAdapter userAdapter = new UserAdapter(user);	
-
-		BwEvent event = new BwEventObj();
-		event.setName(headline);
-		event.setDescription(description);
-		
-		event.setCreatorEnt(userAdapter.getBedeworkSystemUser());
-		event.setColPath(calendar.getPath());
-		
-		event.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		event.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		
-		event.setDuration("0");
-		event.setRecurring(Boolean.FALSE);
-		event.setNoStart(Boolean.FALSE);
-		event.setAccess(userAdapter.getBedeworkSystemUser().getLocationAccess());
-		
-		if (!StringUtil.isEmpty(startDate)) {
-			event.setDtstart(getDateInBedeworkFormat(startDate));
-		}
-		
+		java.util.Date ending = null;
 		if (!StringUtil.isEmpty(endDate)) {
-			event.setDtend(getDateInBedeworkFormat(endDate));
+			ending = DATE_FORMATTER.parse(endDate);
+			
+			if (ending != null) {
+				if (!StringUtil.isEmpty(endHour)) {
+					try {
+						long time = ending.getTime();
+						time = time + Integer.parseInt(endHour)*60*60*1000; //From hour to milliseconds
+						ending.setTime(time);
+					} catch (NumberFormatException e) {
+						LOGGER.log(Level.WARNING, "Unrecognizable number of hours: " +endHour);
+					}
+				}
+				
+				if (!StringUtil.isEmpty(endMinute)) {
+					try {
+						long time = ending.getTime();
+						time = time + Integer.parseInt(endMinute)*60*1000; //From minute to milliseconds
+						ending.setTime(time);
+					} catch (NumberFormatException e) {
+						LOGGER.log(Level.WARNING, "Unrecognizable number of minutes: " + endMinute);
+					}
+				}
+			}
 		}
-		
-		EventInfo ei = new EventInfo(event);
-		try {
-			eventsHandler.add(ei, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Failed to add event", e);
-			return;
-		}
-	}
 
+		createNewBedeworkCalDAVEvent(user, headline, description, location, type, "kitas4", reccur, begining, ending, null);
+	}
+	
 	/**
-	 * <p>Creates calendar for given {@link User}.</p>
-	 * @param user user, which has to contain calendar.
-	 * @param calendarName
-	 * @return <code>true</code> on success, <code>false</code> on failure.
+	 * <p>Creates CalDAV event to Bedework side of system.</p>
+	 * @param user - the one, who creates. Should not be <code>null</code>.
+	 * @param headline - Name, headline of event. Should not be <code>null</code>.
+	 * @param description - Description of event.
+	 * @param location - Location of event.
+	 * @param type - ?
+	 * @param calendarName - Name of calendar, where event should be placed. If 
+	 * <code>null</code>, then event will be placed on "default_userID" calendar. If 
+	 * calendar name was incorrect or not found, <code>false</code> will be returned.
+	 * @param reccuring - <code>true</code>, if events recur, <code>false</code> otherwise. 
+	 * @param startDate - {@link java.util.Date}, when event first occur. If set to 
+	 * <code>null</code>, then today will be used as event start.
+	 * @param endDate - {@link java.util.Date}, when event stops. Should not be 
+	 * <code>null</code>.
+	 * @param attendees - {@link List} of {@link User}s, who should see this event.
+	 * @return <code>true</code> if event successfully created, <code>false</code>
+	 * otherwise.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public boolean createCalendar(User user, String calendarName) {
-		if (user == null || StringUtil.isEmpty(calendarName)) {
-			LOGGER.log(Level.INFO, "User or calendar name not defined.");
-			return Boolean.FALSE;
-		}
+	public boolean createNewBedeworkCalDAVEvent(
+			User user, 
+			String headline,
+			String description, 
+			String location,
+			String type,
+			String calendarName,
+			boolean reccuring, 
+			java.util.Date startDate, 
+			java.util.Date endDate, 
+			List<User> attendees) {
 		
-		BwCalendar calendar = getUserCalendar(user, calendarName);
-		if (calendar != null) {
-			LOGGER.log(Level.INFO, "Such calendar already exists, not creating.");
-			return Boolean.FALSE;
-		}
 		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return Boolean.FALSE;
-		}
-		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
-			bwAPI.closeBedeworkAPI();
-			return Boolean.FALSE;
-		}
-		
-		UserAdapter userAdapter = new UserAdapter(user);
-		
-		calendar = new BwCalendar();
-		calendar.setName(calendarName);
-		calendar.setCreatorEnt(userAdapter.getBedeworkSystemUser());
-		calendar.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		calendar.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		calendar.setPublick(Boolean.FALSE);
-		calendar.setAffectsFreeBusy(Boolean.TRUE);
-		
-		String calPath = getHomeCalendarPath(user);
-		if (calPath == null) {
-			return Boolean.FALSE;
-		}
-		
-		calendar.setColPath(calPath);
-		calendar.setPath(calPath + CoreConstants.SLASH + calendarName);
-		calendar.setCalType(BwCalendar.calTypeCalendarCollection);
-		
-		try {
-			calendarsHandler.add(calendar, calPath);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to add calendar: ", e);
-			return Boolean.FALSE;
-		}
-		
+//		if (user == null) {
+//			return Boolean.FALSE;
+//		}
+//
+//		if (StringUtil.isEmpty(calendarName)) {
+//			if (getUserCalendar(user, 
+//					BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId()) == null) {
+//				if (!createCalendar(user, 
+//						BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId())) {
+//					LOGGER.log(Level.WARNING, "Unable to create default calendar for user.");
+//					return Boolean.FALSE;
+//				}
+//			}
+//		}
+//		
+//		BwCalendar calendar = getUserCalendar(user, calendarName);
+//		if (calendar == null) {
+//			return Boolean.FALSE;
+//		}
+//		
+//		BwAPI bwAPI = new BwAPI(user);
+//		if (!bwAPI.openBedeworkAPI()) {
+//			return Boolean.FALSE;
+//		}
+//		
+//		EventsI eventsHandler = bwAPI.getEventsHandler();
+//		if (eventsHandler == null) {
+//			return Boolean.FALSE;
+//		}
+//		
+//		UserAdapter userAdapter = new UserAdapter(user);
+//
+//		BwEvent event = new BwEventObj();
+//		event.setName(headline);
+//		event.setDescription(description);
+//		
+//		event.setCreatorEnt(userAdapter.getBedeworkSystemUser());
+//		event.setColPath(calendar.getPath());
+//		
+//		event.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+//		event.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+//		
+//		event.setDuration("0");
+//		if (reccuring) {
+//			BwRecurrenceInstance bwRecurrenceInstance = new BwRecurrenceInstance();
+//			bwRecurrenceInstance.setDtstart(null);
+//			bwRecurrenceInstance.setRecurrenceId(bwRecurrenceInstance.getDtstart().getDate());
+//			bwRecurrenceInstance.setMaster(event);
+//			
+//			event.setRecurring(reccuring);
+//			event.setRecurrenceId(null);
+//		}
+//
+//		event.setNoStart(Boolean.FALSE);
+//		event.setAccess(userAdapter.getBedeworkSystemUser().getLocationAccess());
+//		
+//		if (startDate != null) {
+//			event.setDtstart(getDateInBedeworkFormat(startDate));
+//		} else {
+//			event.setDtstart(getDateInBedeworkFormat(
+//					new Timestamp(System.currentTimeMillis())));
+//		}
+//		
+//		if (endDate != null) {
+//			event.setDtend(getDateInBedeworkFormat(endDate));
+//		} else {
+//			return Boolean.FALSE;
+//		}
+//		
+//		EventInfo ei = new EventInfo(event);
+//		try {
+//			eventsHandler.add(ei, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
+//		} catch (CalFacadeException e) {
+//			LOGGER.log(Level.WARNING, "Failed to add event", e);
+//			return Boolean.FALSE;
+//		}
+//		
 		return Boolean.TRUE;
 	}
 	
 	/**
-	 * <p>Searches database for given {@link User} calendar in database.</p>
-	 * @param user who's calendar should be found.
-	 * @param calendarName which should be found.
-	 * @return {@link BwCalendar} or <code>null</code> on failure.
+	 * <p>Adds recurrence for event for certain period. Returns recurrence id by which
+	 * this recurrence should be recognized.
+	 * .</p>
+	 * @param event - {@link BwEvent} which needs recurrence.
+	 * @param period - Some period for recurrence. Possible periods are:
+	 * <li>{@link CalendarEntryCreator#dailyFieldParameterName}</li>
+	 * <li>{@link CalendarEntryCreator#weeklyFieldParameterName}</li>
+	 * <li>{@link CalendarEntryCreator#monthlyFieldParameterName}</li>
+	 * <li>{@link CalendarEntryCreator#yearlyFieldParameterName}</li>
+ 	 * @return {@link BwEvent#getRecurrenceId()} or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public BwCalendar getUserCalendar(User user, String calendarName) {
-		if (user == null || StringUtil.isEmpty(calendarName)) {
-			return null;
-		}
+	public String createRecurrenceForEvent(BwEvent event, String period) {
 		
-		String calendarPath = getHomeCalendarPath(user);
-		if (StringUtil.isEmpty(calendarPath)) {
-			return null;
-		}
-		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-
-		BwCalendar calendar = null;
-		try {
-			calendar = calendarsHandler.get(calendarPath + CoreConstants.SLASH + calendarName);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.INFO, "Calendar " + calendarPath + " not found.");
-		}
-		
-		bwAPI.closeBedeworkAPI();
-		return calendar;
+		return event.getRecurrenceId();
 	}
-	
-	/**
-	 * <p>Searches for home directory of user calendars.</p>
-	 * @param user
-	 * @return Directory of user calendars root, where are or should calendars to be placed.
-	 * <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public String getHomeCalendarPath(User user) {
-		if (user == null) {
-			return null;
-		}
-		
-		UserAdapter userAdapter = new UserAdapter(user);
-		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
 
-		BwCalendar homeCalendar = null;
-		try {
-			homeCalendar = calendarsHandler.getHome(
-					userAdapter.getBedeworkSystemUser(), Boolean.FALSE);
-		} catch (CalFacadeException e1) {
-			LOGGER.log(Level.INFO, "Unable to get home calendar.");
-		}
 		
-		bwAPI.closeBedeworkAPI();
-
-		if (homeCalendar == null) {
-			StringBuffer path = new StringBuffer();
-			path.append(BedeworkConstants.BW_USER_CALENDAR_ROOT_PATH)
-			.append(userAdapter.getID());
-			
-			return path.toString();
-		} else {
-			return homeCalendar.getPath();
-		}
-	}
-	
 	@Override
 	public void updateEntry(int entryID, String headline, User user,
 			String type, String repeat, String startDate, String startHour,
@@ -739,7 +736,7 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	 * )
 	 */
 	@Override
-	public Collection<CalendarEntry> getUserEntriesBetweenTimestamps(User user,
+	public List<CalendarEntry> getUserEntriesBetweenTimestamps(User user,
 			Timestamp fromStamp, Timestamp toStamp, IWContext iwc) {
 		BwAPI bwAPI = new BwAPI(user);
 		
@@ -766,7 +763,7 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 			return java.util.Collections.emptyList();
 		}
 		
-		Collection<CalendarEntry> idegaCalendarEntries = new ArrayList<CalendarEntry>(
+		List<CalendarEntry> idegaCalendarEntries = new ArrayList<CalendarEntry>(
 				bedeworkEventsInfo.size()
 		);
 		
@@ -785,7 +782,7 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public org.bedework.calfacade.BwDateTime getDateInBedeworkFormat(Timestamp date) {
-		net.fortuna.ical4j.model.Date ical4jDate = new net.fortuna.ical4j.model.Date(
+		net.fortuna.ical4j.model.DateTime ical4jDate = new net.fortuna.ical4j.model.DateTime(
 				date.getTime());
 		
 		BwDateTime bwDate = null;
@@ -801,23 +798,13 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	}
 	
 	/**
-	 * <p>Method for converting date from {@link java.lang.String} in format 
-	 * yyyy-MM-dd hh:mm:ss.S to 
+	 * <p>Method for converting date from {@link java.util.Date} to 
 	 * {@link org.bedework.calfacade.BwDateTime}.</p>
 	 * @param date to convert.
 	 * @return Converted date or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public org.bedework.calfacade.BwDateTime getDateInBedeworkFormat(String stringDate) { 
-		if (StringUtil.isEmpty(stringDate)) {
-			return null;
-		}
-		
-		java.util.Date date = DATE_FORMATTER.parse(stringDate);
-		if (date == null) {
-			return null;
-		}
-		
-		return getDateInBedeworkFormat(new Timestamp(date.getTime()));
+	public org.bedework.calfacade.BwDateTime getDateInBedeworkFormat(java.util.Date date) {
+		return getDateInBedeworkFormat(new Timestamp(date.getTime())); 
 	}
 }

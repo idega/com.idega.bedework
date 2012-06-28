@@ -98,11 +98,18 @@ import javax.ejb.RemoveException;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calsvci.EventsI;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.block.cal.data.CalendarEntry;
 import com.idega.data.IDOEntity;
 import com.idega.data.IDOEntityDefinition;
@@ -165,7 +172,11 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public Object getPrimaryKey() throws EJBException {
-		throw new NotImplementedException();
+		if (this.entry == null) {
+			return null;
+		}
+		
+		return this.entry.getId();
 	}
 
 	@Override
@@ -175,7 +186,50 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public void remove() throws RemoveException, EJBException {
-		throw new NotImplementedException();
+		BwUser user = getCreator();
+		if (user == null) {
+			LOGGER.log(Level.WARNING, "Unable to get event owner");
+			return;
+		}
+		
+		UserAdapter userAdapter = new UserAdapter(user);
+		
+		BwAPI bwAPI = new BwAPI(userAdapter.getIdegaSystemUser());
+		if (!bwAPI.openBedeworkAPI()) {
+			LOGGER.log(Level.WARNING, "Unable to get API.");
+			return;
+		}
+		
+		EventsI eventsHandler = bwAPI.getEventsHandler();
+		if (eventsHandler == null) {
+			LOGGER.log(Level.WARNING, "Unable to get events handler.");
+			bwAPI.closeBedeworkAPI();
+			return;
+		}
+		
+		EventInfo ei = new EventInfo(entry);
+		try {
+			eventsHandler.delete(ei, Boolean.TRUE);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Failed to delete event: " + ei);
+		}
+		
+		bwAPI.closeBedeworkAPI();
+		return;
+	}
+	
+	private BwUser getCreator() {
+		if (this.entry == null) {
+			return null;
+		}
+		
+		BwPrincipal principal = this.entry.getCreatorEnt();
+		BwUser user = null;
+		if (principal instanceof BwUser) {
+			user = (BwUser) principal;
+		}
+		
+		return user;
 	}
 
 	@Override
@@ -185,27 +239,79 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public int getEntryID() {
-		throw new NotImplementedException();
+		if (this.entry == null) {
+			return -1;
+		}
+		
+		return this.entry.getId();
 	}
 
 	@Override
 	public Timestamp getDate() {
-		throw new NotImplementedException();
+		if (this.entry == null) {
+			return null;
+		}
+		
+		BwDateTime startDate = this.entry.getDtstart();
+		if (startDate == null) {
+			return null;
+		}
+		
+		Date date = null;
+		try {
+			date = startDate.makeDate();
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Failed to construct Date object from BwDateTime");
+			return null;
+		}
+		
+		if (date == null) {
+			return null;
+		}
+		
+		return new Timestamp(date.getTime());
 	}
 
 	@Override
 	public int getDay() {
-		throw new NotImplementedException();
+		if (this.entry == null) {
+			return -1;
+		}
+		
+		Timestamp date = getDate();
+		if (date == null){
+			return -1;
+		}
+		
+		return date.getDay();
 	}
 
 	@Override
 	public String getDescription() {
-		throw new NotImplementedException();
+		if (this.entry == null) {
+			return null;
+		}
+		
+		return this.entry.getDescription();
 	}
 
 	@Override
 	public String getLocation() {
-		throw new NotImplementedException();
+		if (this.entry == null) {
+			return null;
+		}
+		
+		BwLocation location = this.entry.getLocation();
+		if (location == null) {
+			return null;
+		}
+		
+		BwString address = location.getAddress();
+		if (address == null) {
+			return null;
+		}
+		
+		return address.getValue();
 	}
 
 	/*
@@ -254,12 +360,32 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public int getGroupID() {
-		throw new NotImplementedException();
+		int userId = getUserID();
+		if (userId == -1) {
+			return -1;
+		}
+		
+		BwPrincipal principal = this.entry.getCreatorEnt();
+		BwUser user = null;
+		if (principal instanceof BwUser) {
+			user = (BwUser) principal;
+		} else {
+			return -1;
+		}
+		
+		UserAdapter userAdapter = new UserAdapter(user);
+		User idegaUser = userAdapter.getIdegaSystemUser();
+		if (idegaUser == null) {
+			return -1;
+		}
+		
+		return idegaUser.getGroupID();
 	}
 
 	@Override
 	public int getLedgerID() {
-		throw new NotImplementedException();
+		return -1;
+//		throw new NotImplementedException();
 	}
 
 	/*
@@ -295,7 +421,7 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 			return -1;
 		}
 
-		return creator.getId();
+		return Integer.valueOf(creator.getAccount());
 	}
 
 	@Override
