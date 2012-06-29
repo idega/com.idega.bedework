@@ -83,6 +83,7 @@
 package com.idega.bedework.bussiness;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -90,16 +91,20 @@ import java.util.logging.Logger;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.bedework.BedeworkConstants;
 import com.idega.block.cal.data.CalDAVCalendar;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
-import com.idega.core.user.data.User;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.business.UserBusinessBean;
 import com.idega.util.CoreConstants;
+import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
 /**
@@ -111,7 +116,9 @@ import com.idega.util.StringUtil;
  * @version 1.0.0 Apr 27, 2012
  * @author martynasstake
  */
-public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarManagementService{
+@Service("bedeworkCalendarManagementService")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
+public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean implements BedeworkCalendarManagementService{
 
 	private static final Logger LOGGER = Logger.getLogger(BedeworkCalendarManagementServiceBean.class.getName());
 	
@@ -142,14 +149,14 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 	 * @return {@link User} by id or null on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	private User getUser(String userID) {
+	private com.idega.user.data.User getUser(String userID) {
 		if (StringUtil.isEmpty(userID)) {
 			return null;
 		}
 		
 		try {
 			int userIDInteger = Integer.valueOf(userID);
-			return this.userBusiness.getUser(userIDInteger);
+			return this.getUserBusiness().getUser(userIDInteger);
 		} catch (RemoteException e) {
 			LOGGER.log(Level.WARNING, "Unable to find such user.");
 		} catch (NumberFormatException e) {
@@ -161,17 +168,102 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 	
 	@Override
 	public Collection<BwCalendar> getAllUserCalendars(String userID) {
-		// TODO Auto-generated method stub
-		return null;
+		com.idega.user.data.User user = getUser(userID);
+		if (user == null) {
+			return null;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return null;
+		}
+				
+		BwCalendar homeCalendar = getHomeCalendar(user);
+		bwAPI.closeBedeworkAPI();
+		
+		if (homeCalendar == null) {
+			return null;
+		}
+
+		List<BwCalendar> calendars = new ArrayList<BwCalendar>();
+		calendars.add(homeCalendar);
+		
+		if (homeCalendar.getCalendarCollection()) {
+			calendars.addAll(getAllChildsOfCalendar(homeCalendar));
+		} 
+
+		return calendars;
 	}
 
-	/**
-	 * <p>Creates calendar for given {@link User}.</p>
-	 * @param user user, which has to contain calendar.
-	 * @param calendarName
-	 * @return <code>true</code> on success, <code>false</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
+	public List<CalDAVCalendar> getAllChildsOfCalendar(CalDAVCalendar calendar) {
+		if (!(calendar instanceof BwCalendar)) {
+			return null;
+		}
+		
+		List<BwCalendar> bwCalendars =  getAllChildsOfCalendar((BwCalendar) calendar);
+		if (ListUtil.isEmpty(bwCalendars)) {
+			return null;
+		}
+		 
+		return new ArrayList<CalDAVCalendar>(bwCalendars);
+	}
+	
+	@Override
+	public List<BwCalendar> getAllChildsOfCalendar(BwCalendar calendar) {
+		if (calendar == null) {
+			return null;
+		}
+		
+		if(!calendar.getCalendarCollection()) {
+			return null;
+		}
+		
+		BwAPI bwAPI = new BwAPI(getCurrentUser());
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return null;
+		}
+	
+		Collection<BwCalendar> childCalendars  = null;
+		try {
+			childCalendars = calendarsHandler.getChildren(calendar);
+		} catch (CalFacadeException e) {
+			getLogger().log(Level.WARNING, "Unable to get child calendars.");
+		}
+		
+		if (ListUtil.isEmpty(childCalendars)) {
+			bwAPI.closeBedeworkAPI();
+			return null;
+		}
+		
+		List<BwCalendar> calendars = new ArrayList<BwCalendar>();
+		for (BwCalendar bwCalendar: childCalendars) {
+			List<BwCalendar> childsOfBwCalendar = getAllChildsOfCalendar(bwCalendar);
+			if (ListUtil.isEmpty(childsOfBwCalendar)) {
+				continue;
+			}
+			
+			calendars.addAll(childsOfBwCalendar);
+		}
+		
+		calendars.addAll(childCalendars);
+		
+		bwAPI.closeBedeworkAPI();
+		return calendars;
+	}
+	
+	@Override
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName) {
 		if (user == null || StringUtil.isEmpty(calendarName)) {
 			LOGGER.log(Level.INFO, "User or calendar name not defined.");
@@ -224,13 +316,7 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 		return Boolean.TRUE;
 	}
 	
-	/**
-	 * <p>Searches database for given {@link User} calendar in database.</p>
-	 * @param user who's calendar should be found.
-	 * @param calendarName which should be found.
-	 * @return {@link BwCalendar} or <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
+	@Override
 	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName) {
 		if (user == null || StringUtil.isEmpty(calendarName)) {
 			return null;
@@ -259,14 +345,8 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 		return calendar;
 	}
 	
-	/**
-	 * <p>Searches for home directory of user calendars.</p>
-	 * @param user
-	 * @return Directory of user calendars root, where are or should calendars to be placed.
-	 * <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public String getHomeCalendarPath(com.idega.user.data.User user) {
+	@Override
+	public BwCalendar getHomeCalendar(com.idega.user.data.User user) {
 		if (user == null) {
 			return null;
 		}
@@ -290,7 +370,19 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 		
 		bwAPI.closeBedeworkAPI();
 
+		return homeCalendar;
+	}
+	
+	@Override
+	public String getHomeCalendarPath(com.idega.user.data.User user) {
+		if (user == null) {
+			return null;
+		}
+		
+		BwCalendar homeCalendar = getHomeCalendar(user);
 		if (homeCalendar == null) {
+			UserAdapter userAdapter = new UserAdapter(user);
+			
 			StringBuffer path = new StringBuffer();
 			path.append(BedeworkConstants.BW_USER_CALENDAR_ROOT_PATH)
 			.append(userAdapter.getID());
@@ -302,7 +394,7 @@ public class BedeworkCalendarManagementServiceBean implements BedeworkCalendarMa
 	}
 
 	@Override
-	public List<CalDAVCalendar> getAvailableCalendars(
+	public List<BwCalendar> getSubscribedCalendars(
 			com.idega.user.data.User user, int maxResults, int firstResult)
 			throws Exception {
 		// TODO Auto-generated method stub

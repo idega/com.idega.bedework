@@ -95,7 +95,10 @@ import org.bedework.calsvci.UsersI;
 import com.idega.user.data.User;
 
 /**
- * <p>Class for managing access to Bedework API.</p>
+ * <p>Class for managing access to Bedework API. You needcto get diiferent instance
+ * for different users, or else you get wrong results. Don't forget to open and close it.
+ * If you leave it opened, it will be closed before garbage collection. If you won't open it,
+ * you wont get handlers. </p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>

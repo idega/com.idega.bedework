@@ -89,7 +89,6 @@ import java.util.List;
 import org.bedework.calfacade.BwCalendar;
 
 import com.idega.block.cal.data.CalDAVCalendar;
-import com.idega.business.SpringBeanName;
 import com.idega.core.user.data.User;
 
 /**
@@ -101,7 +100,6 @@ import com.idega.core.user.data.User;
  * @version 1.0.0 Apr 27, 2012
  * @author martynasstake
  */
-@SpringBeanName("bedeworkCalendarManagementService")
 public interface BedeworkCalendarManagementService {
 	
 	/**
@@ -112,6 +110,22 @@ public interface BedeworkCalendarManagementService {
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public Collection<org.bedework.calfacade.BwCalendar> getAllUserCalendars(String userid);
+	
+	/**
+	 * @see BedeworkCalendarManagementService#getAllChildsOfCalendar(BwCalendar)
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<CalDAVCalendar> getAllChildsOfCalendar(CalDAVCalendar calendar);
+	
+	/**
+	 * <p>Bedework calendar system is based on directories, so to find all child calendars 
+	 * of calendar, you must go through them recursively. That is what this method does.</p>
+	 * @param calendar - parent calendar. Not <code>null</code>.
+	 * @return {@link List} of all {@link BwCalendar}s which given calendar has as a child or
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<BwCalendar> getAllChildsOfCalendar(BwCalendar calendar);
 	
 	/**
 	 * <p>Creates calendar for given {@link User}.</p>
@@ -132,6 +146,15 @@ public interface BedeworkCalendarManagementService {
 	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
 	
 	/**
+	 * <p>Gets main calendar from Bedework of {@link com.idega.user.data.User}.</p>
+	 * @param user
+	 * @return main calendar of {@link com.idega.user.data.User} or <code>null</code>
+	 * on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public BwCalendar getHomeCalendar(com.idega.user.data.User user);
+	
+	/**
 	 * <p>Searches for home directory of user calendars.</p>
 	 * @param user
 	 * @return Directory of user calendars root, where are or should calendars to be placed.
@@ -150,7 +173,7 @@ public interface BedeworkCalendarManagementService {
 	*  from 0 result else starts from firstResult result. Returns empty collection if no calendars
 	*  found.
 	*/
-	public List<CalDAVCalendar> getAvailableCalendars(com.idega.user.data.User user, int maxResults, int firstResult) throws Exception;
+	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user, int maxResults, int firstResult) throws Exception;
 
 	/**
 	* Sets that user will get data from this calendar.

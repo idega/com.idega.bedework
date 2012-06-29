@@ -95,15 +95,20 @@ import javax.ejb.RemoveException;
 
 import org.apache.myfaces.dateformat.DateFormatSymbols;
 import org.apache.myfaces.dateformat.SimpleDateFormatter;
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventObj;
+import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.EventsI;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.data.BedeworkCalendarEntry;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.data.AttendanceEntity;
@@ -123,6 +128,7 @@ import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * <p>Bedework apdapter for {@link CalBusiness}.</p>
@@ -421,6 +427,17 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 		createNewBedeworkCalDAVEvent(user, headline, description, location, type, "kitas4", reccur, begining, ending, null);
 	}
 	
+	@Autowired
+	private BedeworkCalendarManagementService bcms;
+	
+	private BedeworkCalendarManagementService getBedeworkCalendarManagementService() {
+		if (this.bcms == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bcms;
+	}
+	
 	/**
 	 * <p>Creates CalDAV event to Bedework side of system.</p>
 	 * @param user - the one, who creates. Should not be <code>null</code>.
@@ -454,83 +471,83 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 			List<User> attendees) {
 		
 		
-//		if (user == null) {
-//			return Boolean.FALSE;
-//		}
-//
-//		if (StringUtil.isEmpty(calendarName)) {
-//			if (getUserCalendar(user, 
-//					BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId()) == null) {
-//				if (!createCalendar(user, 
-//						BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId())) {
-//					LOGGER.log(Level.WARNING, "Unable to create default calendar for user.");
-//					return Boolean.FALSE;
-//				}
-//			}
-//		}
-//		
-//		BwCalendar calendar = getUserCalendar(user, calendarName);
-//		if (calendar == null) {
-//			return Boolean.FALSE;
-//		}
-//		
-//		BwAPI bwAPI = new BwAPI(user);
-//		if (!bwAPI.openBedeworkAPI()) {
-//			return Boolean.FALSE;
-//		}
-//		
-//		EventsI eventsHandler = bwAPI.getEventsHandler();
-//		if (eventsHandler == null) {
-//			return Boolean.FALSE;
-//		}
-//		
-//		UserAdapter userAdapter = new UserAdapter(user);
-//
-//		BwEvent event = new BwEventObj();
-//		event.setName(headline);
-//		event.setDescription(description);
-//		
-//		event.setCreatorEnt(userAdapter.getBedeworkSystemUser());
-//		event.setColPath(calendar.getPath());
-//		
-//		event.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-//		event.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-//		
-//		event.setDuration("0");
-//		if (reccuring) {
-//			BwRecurrenceInstance bwRecurrenceInstance = new BwRecurrenceInstance();
-//			bwRecurrenceInstance.setDtstart(null);
-//			bwRecurrenceInstance.setRecurrenceId(bwRecurrenceInstance.getDtstart().getDate());
-//			bwRecurrenceInstance.setMaster(event);
-//			
-//			event.setRecurring(reccuring);
-//			event.setRecurrenceId(null);
-//		}
-//
-//		event.setNoStart(Boolean.FALSE);
-//		event.setAccess(userAdapter.getBedeworkSystemUser().getLocationAccess());
-//		
-//		if (startDate != null) {
-//			event.setDtstart(getDateInBedeworkFormat(startDate));
-//		} else {
-//			event.setDtstart(getDateInBedeworkFormat(
-//					new Timestamp(System.currentTimeMillis())));
-//		}
-//		
-//		if (endDate != null) {
-//			event.setDtend(getDateInBedeworkFormat(endDate));
-//		} else {
-//			return Boolean.FALSE;
-//		}
-//		
-//		EventInfo ei = new EventInfo(event);
-//		try {
-//			eventsHandler.add(ei, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
-//		} catch (CalFacadeException e) {
-//			LOGGER.log(Level.WARNING, "Failed to add event", e);
-//			return Boolean.FALSE;
-//		}
-//		
+		if (user == null) {
+			return Boolean.FALSE;
+		}
+
+		if (StringUtil.isEmpty(calendarName)) {
+			if (getBedeworkCalendarManagementService().getUserCalendar(user, 
+					BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId()) == null) {
+				if (!getBedeworkCalendarManagementService().createCalendar(user, 
+						BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId())) {
+					LOGGER.log(Level.WARNING, "Unable to create default calendar for user.");
+					return Boolean.FALSE;
+				}
+			}
+		}
+		
+		BwCalendar calendar = getBedeworkCalendarManagementService().getUserCalendar(user, calendarName);
+		if (calendar == null) {
+			return Boolean.FALSE;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return Boolean.FALSE;
+		}
+		
+		EventsI eventsHandler = bwAPI.getEventsHandler();
+		if (eventsHandler == null) {
+			return Boolean.FALSE;
+		}
+		
+		UserAdapter userAdapter = new UserAdapter(user);
+
+		BwEvent event = new BwEventObj();
+		event.setName(headline);
+		event.setDescription(description);
+		
+		event.setCreatorEnt(userAdapter.getBedeworkSystemUser());
+		event.setColPath(calendar.getPath());
+		
+		event.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+		event.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+		
+		event.setDuration("0");
+		if (reccuring) {
+			BwRecurrenceInstance bwRecurrenceInstance = new BwRecurrenceInstance();
+			bwRecurrenceInstance.setDtstart(null);
+			bwRecurrenceInstance.setRecurrenceId(bwRecurrenceInstance.getDtstart().getDate());
+			bwRecurrenceInstance.setMaster(event);
+			
+			event.setRecurring(reccuring);
+			event.setRecurrenceId(null);
+		}
+
+		event.setNoStart(Boolean.FALSE);
+		event.setAccess(userAdapter.getBedeworkSystemUser().getLocationAccess());
+		
+		if (startDate != null) {
+			event.setDtstart(getDateInBedeworkFormat(startDate));
+		} else {
+			event.setDtstart(getDateInBedeworkFormat(
+					new Timestamp(System.currentTimeMillis())));
+		}
+		
+		if (endDate != null) {
+			event.setDtend(getDateInBedeworkFormat(endDate));
+		} else {
+			return Boolean.FALSE;
+		}
+		
+		EventInfo ei = new EventInfo(event);
+		try {
+			eventsHandler.add(ei, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Failed to add event", e);
+			return Boolean.FALSE;
+		}
+		
 		return Boolean.TRUE;
 	}
 	
