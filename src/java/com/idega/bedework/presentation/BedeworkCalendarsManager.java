@@ -85,10 +85,11 @@ package com.idega.bedework.presentation;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
-import com.idega.bedework.bussiness.BedeworkCalendarManagementServiceBean;
+import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
+import com.idega.bedework.bussiness.impl.BedeworkCalendarManagementServiceBean;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
-import com.idega.presentation.ui.DropdownMenu;
+import com.idega.user.data.User;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -103,7 +104,7 @@ import com.idega.util.expression.ELUtil;
 public class BedeworkCalendarsManager extends Block {
 
 	@Autowired
-	BedeworkCalendarManagementService bcms;
+	private BedeworkCalendarManagementService bcms;
 	
 	/**
 	 * <p>Initializes service if down.</p>
@@ -119,16 +120,35 @@ public class BedeworkCalendarsManager extends Block {
 		return this.bcms;
 	}
 	
+	@Autowired
+	private BedeworkCalendarPresentationComponentsService bcpcs;
+	
+	/**
+	 * <p>Initializes service if down.</p>
+	 * @return {@link BedeworkCalendarManagementServiceBean} instance or 
+	 * <code>null</code>.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private BedeworkCalendarPresentationComponentsService getBedeworkCalendarPresentationComponentsService() {
+		if (this.bcpcs == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		
+		return this.bcpcs;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see com.idega.presentation.PresentationObject#main(com.idega.presentation.IWContext)
 	 */
 	@Override
 	public void main(IWContext iwc) throws Exception {
-		super.main(iwc);
-	}
-	
-	public DropdownMenu getCalendarsDropdown(IWContext iwc) {
-		return null;
+		if (iwc == null) {
+			return;
+		}
+
+		super.main(iwc);		
+		User user = iwc.getCurrentUser();
+		add(getBedeworkCalendarPresentationComponentsService().getAllUserCalendars(user.getPrimaryKey().toString()));
 	}
 }

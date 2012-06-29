@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkCalendarManagementService.java    1.0.0 3:39:06 PM
+ * @(#)BedeworkCalendarPresentationComponentsServiceBean.java    1.0.0 10:22:08 AM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,75 +80,134 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness;
+package com.idega.bedework.bussiness.impl;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import org.bedework.calfacade.BwCalendar;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
-import com.idega.block.cal.business.CalendarManagementService;
-import com.idega.core.user.data.User;
+import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
+import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
+import com.idega.block.cal.data.CalDAVCalendar;
+import com.idega.presentation.Layer;
+import com.idega.presentation.ui.DropdownMenu;
+import com.idega.presentation.ui.Label;
+import com.idega.user.data.User;
+import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
- * <p>Provides services from bedework API.</p>
+ * Class description goes here.
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Apr 27, 2012
+ * @version 1.0.0 Jun 29, 2012
  * @author martynasstake
  */
-public interface BedeworkCalendarManagementService extends CalendarManagementService {
+@Service("bedeworkCalendarPresentationComponentsService")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
+public class BedeworkCalendarPresentationComponentsServiceBean implements
+		BedeworkCalendarPresentationComponentsService {
+
+	@Autowired
+	private BedeworkCalendarManagementService bcms;
 	
 	/**
-	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
-	 * @param userid {@link User#getPrimaryKey()};
-	 * @return {@link Collection} of {@link BwCalendar}s or {@link Collections#EMPTY_SET} 
-	 * on failure.
+	 * <p>Initializes service if down.</p>
+	 * @return {@link BedeworkCalendarManagementServiceBean} instance or 
+	 * <code>null</code>.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<org.bedework.calfacade.BwCalendar> getAllUserCalendars(String userid);
-	
-	/**
-	 * <p>Bedework calendar system is based on directories, so to find all child calendars 
-	 * of calendar, you must go through them recursively. That is what this method does.</p>
-	 * @param calendar - parent calendar. Not <code>null</code>.
-	 * @return {@link List} of all {@link BwCalendar}s which given calendar has as a child or
-	 * <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public List<BwCalendar> getAllChildsOfCalendar(BwCalendar calendar);
-	
-	/**
-	 * <p>Creates calendar for given {@link User}.</p>
-	 * @param user user, which has to contain calendar.
-	 * @param calendarName
-	 * @return <code>true</code> on success, <code>false</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
-	
-	/**
-	 * <p>Searches database for given {@link User} calendar in database.</p>
-	 * @param user who's calendar should be found.
-	 * @param calendarName which should be found.
-	 * @return {@link BwCalendar} or <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
-	
-	/**
-	 * <p>Gets main calendar from Bedework of {@link com.idega.user.data.User}.</p>
-	 * @param user
-	 * @return main calendar of {@link com.idega.user.data.User} or <code>null</code>
-	 * on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public BwCalendar getHomeCalendar(com.idega.user.data.User user);
-	
-	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
+	private BedeworkCalendarManagementService getBedeworkCalendarManagementService() {
+		if (this.bcms == null) {
+			ELUtil.getInstance().autowire(this);
+		}
 		
-	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
+		return this.bcms;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllUserCalendars(java.lang.String)
+	 */
+	@Override
+	public DropdownMenu getAllUserCalendars(String userid) {
+		if (StringUtil.isEmpty(userid)) {
+			return null;
+		}
+
+		Collection<BwCalendar> calendars = getBedeworkCalendarManagementService().getAllUserCalendars(userid);
+		if (ListUtil.isEmpty(calendars)) {
+			return null;
+		}
+		
+		DropdownMenu dropdownMenu = new DropdownMenu();
+		for (BwCalendar calendar : calendars) {
+			dropdownMenu.addMenuElement(calendar.getPath(), calendar.getName());
+		}
+
+		return dropdownMenu;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllChildsOfCalendar(java.lang.String)
+	 */
+	@Override
+	public DropdownMenu getAllChildsOfCalendar(String calendarPath) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getHomeCalendarPath(com.idega.user.data.User)
+	 */
+	@Override
+	public Label getHomeCalendarPath(User user) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getUnSubscribedCalendars(com.idega.user.data.User)
+	 */
+	@Override
+	public DropdownMenu getUnSubscribedCalendars(User user) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getSubscribedCalendars(com.idega.user.data.User)
+	 */
+	@Override
+	public DropdownMenu getSubscribedCalendars(User user) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#subscribeCalendar(com.idega.user.data.User, com.idega.block.cal.data.CalDAVCalendar)
+	 */
+	@Override
+	public Layer subscribeCalendar(User user, CalDAVCalendar calendar)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#unSubscribeCalendar(com.idega.user.data.User, com.idega.block.cal.data.CalDAVCalendar)
+	 */
+	@Override
+	public Layer unSubscribeCalendar(User user, CalDAVCalendar calendar)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkCalendarManagementService.java    1.0.0 3:39:06 PM
+ * @(#)BedeworkCalendarPresentationComponentsService.java    1.0.0 10:07:35 AM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -88,20 +88,22 @@ import java.util.List;
 
 import org.bedework.calfacade.BwCalendar;
 
-import com.idega.block.cal.business.CalendarManagementService;
+import com.idega.block.cal.data.CalDAVCalendar;
 import com.idega.core.user.data.User;
+import com.idega.presentation.Layer;
+import com.idega.presentation.ui.DropdownMenu;
+import com.idega.presentation.ui.Label;
 
 /**
- * <p>Provides services from bedework API.</p>
+ * <p>Visual components for Bedework calendars management.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Apr 27, 2012
+ * @version 1.0.0 Jun 29, 2012
  * @author martynasstake
  */
-public interface BedeworkCalendarManagementService extends CalendarManagementService {
-	
+public interface BedeworkCalendarPresentationComponentsService {
 	/**
 	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
 	 * @param userid {@link User#getPrimaryKey()};
@@ -109,7 +111,7 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<org.bedework.calfacade.BwCalendar> getAllUserCalendars(String userid);
+	public DropdownMenu getAllUserCalendars(String userid);
 	
 	/**
 	 * <p>Bedework calendar system is based on directories, so to find all child calendars 
@@ -119,36 +121,32 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<BwCalendar> getAllChildsOfCalendar(BwCalendar calendar);
+	public DropdownMenu getAllChildsOfCalendar(String calendarPath);
 	
 	/**
-	 * <p>Creates calendar for given {@link User}.</p>
-	 * @param user user, which has to contain calendar.
-	 * @param calendarName
-	 * @return <code>true</code> on success, <code>false</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
-	
-	/**
-	 * <p>Searches database for given {@link User} calendar in database.</p>
-	 * @param user who's calendar should be found.
-	 * @param calendarName which should be found.
-	 * @return {@link BwCalendar} or <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
-	
-	/**
-	 * <p>Gets main calendar from Bedework of {@link com.idega.user.data.User}.</p>
+	 * <p>Searches for home directory of user calendars.</p>
 	 * @param user
-	 * @return main calendar of {@link com.idega.user.data.User} or <code>null</code>
-	 * on failure.
+	 * @return Directory of user calendars root, where are or should calendars to be placed.
+	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public BwCalendar getHomeCalendar(com.idega.user.data.User user);
+	public Label getHomeCalendarPath(com.idega.user.data.User user);
 	
-	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
+	public DropdownMenu getUnSubscribedCalendars(com.idega.user.data.User user);
 		
-	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
+	public DropdownMenu getSubscribedCalendars(com.idega.user.data.User user);
+
+	/**
+	* Sets that user will get data from this calendar.
+	* @param user		user that will get data from Calendar
+	* @param calendar	calendar that will send data for user
+	*/
+	public Layer subscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
+
+	/**
+	* Sets that user will not get data from this calendar.
+	* @param user		user that will not get data from Calendar
+	* @param calendar	calendar that will not send data for user
+	*/
+	public Layer unSubscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
 }

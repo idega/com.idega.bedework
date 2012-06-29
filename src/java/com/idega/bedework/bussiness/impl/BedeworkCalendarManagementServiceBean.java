@@ -80,7 +80,7 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness;
+package com.idega.bedework.bussiness.impl;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -96,6 +96,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.bedework.BedeworkConstants;
+import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
+import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.block.cal.data.CalDAVCalendar;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -103,6 +106,7 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.business.UserBusinessBean;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -359,6 +363,9 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		}
 		
 		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			return null;
+		}
 
 		BwCalendar homeCalendar = null;
 		try {
@@ -380,6 +387,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		}
 		
 		BwCalendar homeCalendar = getHomeCalendar(user);
+		
 		if (homeCalendar == null) {
 			UserAdapter userAdapter = new UserAdapter(user);
 			
@@ -393,12 +401,48 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		}
 	}
 
+	// TODO
 	@Override
-	public List<BwCalendar> getSubscribedCalendars(
+	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user) {
+		if (user == null) {
+			return null;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			return null;
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getSubscribedCalendars(
 			com.idega.user.data.User user, int maxResults, int firstResult)
 			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		if (user == null || maxResults < 1 || maxResults - firstResult < 1) {
+			return null;
+		}
+		
+		List<BwCalendar> calendars = getSubscribedCalendars(user);
+		if (ListUtil.isEmpty(calendars)) {
+			return null;
+		}
+		
+		if (calendars.size() <= firstResult) {
+			return null;
+		}
+		
+		if (calendars.size() <= maxResults) {
+			maxResults = calendars.size();
+		}
+		
+		return new ArrayList<CalDAVCalendar>(calendars.subList(firstResult, maxResults)); 
 	}
 
 	@Override
@@ -413,5 +457,18 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 			CalDAVCalendar calendar) throws Exception {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public List<BwCalendar> getUnSubscribedCalendars(User user) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<CalDAVCalendar> getUnSubscribedCalendars(User user,
+			int maxResults, int firstResult) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
