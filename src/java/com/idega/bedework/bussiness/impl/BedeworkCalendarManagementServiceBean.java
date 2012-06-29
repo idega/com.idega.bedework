@@ -423,8 +423,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	
 	@Override
 	public List<CalDAVCalendar> getSubscribedCalendars(
-			com.idega.user.data.User user, int maxResults, int firstResult)
-			throws Exception {
+			com.idega.user.data.User user, int maxResults, int firstResult) {
 		if (user == null || maxResults < 1 || maxResults - firstResult < 1) {
 			return null;
 		}
@@ -447,14 +446,14 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 
 	@Override
 	public boolean subscribeCalendar(com.idega.user.data.User user,
-			CalDAVCalendar calendar) throws Exception {
+			BwCalendar calendar) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean unSubscribeCalendar(com.idega.user.data.User user,
-			CalDAVCalendar calendar) throws Exception {
+			BwCalendar calendar) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -467,8 +466,60 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 
 	@Override
 	public List<CalDAVCalendar> getUnSubscribedCalendars(User user,
-			int maxResults, int firstResult) throws Exception {
+			int maxResults, int firstResult) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public List<CalDAVCalendar> getAllVisibleCalendars(com.idega.user.data.User user, int maxResults, int firstResult) {
+		if (user == null) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> visibleCalendars = new ArrayList<CalDAVCalendar>();
+		
+		List<CalDAVCalendar> unsubscribed = getUnSubscribedCalendars(user, maxResults, firstResult);
+		if (!ListUtil.isEmpty(unsubscribed)) {
+			visibleCalendars.addAll(unsubscribed);
+		}
+		
+		List<CalDAVCalendar> subscribed = getSubscribedCalendars(user, maxResults, firstResult);
+		if (!ListUtil.isEmpty(subscribed)) {
+			visibleCalendars.addAll(subscribed);
+		}
+		
+		List<CalDAVCalendar> owned = getAllUserCalendars(user);
+		if (!ListUtil.isEmpty(owned)) {
+			visibleCalendars.addAll(owned);
+		}
+		
+		return subscribed;
+	}
+
+	@Override
+	public List<CalDAVCalendar> getAllUserCalendars(User user) {
+		if (user == null) {
+			return null;
+		}
+		
+		Collection<BwCalendar> calendars = getAllUserCalendars(user.getPrimaryKey().toString());
+		if (ListUtil.isEmpty(calendars)) {
+			return null;
+		}
+		
+		return new ArrayList<CalDAVCalendar>(calendars);
+	}
+
+	@Override
+	public boolean subscribeCalendar(User user, String calendarPath) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean unSubscribeCalendar(User user, String calendarPath) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

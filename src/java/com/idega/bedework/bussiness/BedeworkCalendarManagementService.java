@@ -151,4 +151,18 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
 		
 	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
+	
+	/**
+	* Sets that user will get data from this calendar.
+	* @param user		user that will get data from Calendar
+	* @param calendar	calendar that will send data for user
+	*/
+	public boolean subscribeCalendar(com.idega.user.data.User user, BwCalendar calendar);
+
+	/**
+	* Sets that user will not get data from this calendar.
+	* @param user		user that will not get data from Calendar
+	* @param calendar	calendar that will not send data for user
+	*/
+	public boolean unSubscribeCalendar(com.idega.user.data.User user, BwCalendar calendar);
 }
