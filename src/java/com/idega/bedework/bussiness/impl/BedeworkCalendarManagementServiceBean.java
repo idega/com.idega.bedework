@@ -522,4 +522,17 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public boolean subscribeCalendars(User user, Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean unsubscribeCalendars(User user,
+			Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
