@@ -149,6 +149,6 @@ public class BedeworkCalendarsManager extends Block {
 
 		super.main(iwc);		
 		User user = iwc.getCurrentUser();
-		add(getBedeworkCalendarPresentationComponentsService().getAllUserCalendars(user.getPrimaryKey().toString()));
+		add(getBedeworkCalendarPresentationComponentsService().getAllUserCalendars(user));
 	}
 }

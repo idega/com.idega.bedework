@@ -136,7 +136,6 @@ public class BwAPI {
 					true, true, true, false, dbConfig);
 
 			bedeworkAPI = new CalSvcIdega();
-			
 			try {
 				bedeworkAPI.init(params);
 			} catch (CalFacadeException e) {
