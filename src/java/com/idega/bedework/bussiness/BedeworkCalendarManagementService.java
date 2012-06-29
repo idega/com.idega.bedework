@@ -103,33 +103,14 @@ import com.idega.core.user.data.User;
 public interface BedeworkCalendarManagementService extends CalendarManagementService {
 	
 	/**
-	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
-	 * @param userid {@link User#getPrimaryKey()};
-	 * @return {@link Collection} of {@link BwCalendar}s or {@link Collections#EMPTY_SET} 
+	 * <p>Gets main calendar from Bedework of {@link com.idega.user.data.User}.</p>
+	 * @param user
+	 * @return main calendar of {@link com.idega.user.data.User} or <code>null</code>
 	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<org.bedework.calfacade.BwCalendar> getAllUserCalendars(String userid);
-	
-	/**
-	 * <p>Bedework calendar system is based on directories, so to find all child calendars 
-	 * of calendar, you must go through them recursively. That is what this method does.</p>
-	 * @param calendar - parent calendar. Not <code>null</code>.
-	 * @return {@link List} of all {@link BwCalendar}s which given calendar has as a child or
-	 * <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public List<BwCalendar> getAllChildsOfCalendar(BwCalendar calendar);
-	
-	/**
-	 * <p>Creates calendar for given {@link User}.</p>
-	 * @param user user, which has to contain calendar.
-	 * @param calendarName
-	 * @return <code>true</code> on success, <code>false</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
-	
+	public BwCalendar getHomeCalendar(com.idega.user.data.User user);
+
 	/**
 	 * <p>Searches database for given {@link User} calendar in database.</p>
 	 * @param user who's calendar should be found.
@@ -138,19 +119,68 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
+
+	/**
+	 * <p>Gets all calendars, where user can write, edit events, todo's.</p>
+	 * @param user
+	 * @return {@link List} of {@link BwCalendar}s, 
+	 * where {@link BwCalendar#calTypeCalendarCollection} or 
+	 * {@link BwCalendar#calTypeInbox} or
+	 * {@link BwCalendar#calTypeOutbox}.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<org.bedework.calfacade.BwCalendar> getAllUserCalendars(com.idega.user.data.User user);
 	
 	/**
-	 * <p>Gets main calendar from Bedework of {@link com.idega.user.data.User}.</p>
+	 * <p>Gets all folders, where user can write, edit calendars.</p>
 	 * @param user
-	 * @return main calendar of {@link com.idega.user.data.User} or <code>null</code>
+	 * @return {@link List} of {@link BwCalendar}s, 
+	 * where {@link BwCalendar#calTypeFolder}.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<org.bedework.calfacade.BwCalendar> getAllUserCalendarFolders(com.idega.user.data.User user);
+	
+	
+	/**
+	 * <p>Searches Bedework system for calendars, folders, where given {@link User} is creator.</p>
+	 * @param userid {@link User#getPrimaryKey()};
+	 * @return {@link Collection} of {@link BwCalendar}s or {@link Collections#EMPTY_SET} 
 	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public BwCalendar getHomeCalendar(com.idega.user.data.User user);
+	public List<org.bedework.calfacade.BwCalendar> getAllUserCalendarDirectories(com.idega.user.data.User user);
 	
-	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
-		
+	/**
+	 * <p>Searches for all calendars, calendar folders where given 
+	 * {@link com.idega.user.data.User} can edit or add content.</p>
+	 * @param user
+	 * @return directories, where user can edit.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<BwCalendar> getAllUserEditableCalendarDirectories(com.idega.user.data.User user);
+
+	/**
+	 * <p>Bedework calendar system is based on directories, so to find all child calendars, folders
+	 * of calendar, you must go through them recursively. That is what this method does.</p>
+	 * @param calendar - parent calendar. Not <code>null</code>.
+	 * @return {@link List} of all {@link BwCalendar}s which given calendar has as a child or
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<BwCalendar> getAllChildCalendarDirectories(BwCalendar calendar);
+	
 	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
+
+	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
+
+	/**
+	 * <p>Creates calendar for given {@link User}.</p>
+	 * @param user user, which has to contain calendar.
+	 * @param calendarName
+	 * @return <code>true</code> on success, <code>false</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
 	
 	/**
 	* Sets that user will get data from this calendar.

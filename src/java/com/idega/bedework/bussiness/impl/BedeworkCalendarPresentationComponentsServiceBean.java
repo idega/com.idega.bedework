@@ -83,22 +83,28 @@
 package com.idega.bedework.bussiness.impl;
 
 import java.util.Collection;
+import java.util.logging.Level;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.exc.CalFacadeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
 import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
+import com.idega.bedework.bussiness.BwAPI;
 import com.idega.block.cal.data.CalDAVCalendar;
+import com.idega.core.business.DefaultSpringBean;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.Layer;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.Label;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
-import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -112,8 +118,8 @@ import com.idega.util.expression.ELUtil;
  */
 @Service("bedeworkCalendarPresentationComponentsService")
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-public class BedeworkCalendarPresentationComponentsServiceBean implements
-		BedeworkCalendarPresentationComponentsService {
+public class BedeworkCalendarPresentationComponentsServiceBean extends DefaultSpringBean
+implements BedeworkCalendarPresentationComponentsService {
 
 	@Autowired
 	private BedeworkCalendarManagementService bcms;
@@ -134,20 +140,49 @@ public class BedeworkCalendarPresentationComponentsServiceBean implements
 	
 	/* (non-Javadoc)
 	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllUserCalendars(java.lang.String)
-	 */
+	 */ 
 	@Override
-	public DropdownMenu getAllUserCalendars(String userid) {
-		if (StringUtil.isEmpty(userid)) {
+	public DropdownMenu getAllUserCalendars(User user) {
+		if (user == null) {
 			return null;
 		}
 
-		Collection<BwCalendar> calendars = getBedeworkCalendarManagementService().getAllUserCalendars(userid);
+		Collection<BwCalendar> calendars = getBedeworkCalendarManagementService()
+				.getAllUserCalendarDirectories(user);
+
 		if (ListUtil.isEmpty(calendars)) {
 			return null;
 		}
 		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return null;
+		}
+		
+		IWResourceBundle iwrb = getResourceBundle(
+				getBundle(BedeworkConstants.BUNDLE_IDENTIFIER));
+		
 		DropdownMenu dropdownMenu = new DropdownMenu();
 		for (BwCalendar calendar : calendars) {
+			try {
+				if (calendarsHandler.isUserRoot(calendar)) {
+					dropdownMenu.addMenuElement(
+							calendar.getPath(),
+							user.getName() + CoreConstants.SPACE + 
+							iwrb.getLocalizedString("user_home_calendar", "User main calendar")
+							);
+					continue;
+				}
+			} catch (CalFacadeException e) {
+				getLogger().log(Level.WARNING, "Unable to check if calendar is user root.");
+			}
+			
 			dropdownMenu.addMenuElement(calendar.getPath(), calendar.getName());
 		}
 

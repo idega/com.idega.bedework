@@ -111,7 +111,7 @@ public interface BedeworkCalendarPresentationComponentsService {
 	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public DropdownMenu getAllUserCalendars(String userid);
+	public DropdownMenu getAllUserCalendars(com.idega.user.data.User user);
 	
 	/**
 	 * <p>Bedework calendar system is based on directories, so to find all child calendars 
