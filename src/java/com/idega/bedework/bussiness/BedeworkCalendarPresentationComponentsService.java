@@ -82,17 +82,12 @@
  */
 package com.idega.bedework.bussiness;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import org.bedework.calfacade.BwCalendar;
-
 import com.idega.block.cal.data.CalDAVCalendar;
 import com.idega.core.user.data.User;
 import com.idega.presentation.Layer;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.Label;
+import com.idega.presentation.ui.SelectionBox;
 
 /**
  * <p>Visual components for Bedework calendars management.</p>
@@ -106,23 +101,18 @@ import com.idega.presentation.ui.Label;
 public interface BedeworkCalendarPresentationComponentsService {
 	/**
 	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
-	 * @param userid {@link User#getPrimaryKey()};
-	 * @return {@link Collection} of {@link BwCalendar}s or {@link Collections#EMPTY_SET} 
-	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public DropdownMenu getAllUserCalendars(com.idega.user.data.User user);
+	public DropdownMenu getAllUserCalendarsDropDown(com.idega.user.data.User user);
 	
 	/**
-	 * <p>Bedework calendar system is based on directories, so to find all child calendars 
-	 * of calendar, you must go through them recursively. That is what this method does.</p>
-	 * @param calendar - parent calendar. Not <code>null</code>.
-	 * @return {@link List} of all {@link BwCalendar}s which given calendar has as a child or
-	 * <code>null</code> on failure.
+	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public DropdownMenu getAllChildsOfCalendar(String calendarPath);
+	public SelectionBox getAllUserCalendarsSelectionBox(com.idega.user.data.User user);
 	
+	public DropdownMenu getUserFoldersDropdown(com.idega.user.data.User user);
+
 	/**
 	 * <p>Searches for home directory of user calendars.</p>
 	 * @param user

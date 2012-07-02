@@ -182,6 +182,46 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 */
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
 	
+	public boolean createCalendar(com.idega.user.data.User user, String calendarName,
+			String folderPath, String summary, String description,
+			boolean isReadOnly, boolean isPublic);
+	
+	public boolean createFolder(com.idega.user.data.User user, String calendarName,
+			String folderPath, String summary, String description,
+			boolean isReadOnly, boolean isPublic);
+	
+	/**
+	 * <p>Creates calendar for given {@link User}.</p>
+	 * @param user user, which has to contain calendar.
+	 * @param calendarName
+	 * @return <code>true</code> on success, <code>false</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean createCalendarDirectory(
+			com.idega.user.data.User user, 
+			String calendarName, 
+			String folderPath, 
+			String summary, 
+			String description, 
+			boolean isReadOnly, 
+			boolean isPublic,
+			int calendarDirectoryType
+			);
+	
+	/**
+	 * TODO
+	 * @param user
+	 * @param calendarName
+	 * @param calendarFolder
+	 * @return
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public BwCalendar getUserCalendar(
+			com.idega.user.data.User user,
+			String calendarName, 
+			String calendarFolder
+			);
+	
 	/**
 	* Sets that user will get data from this calendar.
 	* @param user		user that will get data from Calendar

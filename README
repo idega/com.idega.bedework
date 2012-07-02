@@ -15,6 +15,11 @@ UserAdapter will help you manage users between idega and bedework one.
 Examples of events and calendar creation should be visible on BwCalBussinessBean, but
 still they are not tested, although they worker few times.
 
+Fourth: Add this to tomcat settings, when use eclipse:
+-Dwebconsole.type=properties
+-Dwebconsole.jms.url=tcp://localhost:61616
+-Dwebconsole.jmx.url=service:jmx:rmi:///jndi/rmi://localhost:1099/Jmxrmi
+
 What is problematic but should be done:
 
 1) Integrate timezone server - the one is used now: http://stable.bedework.org/tzsvr;

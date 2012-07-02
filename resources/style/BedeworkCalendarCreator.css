@@ -1,0 +1,30 @@
+@CHARSET "UTF-8";
+div.calendar_name_layer {}
+
+input.calendar_name {
+	float: right;
+}
+
+textarea.calendar_summary {
+	float: right;
+}
+
+textarea.calendar_description {
+	float: right;
+}
+
+select.calendar_folder_dropdown {
+	float: right;
+}
+
+input.calendar_is_unremovable {
+	float: right;
+}
+
+input.cancel_button {
+	float: left;
+}
+
+input.create_calendar_button {
+	float:right;
+}

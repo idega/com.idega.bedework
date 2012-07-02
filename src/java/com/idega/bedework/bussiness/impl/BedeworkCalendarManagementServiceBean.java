@@ -326,11 +326,27 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 
 	@Override
 	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName) {
+		return getUserCalendar(user, calendarName, null);
+	}
+	
+	@Override
+	public BwCalendar getUserCalendar(
+			com.idega.user.data.User user, 
+			String calendarName, 
+			String calendarFolder
+			) {
+		
 		if (user == null || StringUtil.isEmpty(calendarName)) {
 			return null;
 		}
 		
-		String calendarPath = getHomeCalendarPath(user);
+		String calendarPath = null;
+		if (StringUtil.isEmpty(calendarPath)) {
+			calendarPath = getHomeCalendarPath(user);
+		} else {
+			calendarPath = calendarFolder;
+		}
+				
 		if (StringUtil.isEmpty(calendarPath)) {
 			return null;
 		}
@@ -361,12 +377,21 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 
 	@Override
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName) {
+		return createCalendarDirectory(user, calendarName, null, null, null, Boolean.FALSE, 
+				Boolean.FALSE, BwCalendar.calTypeCalendarCollection);
+	}
+	
+	@Override
+	public boolean createCalendarDirectory(User user, String calendarName,
+			String folderPath, String summary, String description,
+			boolean isReadOnly, boolean isPublic, int calendarDirectoryType) {
+		
 		if (user == null || StringUtil.isEmpty(calendarName)) {
 			LOGGER.log(Level.INFO, "User or calendar name not defined.");
 			return Boolean.FALSE;
 		}
 		
-		BwCalendar calendar = getUserCalendar(user, calendarName);
+		BwCalendar calendar = getUserCalendar(user, calendarName, folderPath);
 		if (calendar != null) {
 			LOGGER.log(Level.INFO, "Such calendar already exists, not creating.");
 			return Boolean.FALSE;
@@ -390,18 +415,39 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		calendar.setCreatorEnt(userAdapter.getBedeworkSystemUser());
 		calendar.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
 		calendar.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		calendar.setPublick(Boolean.FALSE);
+		calendar.setPublick(isPublic);
 		calendar.setAffectsFreeBusy(Boolean.TRUE);
 		
-		String calPath = getHomeCalendarPath(user);
+		String calPath = null;
+		if (StringUtil.isEmpty(folderPath)) {
+			calPath = getHomeCalendarPath(user);
+		} else {
+			calPath = folderPath;
+		}
+				
 		if (calPath == null) {
 			return Boolean.FALSE;
 		}
 		
 		calendar.setColPath(calPath);
 		calendar.setPath(calPath + CoreConstants.SLASH + calendarName);
-		calendar.setCalType(BwCalendar.calTypeCalendarCollection);
 		
+		if (calendarDirectoryType < 1 || calendarDirectoryType > 9) {
+			calendarDirectoryType = BwCalendar.calTypeUnknown;
+		}
+		
+		calendar.setCalType(calendarDirectoryType);
+		
+		if (!StringUtil.isEmpty(summary)) {
+			calendar.setSummary(summary);
+		}
+		
+		if (!StringUtil.isEmpty(description)) {
+			calendar.setDescription(description);
+		}
+		
+		calendar.setUnremoveable(isReadOnly);
+ 		
 		try {
 			calendarsHandler.add(calendar, calPath);
 		} catch (CalFacadeException e) {
@@ -411,7 +457,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		
 		return Boolean.TRUE;
 	}
-	
+
 	@Override
 	public boolean subscribeCalendar(User user, String calendarPath) {
 		// TODO Auto-generated method stub
@@ -571,5 +617,37 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		}
 		
 		return folders;
+	}
+
+	@Override
+	public boolean subscribeCalendars(User user,
+			Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean unsubscribeCalendars(User user,
+			Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean createCalendar(com.idega.user.data.User user,
+			String calendarName, String folderPath, String summary,
+			String description, boolean isReadOnly, boolean isPublic) {
+		
+		return createCalendarDirectory(user, calendarName, folderPath, summary, 
+				description, isReadOnly, isPublic, BwCalendar.calTypeCalendarCollection);
+	}
+
+	@Override
+	public boolean createFolder(com.idega.user.data.User user,
+			String calendarName, String folderPath, String summary,
+			String description, boolean isReadOnly, boolean isPublic) {
+		
+		return createCalendarDirectory(user, calendarName, folderPath, summary, 
+				description, isReadOnly, isPublic, BwCalendar.calTypeFolder);
 	}
 }

@@ -89,6 +89,9 @@ import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsServic
 import com.idega.bedework.bussiness.impl.BedeworkCalendarManagementServiceBean;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
+import com.idega.presentation.Layer;
+import com.idega.presentation.ui.GenericButton;
+import com.idega.presentation.ui.SubmitButton;
 import com.idega.user.data.User;
 import com.idega.util.expression.ELUtil;
 
@@ -147,8 +150,62 @@ public class BedeworkCalendarsManager extends Block {
 			return;
 		}
 
-		super.main(iwc);		
+		super.main(iwc);
 		User user = iwc.getCurrentUser();
-		add(getBedeworkCalendarPresentationComponentsService().getAllUserCalendars(user));
+		add(getBedeworkCalendarPresentationComponentsService().getAllUserCalendarsDropDown(user));
+		add(getOwnCalendarsButtonsLayer(iwc));
+		add(getSubscribableCalendarsButtonsLayer(iwc));
+	}
+	
+	public Layer getOwnCalendarsButtonsLayer(IWContext iwc) {
+		if (iwc == null) {
+			return null;
+		}
+		
+		Layer buttonsLayer = new Layer();
+		buttonsLayer.setStyleClass("buttonsLayerOfUserCalendars");
+		
+		GenericButton addFolderButton = new GenericButton(
+				getResourceBundle(iwc).getLocalizedString("add_folder", "Add folder"));
+		addFolderButton.setStyleClass("add_folder_button");
+		buttonsLayer.add(addFolderButton);
+		
+		GenericButton addCalendarButton = new GenericButton(
+				getResourceBundle(iwc).getLocalizedString("add_calendar", "Add calendar"));
+		addCalendarButton.setStyleClass("add_calendar_button");
+		buttonsLayer.add(addCalendarButton);
+		
+		SubmitButton deleteCalendarButton = new SubmitButton(
+				getResourceBundle(iwc).getLocalizedString("delete_calendar", "Delete calendar"));
+		deleteCalendarButton.setStyleAttribute("delete_calendar_button");
+		buttonsLayer.add(deleteCalendarButton);
+		
+		SubmitButton deleteFolderButton = new SubmitButton(
+				getResourceBundle(iwc).getLocalizedString("delete_folder", "Delete folder"));
+		deleteFolderButton.setStyleClass("delete_folder_button");
+		buttonsLayer.add(deleteFolderButton);
+		
+		return buttonsLayer;
+	}
+	
+	public Layer getSubscribableCalendarsButtonsLayer(IWContext iwc) {
+		if (iwc == null) {
+			return null;
+		}
+		
+		Layer buttonsLayer = new Layer();
+		buttonsLayer.setStyleClass("buttons_layer_of_caledars_to_subscribe");
+	
+		SubmitButton subscribeCalendarButton = new SubmitButton(
+				getResourceBundle(iwc).getLocalizedString("subscribe_calendar", "Susbcribe calendar"));
+		subscribeCalendarButton.setStyleAttribute("subscribe_calendar_button");
+		buttonsLayer.add(subscribeCalendarButton);
+		
+		SubmitButton unsubscribeCalendarButton = new SubmitButton(
+				getResourceBundle(iwc).getLocalizedString("unsubscribe_calendar", "Unsubscribe calendar"));
+		unsubscribeCalendarButton.setStyleClass("unsubscribe_calendar_button");
+		buttonsLayer.add(unsubscribeCalendarButton);
+		
+		return buttonsLayer;
 	}
 }

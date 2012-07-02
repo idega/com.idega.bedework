@@ -83,6 +83,7 @@
 package com.idega.bedework.bussiness.impl;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.bedework.calfacade.BwCalendar;
@@ -102,6 +103,7 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.Layer;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.Label;
+import com.idega.presentation.ui.SelectionBox;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
@@ -142,7 +144,7 @@ implements BedeworkCalendarPresentationComponentsService {
 	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllUserCalendars(java.lang.String)
 	 */ 
 	@Override
-	public DropdownMenu getAllUserCalendars(User user) {
+	public DropdownMenu getAllUserCalendarsDropDown(User user) {
 		if (user == null) {
 			return null;
 		}
@@ -189,11 +191,8 @@ implements BedeworkCalendarPresentationComponentsService {
 		return dropdownMenu;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllChildsOfCalendar(java.lang.String)
-	 */
 	@Override
-	public DropdownMenu getAllChildsOfCalendar(String calendarPath) {
+	public SelectionBox getAllUserCalendarsSelectionBox(User user) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -243,6 +242,54 @@ implements BedeworkCalendarPresentationComponentsService {
 			throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public DropdownMenu getUserFoldersDropdown(User user) {
+		if (user == null) {
+			return null;
+		}
+		
+		List<BwCalendar> folders = getBedeworkCalendarManagementService()
+				.getAllUserCalendarFolders(user);
+		if (ListUtil.isEmpty(folders)) {
+			return null;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return null;
+		}
+		
+		IWResourceBundle iwrb = getResourceBundle(
+				getBundle(BedeworkConstants.BUNDLE_IDENTIFIER));
+		
+		DropdownMenu foldersDropdownMenu = new DropdownMenu();
+		for (BwCalendar folder : folders) {
+			try {
+				if (calendarsHandler.isUserRoot(folder)) {
+					foldersDropdownMenu.addMenuElement(
+							folder.getPath(),
+							user.getName() + CoreConstants.SPACE + 
+							iwrb.getLocalizedString("main_folder", "main folder")
+							);
+					continue;
+				}
+			} catch (CalFacadeException e) {
+				getLogger().log(Level.WARNING, "Unable to check if folder is user root.");
+			}
+			
+			foldersDropdownMenu.addMenuElement(folder.getPath(), folder.getName());
+		}
+		
+		bwAPI.closeBedeworkAPI();
+		return foldersDropdownMenu;
 	}
 
 }
