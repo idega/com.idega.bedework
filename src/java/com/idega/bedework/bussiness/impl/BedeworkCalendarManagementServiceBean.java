@@ -620,20 +620,6 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	}
 
 	@Override
-	public boolean subscribeCalendars(User user,
-			Collection<String> calendarPaths) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean unsubscribeCalendars(User user,
-			Collection<String> calendarPaths) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public boolean createCalendar(com.idega.user.data.User user,
 			String calendarName, String folderPath, String summary,
 			String description, boolean isReadOnly, boolean isPublic) {
@@ -649,5 +635,18 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		
 		return createCalendarDirectory(user, calendarName, folderPath, summary, 
 				description, isReadOnly, isPublic, BwCalendar.calTypeFolder);
+	}
+
+	@Override
+	public boolean subscribeCalendars(User user, Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean unsubscribeCalendars(User user,
+			Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
