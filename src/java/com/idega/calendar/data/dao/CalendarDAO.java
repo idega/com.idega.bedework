@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkCalendarPresentationComponentsService.java    1.0.0 10:07:35 AM
+ * @(#)CalendarDAO.java    1.0.0 1:43:00 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,67 +80,103 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness;
+package com.idega.calendar.data.dao;
 
-import java.util.Set;
+import java.util.Collection;
 
-import com.idega.block.cal.data.CalDAVCalendar;
-import com.idega.core.user.data.User;
-import com.idega.presentation.Layer;
-import com.idega.presentation.ui.DropdownMenu;
-import com.idega.presentation.ui.Label;
-import com.idega.presentation.ui.SelectionBox;
+import com.idega.calendar.data.CalendarEntity;
+import com.idega.core.persistence.GenericDao;
+import com.idega.user.data.User;
 
 /**
- * <p>Visual components for Bedework calendars management.</p>
+ * <p>Data access object for ca_caldav_calendar.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jun 29, 2012
+ * @version 1.0.0 Jul 3, 2012
  * @author martynasstake
  */
-public interface BedeworkCalendarPresentationComponentsService {
+public interface CalendarDAO extends GenericDao{
+	public static final String BEAN_NAME = "calendarDAO";
+	
 	/**
-	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
+	 * <p>Updates existing calendar or creates new.</p>
+	 * @param calendarEntity - entity to update/create.
+	 * @return <code>true</code> if entity created/updated, <code>false</code> 
+	 * otherwise.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public DropdownMenu getAllUserCalendarsDropDown(com.idega.user.data.User user);
+	public boolean updateCalendar(User user, CalendarEntity calendarEntity);
 	
 	/**
-	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
+	 * <p>Removes existing entity.</p>
+	 * @param calendarEntity - entity to remove.
+	 * @return <code>true</code> if entity successfully removed, <code>false</code>
+	 * otherwise.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public SelectionBox getAllUserCalendarsSelectionBox(com.idega.user.data.User user);
+	public boolean removeCalendar(User user, CalendarEntity calendarEntity);
 	
-	public DropdownMenu getUserFoldersDropdown(com.idega.user.data.User user);
-
 	/**
-	 * <p>Searches for home directory of user calendars.</p>
-	 * @param user
-	 * @return Directory of user calendars root, where are or should calendars to be placed.
-	 * <code>null</code> on failure.
+	 * <p>Gives a number of calendars in given calendar folder.</p>
+	 * @param calendarPath - {@link com.idega.calendar.data.CalendarEntity#getPath()}, for 
+	 * example: "/principals/users/{@link User#getPrimaryKey()}/calendarFolder". 
+	 * Not <code>null</code>.
+	 * @return number of calendars in folder or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Label getHomeCalendarPath(com.idega.user.data.User user);
+	public Integer getNumberOfIdegaCalendarChildren(String calendarPath);
 	
-	public SelectionBox getGroupsSelectionBox(Set<Long> groupIDs);
+	/**
+	 * <p>Gives a number of existing events, todo's and similar stuff in calendar.</p>
+	 * @param calendarPath - {@link com.idega.calendar.data.CalendarEntity#getPath()}, for 
+	 * example: "/principals/users/{@link User#getPrimaryKey()}/calendarName". 
+	 * Not <code>null</code>.
+	 * @return number of references of events stuff. <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Integer getNumberOfIdegaCalendarEvents(String calendarPath);
 	
-	public DropdownMenu getUnSubscribedCalendars(com.idega.user.data.User user);
-		
-	public DropdownMenu getSubscribedCalendars(com.idega.user.data.User user);
-
 	/**
-	* Sets that user will get data from this calendar.
-	* @param user		user that will get data from Calendar
-	* @param calendar	calendar that will send data for user
-	*/
-	public Layer subscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
-
+	 * <p>Fetches from database user calendars, which holds events and are private.</p>
+	 * @return <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<com.idega.calendar.data.CalendarEntity> getUserIdegaCalendarCollections();
+	
 	/**
-	* Sets that user will not get data from this calendar.
-	* @param user		user that will not get data from Calendar
-	* @param calendar	calendar that will not send data for user
-	*/
-	public Layer unSubscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
+	 * <p>Fetches from database all public calendars, which holds events and are public.</p>
+	 * @return <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<com.idega.calendar.data.CalendarEntity> getIdegaPublicCalendarCollections();
+	
+	/**
+	 * <p>Fetches calendar from database by id.</p>
+	 * @param id - {@link com.idega.calendar.data.CalendarEntity#getId()}. Not <code>null</code>.
+	 * @return {@link com.idega.calendar.data.CalendarEntity} containing required id or 
+	 * <code>null</code> on failure. 
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public com.idega.calendar.data.CalendarEntity getIdegaCalendarById(int id);
+	
+	/**
+	 * <p>Fetches calendar from database by {@link com.idega.calendar.data.CalendarEntity#getPath()}.</p>
+	 * @param calendarPath - {@link com.idega.calendar.data.CalendarEntity#getPath()}, for 
+	 * example: "/principals/users/{@link User#getPrimaryKey()}/calendarName". 
+	 * Not <code>null</code>.
+	 * @return {@link com.idega.calendar.data.CalendarEntity} or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public com.idega.calendar.data.CalendarEntity getIdegaCalendarByPath(String calendarPath);
+	
+	/**
+	 * <p>Fetches calendar by {@link com.idega.calendar.data.CalendarEntity#getName()}.</p>
+	 * @param name - {@link com.idega.calendar.data.CalendarEntity#getName()}. 
+	 * Not <code>null</code>.
+	 * @return {@link CalendarEntity}s with that name or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<com.idega.calendar.data.CalendarEntity>getIdegaCalendarsByName(String name);
 }

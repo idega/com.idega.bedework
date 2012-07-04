@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkCalendarPresentationComponentsServiceBean.java    1.0.0 10:22:08 AM
+ * @(#)CalendarDAOImpl.java    1.0.0 2:23:50 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,233 +80,203 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness.impl;
+package com.idega.calendar.data.dao.impl;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
-import com.idega.bedework.BedeworkConstants;
-import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
-import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
 import com.idega.bedework.bussiness.BwAPI;
-import com.idega.block.cal.data.CalDAVCalendar;
-import com.idega.core.business.DefaultSpringBean;
-import com.idega.idegaweb.IWResourceBundle;
-import com.idega.presentation.Layer;
-import com.idega.presentation.ui.DropdownMenu;
-import com.idega.presentation.ui.Label;
-import com.idega.presentation.ui.SelectionBox;
-import com.idega.user.data.Group;
+import com.idega.calendar.data.CalendarEntity;
+import com.idega.calendar.data.dao.CalendarDAO;
+import com.idega.core.persistence.Param;
+import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
-import com.idega.util.expression.ELUtil;
+import com.idega.util.StringUtil;
 
 /**
- * Class description goes here.
+ * <p>Implementation of data access object for ca_caldav_calendar.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jun 29, 2012
+ * @version 1.0.0 Jul 3, 2012
  * @author martynasstake
  */
-@Service("bedeworkCalendarPresentationComponentsService")
+@Repository(CalendarDAO.BEAN_NAME)
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-public class BedeworkCalendarPresentationComponentsServiceBean extends DefaultSpringBean
-implements BedeworkCalendarPresentationComponentsService {
+public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 
-	@Autowired
-	private BedeworkCalendarManagementService bcms;
+	private static Logger LOGGER = Logger.getLogger(CalendarDAOImpl.class.getName());
 	
-	/**
-	 * <p>Initializes service if down.</p>
-	 * @return {@link BedeworkCalendarManagementServiceBean} instance or 
-	 * <code>null</code>.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	private BedeworkCalendarManagementService getBedeworkCalendarManagementService() {
-		if (this.bcms == null) {
-			ELUtil.getInstance().autowire(this);
+	@Override
+	public boolean updateCalendar(User user, CalendarEntity calendarEntity) {
+		if (calendarEntity == null) {
+			return Boolean.FALSE;
+		}
+
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return Boolean.FALSE;
 		}
 		
-		return this.bcms;
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
+		
+		try {
+			CalendarEntity calendar = getIdegaCalendarById(calendarEntity.getId());
+
+			if (calendar == null) {
+				calendarsHandler.add(calendarEntity, calendarEntity.getColPath());
+			} else {
+				calendarsHandler.update(calendarEntity);
+			}
+
+			return bwAPI.closeBedeworkAPI();
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to add calendar: ", e);
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
+	}
+
+	@Override
+	public boolean removeCalendar(User user, CalendarEntity calendarEntity) {
+		if (calendarEntity == null) {
+			return Boolean.FALSE;
+		}
+
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return Boolean.FALSE;
+		}
+		
+		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
+		
+		try {
+			calendarsHandler.delete(calendarEntity, Boolean.TRUE);
+			return bwAPI.closeBedeworkAPI();
+		} catch (CalFacadeException e1) {
+			LOGGER.log(Level.WARNING, "Unable to remove calendar: " + e1.getMessage());
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllUserCalendars(java.lang.String)
-	 */ 
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getNumberOfIdegaCalendarChildren(java.lang.String)
+	 */
 	@Override
-	public DropdownMenu getAllUserCalendarsDropDown(User user) {
-		if (user == null) {
+	public Integer getNumberOfIdegaCalendarChildren(String calendarPath) {
+		if (StringUtil.isEmpty(calendarPath)) {
+			LOGGER.log(Level.WARNING, "Calendar path not given.");
 			return null;
 		}
-
-		Collection<BwCalendar> calendars = getBedeworkCalendarManagementService()
-				.getAllUserCalendarDirectories(user);
+		
+		Collection<CalendarEntity> calendars = getResultList(
+				CalendarEntity.GET_NUMBER_OF_CHILD_CALENDARS, 
+				CalendarEntity.class,
+                new Param(CalendarEntity.COL_PATH_PROP, calendarPath));
 
 		if (ListUtil.isEmpty(calendars)) {
-			return null;
+			return 0;
 		}
 		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
-			bwAPI.closeBedeworkAPI();
-			return null;
-		}
-		
-		IWResourceBundle iwrb = getResourceBundle(
-				getBundle(BedeworkConstants.BUNDLE_IDENTIFIER));
-		
-		DropdownMenu dropdownMenu = new DropdownMenu();
-		for (BwCalendar calendar : calendars) {
-			try {
-				if (calendarsHandler.isUserRoot(calendar)) {
-					dropdownMenu.addMenuElement(
-							calendar.getPath(),
-							user.getName() + CoreConstants.SPACE + 
-							iwrb.getLocalizedString("user_home_calendar", "User main calendar")
-							);
-					continue;
-				}
-			} catch (CalFacadeException e) {
-				getLogger().log(Level.WARNING, "Unable to check if calendar is user root.");
-			}
-			
-			dropdownMenu.addMenuElement(calendar.getPath(), calendar.getName());
-		}
-
-		return dropdownMenu;
-	}
-
-	@Override
-	public SelectionBox getAllUserCalendarsSelectionBox(User user) {
-		// TODO Auto-generated method stub
-		return null;
+		return calendars.size();
 	}
 
 	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getHomeCalendarPath(com.idega.user.data.User)
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getNumberOfIdegaCalendarEvents(java.lang.String)
 	 */
 	@Override
-	public Label getHomeCalendarPath(User user) {
-		// TODO Auto-generated method stub
-		return null;
+	public Integer getNumberOfIdegaCalendarEvents(String calendarPath) {
+		if (StringUtil.isEmpty(calendarPath)) {
+			LOGGER.log(Level.WARNING, "Calendar path not given.");
+			return null;
+		}
+		
+		Collection<BwEventObj> events = getResultList(
+				CalendarEntity.GET_NUMBER_OF_EVENTS, 
+				BwEventObj.class,
+                new Param(CalendarEntity.COL_PATH_PROP, calendarPath));
+
+		if (ListUtil.isEmpty(events)) {
+			return 0;
+		}
+		
+		return events.size();
 	}
 
 	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getUnSubscribedCalendars(com.idega.user.data.User)
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getUserIdegaCalendarCollections(com.idega.user.data.User)
 	 */
 	@Override
-	public DropdownMenu getUnSubscribedCalendars(User user) {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<CalendarEntity> getUserIdegaCalendarCollections() {
+		return getResultList(CalendarEntity.GET_PRIVATE_CALENDARS, CalendarEntity.class);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getSubscribedCalendars(com.idega.user.data.User)
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaPublicCalendarCollections()
 	 */
 	@Override
-	public DropdownMenu getSubscribedCalendars(User user) {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<CalendarEntity> getIdegaPublicCalendarCollections() {
+		return getResultList(CalendarEntity.GET_PUBLIC_CALENDARS, CalendarEntity.class);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#subscribeCalendar(com.idega.user.data.User, com.idega.block.cal.data.CalDAVCalendar)
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaCalendarById(java.lang.String)
 	 */
 	@Override
-	public Layer subscribeCalendar(User user, CalDAVCalendar calendar)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	public CalendarEntity getIdegaCalendarById(int id) {
+		return this.getSingleResult(
+				CalendarEntity.GET_BY_ID, 
+				CalendarEntity.class, 
+				new Param(CalendarEntity.ID_PROP, id)
+				);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#unSubscribeCalendar(com.idega.user.data.User, com.idega.block.cal.data.CalDAVCalendar)
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaCalendarByPath(java.lang.String)
 	 */
 	@Override
-	public Layer unSubscribeCalendar(User user, CalDAVCalendar calendar)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	public CalendarEntity getIdegaCalendarByPath(String calendarPath) {
+		if (StringUtil.isEmpty(calendarPath)) {
+			LOGGER.log(Level.WARNING, "Calendar path not given.");
+			return null;
+		}
+		
+		return this.getSingleResult(
+				CalendarEntity.GET_BY_PATH,
+				CalendarEntity.class, 
+				new Param(CalendarEntity.PATH_PROP, calendarPath)
+				);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaCalendarsByName(java.lang.String)
+	 */
 	@Override
-	public DropdownMenu getUserFoldersDropdown(User user) {
-		if (user == null) {
+	public Collection<CalendarEntity> getIdegaCalendarsByName(String name) {
+		if (StringUtil.isEmpty(name)) {
+			LOGGER.log(Level.WARNING, "Calendar name not given.");
 			return null;
 		}
 		
-		List<BwCalendar> folders = getBedeworkCalendarManagementService()
-				.getAllUserCalendarFolders(user);
-		if (ListUtil.isEmpty(folders)) {
-			return null;
-		}
-		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
-			bwAPI.closeBedeworkAPI();
-			return null;
-		}
-		
-		IWResourceBundle iwrb = getResourceBundle(
-				getBundle(BedeworkConstants.BUNDLE_IDENTIFIER));
-		
-		DropdownMenu foldersDropdownMenu = new DropdownMenu();
-		for (BwCalendar folder : folders) {
-			try {
-				if (calendarsHandler.isUserRoot(folder)) {
-					foldersDropdownMenu.addMenuElement(
-							folder.getPath(),
-							user.getName() + CoreConstants.SPACE + 
-							iwrb.getLocalizedString("main_folder", "main folder")
-							);
-					continue;
-				}
-			} catch (CalFacadeException e) {
-				getLogger().log(Level.WARNING, "Unable to check if folder is user root.");
-			}
-			
-			foldersDropdownMenu.addMenuElement(folder.getPath(), folder.getName());
-		}
-		
-		bwAPI.closeBedeworkAPI();
-		return foldersDropdownMenu;
+		return getResultList(CalendarEntity.GET_BY_NAME, CalendarEntity.class,
+                new Param(CalendarEntity.NAME_PROP, name));
 	}
-
-	@Override
-	public SelectionBox getGroupsSelectionBox(Set<Long> groupIDs) {
-		List<Group> groups = getBedeworkCalendarManagementService().getAllGroups(groupIDs);
-		if (ListUtil.isEmpty(groups)) {
-			return null;
-		}
-		
-		SelectionBox selectionBox = new SelectionBox();
-		for (Group group : groups) {
-			selectionBox.addElement(group.getPrimaryKey().toString(), group.getName());
-		}
-		
-		return selectionBox;
-	}
-
 }

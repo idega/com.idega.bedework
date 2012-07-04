@@ -85,11 +85,14 @@ package com.idega.bedework.bussiness;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.bedework.calfacade.BwCalendar;
 
 import com.idega.block.cal.business.CalendarManagementService;
+import com.idega.calendar.data.CalendarEntity;
 import com.idega.core.user.data.User;
+import com.idega.user.data.Group;
 
 /**
  * <p>Provides services from bedework API.</p>
@@ -119,6 +122,20 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
+
+	/**
+	 * TODO
+	 * @param user
+	 * @param calendarName
+	 * @param calendarFolder
+	 * @return
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public BwCalendar getUserCalendar(
+			com.idega.user.data.User user,
+			String calendarName, 
+			String calendarFolder
+			);
 
 	/**
 	 * <p>Gets all calendars, where user can write, edit events, todo's.</p>
@@ -169,6 +186,13 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 */
 	public List<BwCalendar> getAllChildCalendarDirectories(BwCalendar calendar);
 	
+	/**
+	 * <p>Fetches groups from database.</p>
+	 * @return {@link List} of {@link Group}s in database or <code>null</code>.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<com.idega.user.data.Group> getAllGroups(Set<Long> groupIDs);
+
 	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
 
 	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
@@ -183,12 +207,35 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
 	
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName,
+			String folderPath, String summary, boolean isPublic, Set<Long> groupsIDs);
+	
+	public boolean createCalendar(com.idega.user.data.User user, String calendarName,
 			String folderPath, String summary, String description,
 			boolean isReadOnly, boolean isPublic);
 	
 	public boolean createFolder(com.idega.user.data.User user, String calendarName,
 			String folderPath, String summary, String description,
 			boolean isReadOnly, boolean isPublic);
+	
+	/**
+	 * <p>Updates existing calendar or creates new one if does not exist.</p>
+	 * @param user - {@link com.idega.user.data.User}, who has this {@link CalendarEntity}.
+	 * Not <code>null</code>.
+	 * @param calendarName - {@link CalendarEntity#getName()}.
+	 * @param folderPath - {@link CalendarEntity#getColPath()}. Place where calendar should
+	 * be placed in hierarchy.
+	 * @param summary - {@link CalendarEntity#getSummary()}, a short description of 
+	 * calendar.
+	 * @param isPublic - visible to everybody, when <code>true</code>, visible to given 
+	 * groups, when <code>false</code>.
+	 * @param groupsIDs - {@link Set} of {@link Group} ID's, which can see this private 
+	 * calendar. No effect for public ones.
+	 * @return <code>true</code> is successfully created/updated, <code>false</code>
+	 *  otherwise. 
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean updateCalendar(com.idega.user.data.User user, String calendarName,
+			String folderPath, String summary, boolean isPublic, Set<Long> groupsIDs);
 	
 	/**
 	 * <p>Creates calendar for given {@link User}.</p>
@@ -205,25 +252,59 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 			String description, 
 			boolean isReadOnly, 
 			boolean isPublic,
-			int calendarDirectoryType
+			int calendarDirectoryType,
+			Set<Long> groupsIDs
 			);
 	
 	/**
-	 * TODO
-	 * @param user
-	 * @param calendarName
-	 * @param calendarFolder
-	 * @return
+	 * <p>Updates existing {@link CalendarEntity} in database. Creates new one, if not exist.
+	 * Author reminds, that on Bedework calendar {@link CalendarEntity} can be not only
+	 * calendar, but also a folder or directory of other {@link CalendarEntity}s.</p>
+	 * @param calendar - {@link CalendarEntity} to update.
+	 * @param user - {@link com.idega.user.data.User}, who has this {@link CalendarEntity}.
+	 * Not <code>null</code>.
+	 * @param calendarName - {@link CalendarEntity#getName()}.
+	 * @param folderPath - {@link CalendarEntity#getColPath()}. Place where calendar should
+	 * be placed in hierarchy.
+	 * @param summary - {@link CalendarEntity#getSummary()}, a short description of 
+	 * calendar.
+	 * @param description - {@link CalendarEntity#getDescription()}, a wide description of 
+	 * calendar.
+	 * @param isReadOnly - makes calendar unremovable, when <code>true</code>.
+	 * @param isPublic - visible to everybody, when <code>true</code>, visible to given 
+	 * groups, when <code>false</code>.
+	 * @param calendarDirectoryType - type of directory:
+	 * <li>{@link BwCalendar#calTypeAlias}</li>
+	 * <li>{@link BwCalendar#calTypeBusy}</li>
+	 * <li>{@link BwCalendar#calTypeCalendarCollection}</li>
+	 * <li>{@link BwCalendar#calTypeDeleted}</li>
+	 * <li>{@link BwCalendar#calTypeExtSub}</li>
+	 * <li>{@link BwCalendar#calTypeFolder}</li>
+	 * <li>{@link BwCalendar#calTypeInbox}</li>
+	 * <li>{@link BwCalendar#calTypeOutbox}</li>
+	 * <li>{@link BwCalendar#calTypeResourceCollection}</li>
+	 * <li>{@link BwCalendar#calTypeUnknown}</li>
+	 * @param groupsIDs - {@link Set} of {@link Group} ID's, which can see this private 
+	 * calendar. No effect for public ones.
+	 * @return <code>true</code> if calendar successfully updated, <code>false</code>
+	 * otherwise.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public BwCalendar getUserCalendar(
+	public boolean updateCalendarDirectory(
+			com.idega.calendar.data.CalendarEntity calendar,
 			com.idega.user.data.User user,
-			String calendarName, 
-			String calendarFolder
+			String calendarName,
+			String folderPath,
+			String summary, 
+			String description,
+			boolean isReadOnly, 
+			boolean isPublic,
+			int calendarDirectoryType,
+			Set<Long> groupsIDs
 			);
-	
+
 	/**
-	* Sets that user will get data from this calendar.
+	* <p>Sets that user will get data from this calendar.</p>
 	* @param user		user that will get data from Calendar
 	* @param calendar	calendar that will send data for user
 	*/
@@ -235,4 +316,57 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	* @param calendar	calendar that will not send data for user
 	*/
 	public boolean unSubscribeCalendar(com.idega.user.data.User user, BwCalendar calendar);
+	
+	/**
+	 * <p>Method puts all data from {@link List} of {@link Group#getPrimaryKey()} to 
+	 * {@link Set} of {@link Group#getPrimaryKey()}.</p>
+	 * @param groupIDs - {@link List} of {@link Group#getPrimaryKey()}. Not <code>null</code>.
+	 * @return converted {@link Set} or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Set<Long> convertGroupIDs(List<String> groupIDs);
+	
+	/**
+	 * <p>Fills entity with fieds, but does not save it to database.</p>
+	 * @param calendar - {@link CalendarEntity} to update.
+	 * @param user - {@link com.idega.user.data.User}, who has this {@link CalendarEntity}.
+	 * Not <code>null</code>.
+	 * @param calendarName - {@link CalendarEntity#getName()}.
+	 * @param folderPath - {@link CalendarEntity#getColPath()}. Place where calendar should
+	 * be placed in hierarchy.
+	 * @param summary - {@link CalendarEntity#getSummary()}, a short description of 
+	 * calendar.
+	 * @param description - {@link CalendarEntity#getDescription()}, a wide description of 
+	 * calendar.
+	 * @param isReadOnly - makes calendar unremovable, when <code>true</code>.
+	 * @param isPublic - visible to everybody, when <code>true</code>, visible to given 
+	 * groups, when <code>false</code>.
+	 * @param calendarDirectoryType - type of directory:
+	 * <li>{@link BwCalendar#calTypeAlias}</li>
+	 * <li>{@link BwCalendar#calTypeBusy}</li>
+	 * <li>{@link BwCalendar#calTypeCalendarCollection}</li>
+	 * <li>{@link BwCalendar#calTypeDeleted}</li>
+	 * <li>{@link BwCalendar#calTypeExtSub}</li>
+	 * <li>{@link BwCalendar#calTypeFolder}</li>
+	 * <li>{@link BwCalendar#calTypeInbox}</li>
+	 * <li>{@link BwCalendar#calTypeOutbox}</li>
+	 * <li>{@link BwCalendar#calTypeResourceCollection}</li>
+	 * <li>{@link BwCalendar#calTypeUnknown}</li>
+	 * @param groupsIDs - {@link Set} of {@link Group} ID's, which can see this private 
+	 * calendar. No effect for public ones.
+	 * @return {@link CalendarEntity} if successfully created, <code>null</code> otherwise.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public CalendarEntity setCalendarEntity(
+			CalendarEntity calendar,
+			com.idega.user.data.User user,
+			String calendarName,
+			String folderPath,
+			String summary, 
+			String description,
+			boolean isReadOnly, 
+			boolean isPublic,
+			int calendarDirectoryType,
+			Set<Long> groupsIDs
+			);
 }

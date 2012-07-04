@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkCalendarPresentationComponentsService.java    1.0.0 10:07:35 AM
+ * @(#)CalDAVCalendar.java    1.0.0 8:32:56 AM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,67 +80,108 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness;
+package com.idega.calendar.data;
 
 import java.util.Set;
 
-import com.idega.block.cal.data.CalDAVCalendar;
-import com.idega.core.user.data.User;
-import com.idega.presentation.Layer;
-import com.idega.presentation.ui.DropdownMenu;
-import com.idega.presentation.ui.Label;
-import com.idega.presentation.ui.SelectionBox;
+import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.annotations.Wrapper;
+import org.bedework.calfacade.exc.CalFacadeException;
 
 /**
- * <p>Visual components for Bedework calendars management.</p>
+ * <p>Entity for IDEGA functionality.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jun 29, 2012
+ * @version 1.0.0 Jul 3, 2012
  * @author martynasstake
  */
-public interface BedeworkCalendarPresentationComponentsService {
-	/**
-	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public DropdownMenu getAllUserCalendarsDropDown(com.idega.user.data.User user);
-	
-	/**
-	 * <p>Searches Bedework system for calendars, where given {@link User} is creator.</p>
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public SelectionBox getAllUserCalendarsSelectionBox(com.idega.user.data.User user);
-	
-	public DropdownMenu getUserFoldersDropdown(com.idega.user.data.User user);
+@Wrapper(quotas = true)
+@Dump(elementName="collection", keyFields={"path"})
+public class CalendarEntity extends BwCalendar {
 
 	/**
-	 * <p>Searches for home directory of user calendars.</p>
-	 * @param user
-	 * @return Directory of user calendars root, where are or should calendars to be placed.
-	 * <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 * 
 	 */
-	public Label getHomeCalendarPath(com.idega.user.data.User user);
+	private static final long serialVersionUID = 4815408307028947282L;
 	
-	public SelectionBox getGroupsSelectionBox(Set<Long> groupIDs);
+	/* Queries */
+	public static final String 	GET_BY_NAME = "getNamedIdegaCalendar",
+											GET_BY_PATH = "getIdegaCalendarByPath",
+											GET_BY_ID = "getIdegaCalendarById",
+											GET_PUBLIC_CALENDARS = "getIdegaPublicCalendarCollections",
+											GET_PRIVATE_CALENDARS = "getUserIdegaCalendarCollections",
+											GET_NUMBER_OF_EVENTS = "countCalendarEventRefs",
+											GET_NUMBER_OF_CHILD_CALENDARS= "countIdegaCalendarChildren";
 	
-	public DropdownMenu getUnSubscribedCalendars(com.idega.user.data.User user);
+	public static final String 	COL_PATH_PROP = "colPath",
+											NAME_PROP = "name",
+											PATH_PROP = "path",
+											ID_PROP = "id";
+	
+	private Set<Long> groups;
+
+	public CalendarEntity() {}
+	
+	public CalendarEntity(BwCalendar entity, Set<Long> groupIDs) {
+		setAccess(entity.getAccess());
+		setAffectsFreeBusy(entity.getAffectsFreeBusy());
+		setAliasTarget(entity.getAliasTarget());
+		setByteSize(entity.getByteSize());
+		setCalType(entity.getCalType());
+		setCategories(entity.getCategories());
+		setColor(entity.getColor());
+		setColPath(entity.getColPath());
+		setCreated(entity.getCreated());
+		setCreatorEnt(entity.getCreatorEnt());
+		setCreatorHref(entity.getCreatorHref());
+		setDescription(entity.getDescription());
+		setDisplay(entity.getDisplay());
+		setFilterExpr(entity.getFilterExpr());
+		setGroups(groupIDs);
+		setId(entity.getId());
+		setIgnoreTransparency(entity.getIgnoreTransparency());
+		setIsTopicalArea(entity.getIsTopicalArea());
+		setLastEtag(entity.getLastEtag());
+		setLastmod(entity.getLastmod());
+		setLastRefresh(entity.getLastRefresh());
+		setLastRefreshStatus(entity.getLastRefreshStatus());
+		setMailListId(entity.getMailListId());
+		setName(entity.getName());
+		setOwnerHref(entity.getOwnerHref());
+		setPath(entity.getPath());
+		setProperties(entity.getProperties());
+		setPublick(entity.getPublick());
+		setPwNeedsEncrypt(entity.getPwNeedsEncrypt());
+		setRefreshRate(entity.getRefreshRate());
+		setRemoteId(entity.getRemoteId());
+		setRemotePw(entity.getRemotePw());
+		setTimezone(entity.getTimezone());
+		setSeq(entity.getSeq());
+		setSubscriptionId(entity.getSubscriptionId());
+		setSummary(entity.getSummary());
+		setUnremoveable(entity.getUnremoveable());
 		
-	public DropdownMenu getSubscribedCalendars(com.idega.user.data.User user);
+		try {
+			setCurrentAccess(entity.getCurrentAccess());
+			setDisabled(entity.getDisabled());
+			setOpen(entity.getOpen());
+		} catch (CalFacadeException e) {}
+	}
+	
+	/**
+	 * @return the groups
+	 */
+	public Set<Long> getGroups() {
+		return groups;
+	}
 
 	/**
-	* Sets that user will get data from this calendar.
-	* @param user		user that will get data from Calendar
-	* @param calendar	calendar that will send data for user
-	*/
-	public Layer subscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
-
-	/**
-	* Sets that user will not get data from this calendar.
-	* @param user		user that will not get data from Calendar
-	* @param calendar	calendar that will not send data for user
-	*/
-	public Layer unSubscribeCalendar(com.idega.user.data.User user, CalDAVCalendar calendar) throws Exception;
+	 * @param groups the groups to set
+	 */
+	public void setGroups(Set<Long> groups) {
+		this.groups = groups;
+	}
 }

@@ -1,24 +1,54 @@
 @CHARSET "UTF-8";
-div.calendar_name_layer {}
+div.calendar_name_layer {
+	height: 200%;
+}
 
 input.calendar_name {
 	float: right;
+}
+
+div.calendar_summary_layer {
+	height: 300%;
 }
 
 textarea.calendar_summary {
 	float: right;
 }
 
+div.calendar_description_layer {
+	height: 300%;
+}
+
 textarea.calendar_description {
 	float: right;
+}
+
+div.calendar_groups_selection_layer {
+	height: 500%;
+}
+
+select.calendar_groups_selectionBox {
+	float: right;
+}
+
+div.calendar_folder_dropdown_layer {
+	height: 200%;
 }
 
 select.calendar_folder_dropdown {
 	float: right;
 }
 
+div.calendar_is_unremovable_layer {
+	height: 200%;
+}
+
 input.calendar_is_unremovable {
 	float: right;
+}
+
+div.buttonsLayer {
+	height: 200%;
 }
 
 input.cancel_button {

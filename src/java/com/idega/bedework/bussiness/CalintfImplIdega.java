@@ -781,8 +781,12 @@ public class CalintfImplIdega extends CalintfBase implements PrivilegeDefs {
 	}
 
 	public void updateCalendar(final BwCalendar val) throws CalFacadeException {
+		CalendarWrapper wrapper = null;
+		if (!(val instanceof CalendarWrapper))
+			wrapper = new CalendarWrapper(val, access);
+		
 		checkOpen();
-		calendars.updateCalendar(val);
+		calendars.updateCalendar(wrapper);
 	}
 
 	/*

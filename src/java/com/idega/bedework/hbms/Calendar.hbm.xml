@@ -117,6 +117,14 @@
         <property name="value" column="bw_value" type="text"/>
       </composite-element>
     </set>
+    
+    <joined-subclass name="com.idega.calendar.data.CalendarEntity" table="CA_CALDAV_CALENDAR">
+    		<key column="id"/>
+    		<set name="groups" table="CA_CALENDAR_GROUP">
+      		<key column="id" />
+      		<element column="ic_group_id" type="long"></element>
+    		</set>
+  	</joined-subclass>
   </class>
 
   <!-- =================================================================
@@ -148,47 +156,81 @@
     <property name="sequence"  column="bw_sequence" type="integer" />
   </class>
 
-  <!-- =================================================================
-       calendar queries
-       ================================================================= -->
+	<!-- =================================================================
+			calendar queries
+			================================================================= -->
 
-  <query name="getNamedCalendars"><![CDATA[
-    from org.bedework.calfacade.BwCalendar as cal
-      where cal.name=:name and  
-          (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
-  ]]></query>
+	<query name="getNamedCalendars"><![CDATA[
+		from org.bedework.calfacade.BwCalendar as cal
+	  	where cal.name=:name and  
+	    (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
 
-  <query name="getCalendarByPath"><![CDATA[
-    from org.bedework.calfacade.BwCalendar as cal
-      where cal.path=:path and 
-          (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
-  ]]></query>
+ 	<query name="getNamedIdegaCalendars"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+	  	where cal.name=:name and  
+	    (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
 
-  <query name="getCalendarById"><![CDATA[
-    from org.bedework.calfacade.BwCalendar as cal
-      where cal.id=:id
-  ]]></query>
+	<query name="getCalendarByPath"><![CDATA[
+		from org.bedework.calfacade.BwCalendar as cal
+		where cal.path=:path and 
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+  	]]></query>
+  	
+  	<query name="getIdegaCalendarByPath"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+		where cal.path=:path and 
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+  	]]></query>
 
-  <query name="getPublicCalendarCollections"><![CDATA[
-    from org.bedework.calfacade.BwCalendar as cal
-      where cal.calType=1 and cal.publick=true and  
-          (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
-  ]]></query>
+	<query name="getCalendarById"><![CDATA[
+		from org.bedework.calfacade.BwCalendar as cal
+		where cal.id=:id
+	]]></query>
 
-  <query name="getUserCalendarCollections"><![CDATA[
-    from org.bedework.calfacade.BwCalendar as cal
-      where cal.calType=1 and cal.publick=false and  
-          (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
-  ]]></query>
+	<query name="getIdegaCalendarById"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal where cal.id=:id
+	]]></query>
+		
+	<query name="getPublicCalendarCollections"><![CDATA[
+		from org.bedework.calfacade.BwCalendar as cal
+		where cal.calType=1 and cal.publick=true and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
 
-  <query name="countCalendarEventRefs"><![CDATA[
-    select count(*) from org.bedework.calfacade.BwEventObj as ev
-      where ev.colPath = :colPath and ev.tombstoned=false
-  ]]></query>
+	<query name="getIdegaPublicCalendarCollections"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+		where cal.calType=1 and cal.publick=true and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
+  	
+	<query name="getUserCalendarCollections"><![CDATA[
+		from org.bedework.calfacade.BwCalendar as cal
+		where cal.calType=1 and cal.publick=false and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
+  	
+	<query name="getUserIdegaCalendarCollections"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+		where cal.calType=1 and cal.publick=false and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
 
-  <query name="countCalendarChildren"><![CDATA[
-    select count(*) from org.bedework.calfacade.BwCalendar as cal
-      where cal.colPath = :colPath and  
-          (cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
-  ]]></query>
+	<query name="countCalendarEventRefs"><![CDATA[
+		select count(*) from org.bedework.calfacade.BwEventObj as ev
+		where ev.colPath = :colPath and ev.tombstoned=false
+	]]></query>
+
+	<query name="countCalendarChildren"><![CDATA[
+		select count(*) from org.bedework.calfacade.BwCalendar as cal
+		where cal.colPath = :colPath and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
+	
+	<query name="countIdegaCalendarChildren"><![CDATA[
+		select count(*) from com.idega.calendar.data.CalendarEntity as cal
+		where cal.colPath = :colPath and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
 </hibernate-mapping>

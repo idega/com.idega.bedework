@@ -85,12 +85,17 @@ package com.idega.bedework.bussiness.impl;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ejb.FinderException;
+
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -102,14 +107,19 @@ import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.block.cal.data.CalDAVCalendar;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.calendar.data.CalendarEntity;
+import com.idega.calendar.data.dao.CalendarDAO;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.business.UserBusinessBean;
+import com.idega.user.data.Group;
+import com.idega.user.data.GroupHome;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * <p>Implementation of {@link BedeworkCalendarManagementService}.</p>
@@ -168,6 +178,17 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		}
 		
 		return null;
+	}
+	
+	@Autowired
+	private CalendarDAO calendarDAO;
+	
+	private CalendarDAO getCalendarDAO() {
+		if (this.calendarDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		
+		return this.calendarDAO;
 	}
 	
 	@Override
@@ -370,92 +391,86 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	}
 
 	@Override
-	public List<BwCalendar> getUnSubscribedCalendars(User user) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName) {
 		return createCalendarDirectory(user, calendarName, null, null, null, Boolean.FALSE, 
-				Boolean.FALSE, BwCalendar.calTypeCalendarCollection);
+				Boolean.FALSE, BwCalendar.calTypeCalendarCollection, null);
 	}
 	
 	@Override
+	public boolean createCalendar(User user, String calendarName,
+			String folderPath, String summary, boolean isPublic,
+			Set<Long> groupsIDs) {
+		return createCalendarDirectory(user, calendarName, folderPath, summary, 
+				null, Boolean.FALSE, isPublic, BwCalendar.calTypeCalendarCollection, groupsIDs);
+	}
+
+	@Override
+	public boolean createCalendar(com.idega.user.data.User user,
+			String calendarName, String folderPath, String summary,
+			String description, boolean isReadOnly, boolean isPublic) {
+		
+		return createCalendarDirectory(user, calendarName, folderPath, summary, 
+				description, isReadOnly, isPublic, BwCalendar.calTypeCalendarCollection, null);
+	}
+
+	@Override
+	public boolean createFolder(com.idega.user.data.User user,
+			String calendarName, String folderPath, String summary,
+			String description, boolean isReadOnly, boolean isPublic) {
+		
+		return createCalendarDirectory(user, calendarName, folderPath, summary, 
+				description, isReadOnly, isPublic, BwCalendar.calTypeFolder, null);
+	}
+
+	@Override
 	public boolean createCalendarDirectory(User user, String calendarName,
 			String folderPath, String summary, String description,
-			boolean isReadOnly, boolean isPublic, int calendarDirectoryType) {
+			boolean isReadOnly, boolean isPublic, int calendarDirectoryType, 
+			Set<Long> groupsIDs) {
 		
 		if (user == null || StringUtil.isEmpty(calendarName)) {
 			LOGGER.log(Level.INFO, "User or calendar name not defined.");
 			return Boolean.FALSE;
 		}
 		
-		BwCalendar calendar = getUserCalendar(user, calendarName, folderPath);
-		if (calendar != null) {
+		BwCalendar bwCalendar = getUserCalendar(user, calendarName, folderPath);
+		if (bwCalendar != null) {
 			LOGGER.log(Level.INFO, "Such calendar already exists, not creating.");
 			return Boolean.FALSE;
 		}
 		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
+		CalendarEntity calendar = new CalendarEntity();
+		calendar = setCalendarEntity(calendar, user, calendarName, folderPath, summary, 
+				description, isReadOnly, isPublic, calendarDirectoryType, groupsIDs);
+		if (calendar == null) {
 			return Boolean.FALSE;
 		}
 		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
-			bwAPI.closeBedeworkAPI();
+		return getCalendarDAO().updateCalendar(user, calendar);
+	}
+
+	@Override
+	public boolean updateCalendarDirectory(CalendarEntity calendar, User user,
+			String calendarName, String folderPath, String summary, String description,
+			boolean isReadOnly, boolean isPublic, int calendarDirectoryType, Set<Long> groupsIDs) {
+		
+		if (user == null) {
+			LOGGER.log(Level.INFO, "User or calendar not defined.");
 			return Boolean.FALSE;
 		}
 		
-		UserAdapter userAdapter = new UserAdapter(user);
-		
-		calendar = new BwCalendar();
-		calendar.setName(calendarName);
-		calendar.setCreatorEnt(userAdapter.getBedeworkSystemUser());
-		calendar.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		calendar.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		calendar.setPublick(isPublic);
-		calendar.setAffectsFreeBusy(Boolean.TRUE);
-		
-		String calPath = null;
-		if (StringUtil.isEmpty(folderPath)) {
-			calPath = getHomeCalendarPath(user);
-		} else {
-			calPath = folderPath;
+		if (calendar == null || getCalendarDAO().getIdegaCalendarById(calendar.getId()) == null) {
+			return createCalendarDirectory(user, calendarName, folderPath, summary, 
+					description, isReadOnly, isPublic, calendarDirectoryType, groupsIDs);
 		}
-				
-		if (calPath == null) {
+		
+		calendar = setCalendarEntity(calendar, user, calendarName, folderPath, summary, 
+				description, isReadOnly, isPublic, calendarDirectoryType, groupsIDs);
+		if (calendar == null) {
 			return Boolean.FALSE;
 		}
 		
-		calendar.setColPath(calPath);
-		calendar.setPath(calPath + CoreConstants.SLASH + calendarName);
-		
-		if (calendarDirectoryType < 1 || calendarDirectoryType > 9) {
-			calendarDirectoryType = BwCalendar.calTypeUnknown;
-		}
-		
-		calendar.setCalType(calendarDirectoryType);
-		
-		if (!StringUtil.isEmpty(summary)) {
-			calendar.setSummary(summary);
-		}
-		
-		if (!StringUtil.isEmpty(description)) {
-			calendar.setDescription(description);
-		}
-		
-		calendar.setUnremoveable(isReadOnly);
- 		
-		try {
-			calendarsHandler.add(calendar, calPath);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to add calendar: ", e);
-			return Boolean.FALSE;
-		}
-		
-		return Boolean.TRUE;
+		return getCalendarDAO().updateCalendar(user, calendar);
 	}
 
 	@Override
@@ -472,6 +487,12 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	}
 
 	@Override
+	public boolean subscribeCalendars(User user, Collection<String> calendarPaths) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
 	public boolean unSubscribeCalendar(User user, String calendarPath) {
 		// TODO Auto-generated method stub
 		return false;
@@ -480,6 +501,13 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	@Override
 	public boolean unSubscribeCalendar(com.idega.user.data.User user,
 			BwCalendar calendar) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean unsubscribeCalendars(User user,
+			Collection<String> calendarPaths) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -528,36 +556,16 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	}
 
 	@Override
-	public List<CalDAVCalendar> getUnSubscribedCalendars(User user,
-			int maxResults, int firstResult) {
+	public List<BwCalendar> getUnSubscribedCalendars(User user) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<CalDAVCalendar> getAllVisibleCalendars(com.idega.user.data.User user, int maxResults, int firstResult) {
-		if (user == null) {
-			return null;
-		}
-		
-		List<CalDAVCalendar> visibleCalendars = new ArrayList<CalDAVCalendar>();
-		
-		List<CalDAVCalendar> unsubscribed = getUnSubscribedCalendars(user, maxResults, firstResult);
-		if (!ListUtil.isEmpty(unsubscribed)) {
-			visibleCalendars.addAll(unsubscribed);
-		}
-		
-		List<CalDAVCalendar> subscribed = getSubscribedCalendars(user, maxResults, firstResult);
-		if (!ListUtil.isEmpty(subscribed)) {
-			visibleCalendars.addAll(subscribed);
-		}
-		
-//		List<CalDAVCalendar> owned = getAllUserCalendarDirectories(user.getPrimaryKey().toString());
-//		if (!ListUtil.isEmpty(owned)) {
-//			visibleCalendars.addAll(owned);
-//		}
-		
-		return subscribed;
+	public List<CalDAVCalendar> getUnSubscribedCalendars(User user,
+			int maxResults, int firstResult) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -620,33 +628,177 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 	}
 
 	@Override
-	public boolean createCalendar(com.idega.user.data.User user,
-			String calendarName, String folderPath, String summary,
-			String description, boolean isReadOnly, boolean isPublic) {
+		public List<CalDAVCalendar> getAllVisibleCalendars(com.idega.user.data.User user, int maxResults, int firstResult) {
+			if (user == null) {
+				return null;
+			}
+			
+			List<CalDAVCalendar> visibleCalendars = new ArrayList<CalDAVCalendar>();
+			
+			List<CalDAVCalendar> unsubscribed = getUnSubscribedCalendars(user, maxResults, firstResult);
+			if (!ListUtil.isEmpty(unsubscribed)) {
+				visibleCalendars.addAll(unsubscribed);
+			}
+			
+			List<CalDAVCalendar> subscribed = getSubscribedCalendars(user, maxResults, firstResult);
+			if (!ListUtil.isEmpty(subscribed)) {
+				visibleCalendars.addAll(subscribed);
+			}
+			
+	//		List<CalDAVCalendar> owned = getAllUserCalendarDirectories(user.getPrimaryKey().toString());
+	//		if (!ListUtil.isEmpty(owned)) {
+	//			visibleCalendars.addAll(owned);
+	//		}
+			
+			return subscribed;
+		}
+
+	@Override
+	public List<Group> getAllGroups(Set<Long> groupIDs) {
+		GroupHome groupHome = getHomeForEntity(Group.class);
+		if (groupHome == null) {
+			return null;
+		}
 		
-		return createCalendarDirectory(user, calendarName, folderPath, summary, 
-				description, isReadOnly, isPublic, BwCalendar.calTypeCalendarCollection);
-	}
+		List<Group> allGroups = null;
+		try {
+			Collection<?> groups = null;
 
-	@Override
-	public boolean createFolder(com.idega.user.data.User user,
-			String calendarName, String folderPath, String summary,
-			String description, boolean isReadOnly, boolean isPublic) {
+			if (ListUtil.isEmpty(groupIDs)) {
+				groups = groupHome.findAll();
+			} else {
+				groups = groupHome.findGroups(groupIDs.toArray(new String[groupIDs.size()]));
+			}
+			
+			if (ListUtil.isEmpty(groups)) {
+				return null;
+			}
+			
+			allGroups = new ArrayList<Group>();
+			
+			for (Object group : groups) {
+				if (group instanceof Group) {
+					allGroups.add((Group) group);
+				}
+			}
+			
+		} catch (FinderException e) {
+			getLogger().log(Level.WARNING, "Unable to get groups: " + e.getMessage());
+			return null;
+		}
 		
-		return createCalendarDirectory(user, calendarName, folderPath, summary, 
-				description, isReadOnly, isPublic, BwCalendar.calTypeFolder);
+		return allGroups;
 	}
 
 	@Override
-	public boolean subscribeCalendars(User user, Collection<String> calendarPaths) {
-		// TODO Auto-generated method stub
-		return false;
+	public Set<Long> convertGroupIDs(List<String> groupIDs) {
+		if (ListUtil.isEmpty(groupIDs)) {
+			return null;
+		}
+		
+		Set<Long> ids = new HashSet<Long>();
+		for (String groupID : groupIDs) {
+			Long value = null;
+			try {
+				value = Long.valueOf(groupID);
+			} catch (NumberFormatException e) {}
+			
+			if (value != null) {
+				ids.add(value);
+			}
+		}
+		
+		return ids;
 	}
 
 	@Override
-	public boolean unsubscribeCalendars(User user,
-			Collection<String> calendarPaths) {
-		// TODO Auto-generated method stub
-		return false;
+	public CalendarEntity setCalendarEntity(CalendarEntity calendar, User user, 
+			String calendarName, String folderPath, String summary, String description,
+			boolean isReadOnly, boolean isPublic, int calendarDirectoryType,
+			Set<Long> groupsIDs) {
+		
+		if (user == null) {
+			return null;
+		}
+		
+		UserAdapter userAdapter = new UserAdapter(user);
+		
+		calendar.setName(calendarName);
+		calendar.setCreatorEnt(userAdapter.getBedeworkSystemUser());
+		calendar.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+		calendar.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
+		calendar.setPublick(isPublic);
+		calendar.setAffectsFreeBusy(Boolean.TRUE);
+		
+		String calPath = null;
+		if (StringUtil.isEmpty(folderPath)) {
+			calPath = getHomeCalendarPath(user);
+		} else {
+			calPath = folderPath;
+		}
+				
+		if (calPath == null) {
+			return null;
+		}
+		
+		calendar.setColPath(calPath);
+		calendar.setPath(calPath + CoreConstants.SLASH + calendarName);
+		
+		if (calendarDirectoryType < 1 || calendarDirectoryType > 9) {
+			calendarDirectoryType = BwCalendar.calTypeUnknown;
+		}
+		
+		calendar.setCalType(calendarDirectoryType);
+		
+		if (!StringUtil.isEmpty(summary)) {
+			calendar.setSummary(summary);
+		}
+		
+		if (!StringUtil.isEmpty(description)) {
+			calendar.setDescription(description);
+		}
+		
+		calendar.setUnremoveable(isReadOnly);
+		
+		if (!ListUtil.isEmpty(groupsIDs)) {
+			calendar.setGroups(groupsIDs);
+		}
+		
+		return calendar;
+	}
+
+	@Override
+	public boolean updateCalendar(com.idega.user.data.User user, String calendarName,
+			String folderPath, String summary, boolean isPublic, Set<Long> groupsIDs) {
+		
+		if (user == null || StringUtil.isEmpty(calendarName)) {
+			LOGGER.log(Level.INFO, "User or calendar name not defined.");
+			return Boolean.FALSE;
+		}
+
+		BwCalendar bwCalendar = getUserCalendar(user, calendarName, folderPath);
+		if (bwCalendar == null) {
+			LOGGER.log(Level.INFO, "Such calendar: "+ calendarName +" does not exists, creating...");
+			return createCalendar(user, calendarName, folderPath, summary, isPublic, groupsIDs);
+		}
+		
+		String path = null;
+		if (StringUtil.isEmpty(folderPath)) {
+			path = getHomeCalendarPath(user);
+		} else {
+			path = folderPath;
+		}
+		
+		path = path + CoreConstants.SLASH + calendarName;
+
+		CalendarEntity calendar = getCalendarDAO().getIdegaCalendarByPath(path);
+ 		if (calendar == null) {
+			calendar = new CalendarEntity(bwCalendar, groupsIDs);
+		}
+		
+		return updateCalendarDirectory(calendar, user, 
+				calendarName, folderPath, 
+				summary, null, Boolean.FALSE, isPublic, 
+				BwCalendar.calTypeCalendarCollection, groupsIDs);
 	}
 }
