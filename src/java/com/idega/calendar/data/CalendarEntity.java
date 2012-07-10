@@ -169,15 +169,95 @@ public class CalendarEntity extends BwCalendar {
 			setDisabled(entity.getDisabled());
 			setOpen(entity.getOpen());
 		} catch (CalFacadeException e) {}
-	}
-	
-	/**
-	 * @return the groups
-	 */
+	}	
+		
+//	/**
+//	 * <p>Tells if groups are loading now.</p>
+//	 */
+//	private boolean isGroupsLoadingProcess = Boolean.FALSE;
+//	
+//	public boolean isGroupsLoadingProcess() {
+//		return isGroupsLoadingProcess;
+//	}
+//
+//	public void setGroupsLoadingProcess(boolean isGroupsLoadingProcess) {
+//		this.isGroupsLoadingProcess = isGroupsLoadingProcess;
+//	}
+//
+//	private boolean isGroupsLoaded = Boolean.FALSE;
+//	
+//	public boolean isGroupsLoaded() {
+//		return isGroupsLoaded;
+//	}
+//
+//	public void setGroupsLoaded(boolean isGroupsLoaded) {
+//		this.isGroupsLoaded = isGroupsLoaded;
+//	}
+
 	public Set<Long> getGroups() {
-		return groups;
+//		if (isGroupsLoaded()){
+    			return this.groups;
+//		}
+//
+//		try {
+//			CalendarEntity articleEntity = (CalendarEntity) HibernateUtil.getInstance().loadLazyField(
+//					CalendarEntity.class.getMethod("getGroups", Boolean.class), this,Boolean.FALSE);
+//			groups = articleEntity.getGroups(false);
+//		} catch (Exception e) {
+//			Logger.getLogger(CalendarEntity.class.getName()).log(Level.WARNING, "Failed loading article categories", e);
+//			return null;
+//		}
+//
+//		setGroupsLoaded(Boolean.TRUE);
+//		return groups;
 	}
 
+//    public Set<Long> getGroups(Boolean reload){
+//    		if (reload) {
+//    			setGroupsLoaded(Boolean.FALSE);
+//    			return getGroups();
+//    		}
+//    		
+//    		return this.groups;
+//    }
+	
+	
+//	public Set<Long> getGroups() {
+//		if (isGroupsLoaded() || isGroupsLoadingProcess()) {
+//			return this.groups;
+//		}
+//				
+//		/* Let's load groups! */	
+//		try {
+//			java.lang.reflect.Method method = CalendarEntity.class.getMethod("getGroups");
+//			if (method == null) {
+//				return null;
+//			}
+//
+//			setGroupsLoadingProcess(Boolean.TRUE);
+//			CalendarEntity calendarEntity = (CalendarEntity) HibernateUtil.getInstance().loadLazyField(
+//					method, this);
+//			setGroupsLoadingProcess(Boolean.FALSE);
+//			
+//			if (calendarEntity == null) {
+//				Logger.getLogger(CalendarEntity.class.getName()).log(
+//						Level.WARNING, "Failed loading groups. Not found in database.");
+//				return null;
+//			}
+//			
+//			calendarEntity.setGroupsLoaded(Boolean.TRUE);
+//			groups = calendarEntity.getGroups();
+//		} catch (Exception e) {
+//			setGroupsLoadingProcess(Boolean.FALSE);
+//			Logger.getLogger(CalendarEntity.class.getName())
+//				.log(Level.WARNING, "Failed loading groups of calendar.", e);
+//			return null;
+//		}
+//		
+//		setGroupsLoaded(Boolean.TRUE);
+//		return this.groups;
+//	}
+	
 	/**
 	 * @param groups the groups to set
 	 */

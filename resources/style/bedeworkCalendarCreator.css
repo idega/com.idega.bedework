@@ -1,0 +1,118 @@
+@CHARSET "UTF-8";
+div.calendar_name_layer {
+	height: 10%;
+}
+
+input.calendar_name_input {
+	float: right;
+}
+
+div.calendar_summary_layer {
+	height: 17%;
+}
+
+textarea.calendar_summary {
+	float: right;
+}
+
+div.calendar_description_layer {
+	height: 20%;
+}
+
+textarea.calendar_description {
+	float: right;
+}
+
+div.calendar_publicity {
+	float: right;
+}
+
+div.calendar_groups_selection_layer {
+	height: auto;
+}
+
+div.calendar_privacy_layer {
+	height: 20%;
+}
+
+div.calendar_privacy_button_layer {
+	float: right;
+}
+
+select.calendar_groups_selectionBox {
+	float: right;
+}
+
+div.calendar_folder_dropdown_layer {
+	height: 10%;
+}
+
+select.calendar_folder_dropdown {
+	float: right;
+}
+
+div.calendar_is_unremovable_layer {
+	height: 10%;
+}
+
+input.calendar_is_unremovable {
+	float: right;
+}
+
+div.calendar_create_buttons_layer {
+	height: 10%;
+}
+
+div.calendar_edit_buttons_layer {
+	height: 10%;
+}
+
+input.cancel_button {
+	float: left;
+}
+
+input.create_calendar_button {
+	float: right;
+}
+
+input.add_calendar_button {
+	float: right;
+}
+
+div.calendars_view_layer {
+	display: table;
+	border: solid 2px;
+}
+
+div.calendar_view_layer {
+	height: 14pt;
+	display: table-row;
+}
+
+span.calendar_number {
+	width: 20%; 
+	display: table-cell;
+	border: solid 2px;
+}
+
+div.calendar_view_layer span.calendar_name {
+	width: 20%;
+	display: table-cell;
+	border: solid 2px;
+}
+
+div.calendar_view_layer a.calendar_edit {
+	float: right;
+	display: table-cell;
+	border: solid 2px;
+}
+
+div.calendar_view_layer a.calendar_delete {
+	float: right;
+	display: table-cell;
+	border: solid 2px;
+}
+
+table.calendars_table {
+	height: 10%;
+}

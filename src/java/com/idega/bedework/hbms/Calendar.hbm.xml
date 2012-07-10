@@ -118,11 +118,11 @@
       </composite-element>
     </set>
     
-    <joined-subclass name="com.idega.calendar.data.CalendarEntity" table="CA_CALDAV_CALENDAR">
+    <joined-subclass name="com.idega.calendar.data.CalendarEntity" table="CA_CALDAV_CALENDAR" lazy="false">
     		<key column="id"/>
-    		<set name="groups" table="CA_CALENDAR_GROUP">
+    		<set name="groups" table="CA_CALENDAR_GROUP" lazy="false">
       		<key column="id" />
-      		<element column="ic_group_id" type="long"></element>
+      		<element column="ic_group_id" type="long" ></element>
     		</set>
   	</joined-subclass>
   </class>

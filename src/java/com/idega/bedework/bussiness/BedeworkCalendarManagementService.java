@@ -115,6 +115,14 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	public BwCalendar getHomeCalendar(com.idega.user.data.User user);
 
 	/**
+	 * <p>Searches database for {@link CalendarEntity} with given id.</p>
+	 * @param calendarID {@link CalendarEntity#getId()}.
+	 * @return {@link CalendarEntity} with given id or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public CalendarEntity getCalendar(String calendarID);
+	
+	/**
 	 * <p>Searches database for given {@link User} calendar in database.</p>
 	 * @param user who's calendar should be found.
 	 * @param calendarName which should be found.
@@ -369,4 +377,22 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 			int calendarDirectoryType,
 			Set<Long> groupsIDs
 			);
+	
+	/**
+	 * <p>Completely removes calendars with all events inside.</p>
+	 * @param calendarID - {@link CalendarEntity#getId()}.
+	 * @param user - who has the calendar.
+	 * @return <code>true</code> if deleted, <code>false</code> otherwise.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean removeCalendar(String calendarID, com.idega.user.data.User user);
+	
+	/**
+	 * <p>Completely removes calendars with all events inside.</p>
+	 * @param calendar to delete.
+	 * @param user who has calendar.
+	 * @return <code>true</code> if deleted, <code>false</code> otherwise.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean removeCalendar(CalendarEntity calendar, com.idega.user.data.User user);
 }

@@ -801,4 +801,54 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 				summary, null, Boolean.FALSE, isPublic, 
 				BwCalendar.calTypeCalendarCollection, groupsIDs);
 	}
+
+	private int getIDFromString(String calendarID) {
+		if (StringUtil.isEmpty(calendarID)) {
+			return -1;
+		}
+		
+		Integer id = null;
+		try {
+			id = Integer.valueOf(calendarID);
+			return id;
+		} catch (NumberFormatException e) {
+			getLogger().log(Level.WARNING, "ID shoud be number, but: " + calendarID + " found.");
+			return -1;
+		}
+	}
+	
+	@Override
+	public boolean removeCalendar(String calendarID, User user) {
+		if (StringUtil.isEmpty(calendarID)) {
+			getLogger().log(Level.WARNING, "Unable to remove calendar. Calendar ID is not given.");
+			return Boolean.FALSE;
+		}
+		
+		int id = getIDFromString(calendarID);
+		if (id == -1) {
+			return Boolean.FALSE;
+		}
+		
+		return getCalendarDAO().removeCalendar(user, id);
+	}
+
+	@Override
+	public boolean removeCalendar(CalendarEntity calendar, User user) {
+		return getCalendarDAO().removeCalendar(user, calendar);
+	}
+
+	@Override
+	public CalendarEntity getCalendar(String calendarID) {
+		if (StringUtil.isEmpty(calendarID)) {
+			getLogger().log(Level.WARNING, "Unable to get calendar. Calendar ID is not given.");
+			return null;
+		}
+		
+		int id = getIDFromString(calendarID);
+		if (id == -1) {
+			return null;
+		}
+		
+		return getCalendarDAO().getIdegaCalendarById(id);
+	}
 }

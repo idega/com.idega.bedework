@@ -171,7 +171,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			calendarsHandler.delete(calendarEntity, Boolean.TRUE);
 			return bwAPI.closeBedeworkAPI();
 		} catch (CalFacadeException e1) {
-			LOGGER.log(Level.WARNING, "Unable to remove calendar: " + e1.getMessage());
+			LOGGER.log(Level.WARNING, "Unable to remove calendar: ", e1);
 			bwAPI.closeBedeworkAPI();
 			return Boolean.FALSE;
 		}
@@ -278,5 +278,19 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 		
 		return getResultList(CalendarEntity.GET_BY_NAME, CalendarEntity.class,
                 new Param(CalendarEntity.NAME_PROP, name));
+	}
+
+	@Override
+	public boolean removeCalendar(User user, int calendarID) {
+		if (user == null) {
+			return Boolean.FALSE;
+		}
+		
+		CalendarEntity calendar = getIdegaCalendarById(calendarID);
+		if (calendar == null) {
+			return Boolean.FALSE;
+		}
+		
+		return removeCalendar(user, calendar);
 	}
 }

@@ -82,31 +82,48 @@
  */
 package com.idega.bedework.presentation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
+import org.bedework.calfacade.BwCalendar;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
 import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
 import com.idega.bedework.bussiness.impl.BedeworkCalendarManagementServiceBean;
+import com.idega.block.web2.business.JQuery;
+import com.idega.calendar.data.CalendarEntity;
 import com.idega.idegaweb.IWBundle;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Layer;
+import com.idega.presentation.Table2;
+import com.idega.presentation.TableBodyRowGroup;
+import com.idega.presentation.TableCell2;
+import com.idega.presentation.TableHeaderRowGroup;
+import com.idega.presentation.TableRow;
+import com.idega.presentation.text.Heading3;
+import com.idega.presentation.text.Link;
 import com.idega.presentation.text.Text;
+import com.idega.presentation.ui.BackButton;
 import com.idega.presentation.ui.CheckBox;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.Form;
 import com.idega.presentation.ui.Label;
+import com.idega.presentation.ui.RadioButton;
 import com.idega.presentation.ui.RadioGroup;
 import com.idega.presentation.ui.SelectOption;
-import com.idega.presentation.ui.SelectionBox;
 import com.idega.presentation.ui.SubmitButton;
 import com.idega.presentation.ui.TextArea;
 import com.idega.presentation.ui.TextInput;
+import com.idega.user.presentation.group.GroupsFilter;
 import com.idega.util.ArrayUtil;
+import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
 import com.idega.util.PresentationUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
@@ -123,17 +140,92 @@ import com.idega.util.expression.ELUtil;
  */
 public class BedeworkCalendarCreator extends Block {
 	
-	public static final String ATTRIBUTE_NAME = "attr_name";
-	public static final String ATTRIBUTE_SUMMARY = "attr_summary";
-	public static final String ATTRIBUTE_DESCRIPTION = "attr_description";
-	public static final String ATTRIBUTE_FOLDER = "attr_folder";
-	public static final String ATTRIBUTE_IS_REMOVABLE = "attr_is_removable";
-	public static final String ATTRIBUTE_IS_PUBLIC = "attr_is_public";
-	public static final String ATTRIBUTE_GROUPS = "attr_groups";
+	public static final String	ATTRIBUTE_NAME = "attr_name",
+											ATTRIBUTE_SUMMARY = "attr_summary",
+											ATTRIBUTE_DESCRIPTION = "attr_description",
+											ATTRIBUTE_FOLDER = "attr_folder",
+											ATTRIBUTE_IS_REMOVABLE = "attr_is_removable",
+											ATTRIBUTE_IS_PRIVATE = "attr_is_private",
+											ATTRIBUTE_GROUPS = "attr_groups",
+											ATTRIBUTE_CALENDAR_ID = "attr_calendar_id";
 	
-	public static final String PARAMETER_ACTION = "prm_action";
-	public static final String PARAMETER_CREATE = "prm_create";
-	public static final String PARAMETER_CANCEL = "prm_cancel";
+	public static final String 	CLASS_CALENDARS_TABLE = "calendars_table",
+											CLASS_CALENDARS_TABLE_HEADER = "calendars_table_header",
+											CLASS_CALENDARS_TABLE_BODY = "calendars_table_body",
+											CLASS_CALENDARS_TABLE_ROW = "calendars_table_row",
+											CLASS_CALENDARS_TABLE_CELL = "calendar_table_cell",
+											
+											CLASS_CALENDAR_NAME = "calendar_name",
+											CLASS_CALENDAR_NUMBER = "calendar_number",
+											
+											CLASS_CALENDAR_LAYER_NAME_INPUT = "calendar_name_layer",
+											CLASS_CALENDAR_LAYER_GROUPS_SELECTION = "calendar_groups_selection_layer",
+											CLASS_CALENDAR_LAYER_DESCRIPTION = "calendar_description_layer",
+											CLASS_CALENDAR_LAYER_SUMMARY = "calendar_summary_layer",
+											CLASS_CALENDAR_LAYER_FOLDER_SELECTION = "calendar_folder_dropdown_layer",
+											CLASS_CALENDAR_LAYER_REMOVABLE = "calendar_is_unremovable_layer",
+											CLASS_CALENDAR_LAYER_PRIVACY = "calendar_privacy_layer",
+											CLASS_CALENDAR_LAYER_BUTTON_PRIVACY = "calendar_privacy_button_layer",
+
+											CLASS_CALENDAR_REMOVABLE_CHECKBOX = "calendar_is_unremovable",
+											CLASS_CALENDAR_FOLDER_SELECTION = "calendar_folder_dropdown",
+											CLASS_CALENDAR_SUMMARY_INPUT = "calendar_summary",
+											CLASS_CALENDAR_DESCRIPTION_INPUT = "calendar_description",
+											CLASS_CALENDAR_NAME_INPUT = "calendar_name_input",
+											CLASS_CALENDAR_GROUPS_SELECTION_BOX = "calendar_groups_selectionBox",
+											
+											CLASS_BUTTONS_LAYER_FOR_CALENDAR_CREATION = "calendar_create_buttons_layer",
+											CLASS_BUTTONS_LAYER_FOR_CALENDAR_EDIT = "calendar_edit_buttons_layer",
+											
+											CLASS_CALENDAR_BUTTON_ADD = "add_calendar_button",
+											CLASS_CALENDAR_BUTTON_CANCEL = "cancel_button",
+											CLASS_CALENDAR_BUTTON_CREATE = "create_calendar_button",
+											CLASS_CALENDAR_BUTTON_EDIT = "calendar_edit_button",
+											CLASS_CALENDAR_BUTTON_DELETE = "calendar_delete",
+											CLASS_CALENDAR_BUTTON_PRIVACY = "calendar_privacy",
+											
+											CLASS_CALENDAR_FORM_EDIT = "calendar_edit_form",
+											CLASS_CALENDAR_FORM_VIEW = "calendar_view_form";
+
+	public static final String 	FILE_CALENDAR_IMAGE_EDIT = "images/edit.png",
+											FILE_CALENDAR_IMAGE_DELETE = "images/delete.png",
+											FILE_CALENDAR_CREATOR_CSS = "style/bedeworkCalendarCreator.css",
+											FILE_CALENDAR_CREATOR_JS = "javascript/bedeworkCalendarCreator.js";
+	
+	public static final String 	PARAMETER_ACTION = "prm_action",
+											PARAMETER_CREATE = "prm_create",
+											PARAMETER_CANCEL = "prm_cancel",
+											PARAMETER_EDIT = "prm_edit",
+											PARAMETER_DELETE = "prm_delete",
+											PARAMETER_ADD = "prm_add";
+	
+	public static final String 	VALUE_CALENDAR_PRIVATE = "yes",
+											VALUE_CALENDAR_PUBLIC = "no";
+	
+	private IWBundle iwb = null;
+	
+	private IWBundle getIWBundle(IWContext iwc) {
+		if (iwc == null) {
+			iwc = CoreUtil.getIWContext();
+		}
+		
+		if (this.iwb == null) {
+			this.iwb = iwc.getIWMainApplication().getBundle(BedeworkConstants.BUNDLE_IDENTIFIER);
+		}
+		
+		return this.iwb;
+	}
+	
+	@Autowired
+	private JQuery jQuery;
+	
+	private JQuery getJQuery() {
+		if (this.jQuery == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		
+		return this.jQuery;
+	}
 	
 	@Autowired
 	private BedeworkCalendarManagementService bcms;
@@ -168,7 +260,7 @@ public class BedeworkCalendarCreator extends Block {
 		
 		return this.bcpcs;
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see com.idega.presentation.PresentationObject#main(com.idega.presentation.IWContext)
 	 */
@@ -176,91 +268,320 @@ public class BedeworkCalendarCreator extends Block {
 	public void main(IWContext iwc) throws Exception {
 		super.main(iwc);
 		
-		IWBundle bundle = getBundle(iwc);
-		if (bundle == null) {
+		PresentationUtil.addStyleSheetsToHeader(iwc, Arrays.asList(
+				getIWBundle(iwc).getVirtualPathWithFileNameString(
+						FILE_CALENDAR_CREATOR_CSS
+						)
+		));
+		
+		if (!iwc.isLoggedOn()) {
+			add(new Heading3(getLocalizedString("user_not_logged_on", "User is not logged on", iwc)));
 			return;
 		}
 		
-		PresentationUtil.addStyleSheetsToHeader(iwc, Arrays.asList(
-				iwc.getIWMainApplication().getBundle(BedeworkConstants.BUNDLE_IDENTIFIER)
-				.getVirtualPathWithFileNameString("style/BedeworkCalendarCreator.css")
+		PresentationUtil.addJavaScriptSourcesLinesToBody(iwc, Arrays.asList(
+				CoreConstants.DWR_UTIL_SCRIPT,
+				getJQuery().getBundleURIToJQueryLib(),
+				getIWBundle(iwc).getVirtualPathWithFileNameString(
+						FILE_CALENDAR_CREATOR_JS
+						)
 		));
 		
-		Form form = new Form();
+		Form calendarEditForm = new Form();
+		calendarEditForm.setStyleClass(CLASS_CALENDAR_FORM_EDIT);
 		
-		form.add(getNameLayer(iwc));
-		form.add(getSummaryLayer(iwc));
-		form.add(getPublicPrivateSelection(iwc));
-		form.add(getGroupsSelectionBoxLayer(iwc));
-		form.add(getButtonsLayer(iwc));
-		
-		add(form);
+		Form calendarViewForm = new Form();
+		calendarViewForm.setStyleClass(CLASS_CALENDAR_FORM_VIEW);
 		
 		String action = iwc.getParameter(PARAMETER_ACTION);
+		
+		/* User asked to create/update calendar. */
 		if (PARAMETER_CREATE.equals(action)) {
-			boolean isPublic = Boolean.FALSE;
-			String publicity = iwc.getParameter(ATTRIBUTE_IS_PUBLIC);
-			if (!StringUtil.isEmpty(publicity)) {
-				if (publicity.equals("public")) {
-					isPublic = Boolean.TRUE;
+			boolean isUpdated = Boolean.FALSE;
+
+			/* Checks if calendar is public or private. */
+			Boolean isPrivate = null;
+			String privacy = iwc.getParameter(CLASS_CALENDAR_BUTTON_PRIVACY);
+			if (!StringUtil.isEmpty(privacy)) {
+				if (privacy.equals(VALUE_CALENDAR_PRIVATE)) {
+					isPrivate = Boolean.TRUE;
+				} else if (privacy.equals(VALUE_CALENDAR_PUBLIC)) {
+					isPrivate = Boolean.FALSE;
 				}
 			}
 
+			/* Checks which groups are selected.  */
 			String[] groups = iwc.getParameterValues(ATTRIBUTE_GROUPS);
-			Set<Long> groupIDs = getBedeworkCalendarManagementService().convertGroupIDs(Arrays.asList(groups));
 			
-			getBedeworkCalendarManagementService().updateCalendar(
+			Set<Long> groupIDs = null;
+			if (!ArrayUtil.isEmpty(groups)) {
+				groupIDs = getBedeworkCalendarManagementService().convertGroupIDs(
+						Arrays.asList(groups)
+						);
+			}
+			
+			/* Tries to update/create calendar with given values. */
+			isUpdated = getBedeworkCalendarManagementService().updateCalendar(
 					iwc.getCurrentUser(), 
 					iwc.getParameter(ATTRIBUTE_NAME), 
 					iwc.getParameter(ATTRIBUTE_FOLDER), 
 					iwc.getParameter(ATTRIBUTE_SUMMARY), 
-					isPublic, groupIDs);
+					!isPrivate, isPrivate ? groupIDs : null);
+			
+			/* Prints results. */
+			if (isUpdated) {
+				add(new Heading3(getLocalizedString("your_calendar_is_updated", 
+						"Your calendar is updated!", iwc)));
+			} else {
+				add(new Heading3(getLocalizedString("failed_to_updated", 
+						"Failed to update. Check your form!", iwc)));
+			}
+			
+		/* User asked to remove calendar. */
+		} else if (PARAMETER_DELETE.equals(action)) {
+			
+			/* Removing calendar of current user. */
+			boolean isRemoved = getBedeworkCalendarManagementService().removeCalendar(
+					iwc.getParameter(ATTRIBUTE_CALENDAR_ID), iwc.getCurrentUser());
+			
+			/* Prints results. */
+			if (isRemoved) {
+				add(new Heading3(getLocalizedString("calendar_successfully_removed", 
+						"Calendar removed", iwc)));
+			} else {
+				add(new Heading3(getLocalizedString("failed_to_remove_calendar", 
+						"Failed to remove calendar", iwc)));
+			}
+			
+		/* User asked to open edit form. */
+		} else if (PARAMETER_EDIT.equals(action)){
+			
+			/* Getting entity to edit. */
+			CalendarEntity calendar = getBedeworkCalendarManagementService().getCalendar(
+					iwc.getParameter(ATTRIBUTE_CALENDAR_ID));
+			if (calendar == null) {
+				add(new Heading3(getLocalizedString("not_possible_to_edit", 
+						"Not possible to edit default calendar", iwc)));
+			} else {
+			
+				/* Creating form for editing. */
+				calendarEditForm.add(getNameLayer(iwc, calendar.getName()));
+				calendarEditForm.add(getSummaryLayer(iwc, calendar.getSummary()));
+				calendarEditForm.add(getPublicPrivateSelection(iwc, calendar.getPublick()));
+				
+				Layer selectionBoxLayer = getGroupsSelectionBox(iwc, calendar.getGroups());
+				if (calendar.getPublick()) {
+					selectionBoxLayer.setStyleAttribute("display", "none");
+				} 				
+				calendarEditForm.add(selectionBoxLayer);
+
+				calendarEditForm.add(getButtonsForCalendarCreationLayer(iwc));
+			}
+
+		/* User asked to open creation form. */
+		} else if (PARAMETER_ADD.equals(action)) {
+			
+			/* Creating empty form. */
+			calendarEditForm.add(getNameLayer(iwc, null));
+			calendarEditForm.add(getSummaryLayer(iwc, null));
+			calendarEditForm.add(getPublicPrivateSelection(iwc, null));
+			calendarEditForm.add(getGroupsSelectionBox(iwc, null));
+			calendarEditForm.add(getButtonsForCalendarCreationLayer(iwc));
+
+		/* User asked nothing, opening calendar view. */
+		} else {
+			Table2 table = new Table2();
+			table.setStyleClass(CLASS_CALENDARS_TABLE);
+			
+			if (addCalendarsViewHeaders(iwc, table.createHeaderRowGroup()) 
+					&& addCalendarsViewRows(iwc, table.createBodyRowGroup())) {
+				add(table);
+			} else {
+				add(new Heading3(getLocalizedString(
+						"no_calendars_found", 
+						"No calendars found.", 
+						iwc))
+				);
+			}
+			
+			calendarViewForm.add(getButtonsForCalendarAdditionLayer(iwc));
+			add(calendarViewForm);
+			return;
 		}
+		
+		add(calendarEditForm);
 	}
+		
 	
-	private Layer getGroupsSelectionBoxLayer(IWContext iwc) {
+	private Layer getGroupsSelectionBox(IWContext iwc, Set<Long> groupIDs) {
 		if (iwc == null) {
 			return null;
 		}
 		
 		Layer groupsSelectionBoxLayer = new Layer();
-		groupsSelectionBoxLayer.setStyleClass("calendar_groups_selection_layer");
+		groupsSelectionBoxLayer.setStyleClass(CLASS_CALENDAR_LAYER_GROUPS_SELECTION);
 		
-		SelectionBox groupsSelectionBox = getBedeworkCalendarPresentationComponentsService()
-				.getGroupsSelectionBox(null);
+		GroupsFilter groupsFilter = new GroupsFilter();
+		groupsFilter.setSelectedGroupParameterName(ATTRIBUTE_GROUPS);
 		
-		if (groupsSelectionBox == null) {
-			return null;
-		}
+		Layer groupsFilterLayer = new Layer();
+		groupsFilterLayer.setStyleClass(CLASS_CALENDAR_GROUPS_SELECTION_BOX);
+		groupsFilterLayer.add(groupsFilter);
 		
-		groupsSelectionBox.setName(ATTRIBUTE_GROUPS);
-		groupsSelectionBox.setStyleClass("calendar_groups_selectionBox");
-		
-		String[] groups = iwc.getParameterValues(ATTRIBUTE_GROUPS);
-		if (!ArrayUtil.isEmpty(groups)) {
-			for (String group : groups) {
-				groupsSelectionBox.setSelectedElement(group);
+		if (!ListUtil.isEmpty(groupIDs)) {
+			List<String> localGroups = new ArrayList<String>(groupIDs.size());
+			for (Long groupID : groupIDs) {
+				localGroups.add(String.valueOf(groupID));
 			}
+			
+			groupsFilter.setSelectedGroups(localGroups);
 		}
-		
-		Label inputLabel = new Label(getResourceBundle(iwc)
-				.getLocalizedString("choose_calendar_groups", "Choose calendar groups:"), 
-				groupsSelectionBox);
-		
-		groupsSelectionBoxLayer.add(inputLabel);
-		groupsSelectionBoxLayer.add(groupsSelectionBox);
+
+		groupsSelectionBoxLayer.add(new Text(
+				getLocalizedString("visible_for_groups", "Visible for groups:", iwc)));
+		groupsSelectionBoxLayer.add(groupsFilter);
 		
 		return groupsSelectionBoxLayer;
 	}
 	
-	private Layer getNameLayer(IWContext iwc) {
+	/**
+	 * <p>Adds headers: 'number', 'name', 'edit', 'delete' to headers.</p>
+	 * @param iwc not <code>null</code>.
+	 * @param headerRows where to add. Not <code>null</code>
+	 * @return <code>true</code> on success, <code>false</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private boolean addCalendarsViewHeaders(IWContext iwc, 
+			TableHeaderRowGroup headerRows) {
+		if (iwc == null || headerRows == null) {
+			return Boolean.FALSE;
+		}
+		
+		headerRows.setStyleClass(CLASS_CALENDARS_TABLE_HEADER);
+		
+		TableRow header = headerRows.createRow();
+		header.setStyleClass(CLASS_CALENDARS_TABLE_ROW);
+		
+		TableCell2 cell = header.createCell();
+		cell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		cell.add(new Text(getLocalizedString("number", "Nr.", iwc)));
+		
+		cell = header.createCell();
+		cell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		cell.add(new Text(getLocalizedString("name", "Name", iwc)));
+		
+		cell = header.createCell();
+		cell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		cell.add(new Text(getLocalizedString("edit", "Edit", iwc)));
+		
+		cell = header.createCell();
+		cell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		cell.add(new Text(getLocalizedString("delete", "Delete", iwc)));
+		
+		return Boolean.TRUE;
+	}
+	
+	/**
+	 * <p>Fills table with content of calendars.</p>
+	 * @param iwc not <code>null</code>.
+	 * @param bodyRows where to add. Not <code>null</code>
+	 * @return <code>true</code> on success, <code>false</code> on failure. 
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private boolean addCalendarsViewRows(IWContext iwc, 
+			TableBodyRowGroup bodyRows) {
+		if (iwc == null || bodyRows == null) {
+			return Boolean.FALSE;
+		}
+		
+		List<BwCalendar> calendars = getBedeworkCalendarManagementService()
+				.getAllUserCalendars(iwc.getCurrentUser());
+		
+		if (ListUtil.isEmpty(calendars)) {
+			return Boolean.FALSE;
+		}
+		
+		bodyRows.setStyleClass(CLASS_CALENDARS_TABLE_BODY);
+		
+		int rowNumber = 1;
+		for (BwCalendar calendar : calendars) {
+			if (!addCalendarViewRow(iwc, calendar, bodyRows.createRow(), rowNumber++)) {
+				return Boolean.FALSE;
+			}
+		}
+		
+		return Boolean.TRUE;
+	}
+	
+	/**
+	 * <p>Adds number in row, name, also 'edit' and 'remove' buttons.</p>
+	 * @param iwc not <code>null</code>.
+	 * @param calendar which information is shown in current row. Not <code>null</code>.
+	 * @param tableRow where to add information.
+	 * @param rowNumber - line number. 
+	 * @return <code>true</code> if added, <code>false</code> otherwise.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private boolean addCalendarViewRow(IWContext iwc, BwCalendar calendar, 
+			TableRow tableRow, int rowNumber) {
+		if (iwc == null || calendar == null || tableRow == null) {
+			return Boolean.FALSE;
+		}
+		
+		tableRow.setStyleClass(CLASS_CALENDARS_TABLE_ROW);
+		tableRow.setStyleClass(calendar.getName());
+		
+		TableCell2 tableCell = tableRow.createCell();
+		tableCell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		tableCell.setStyleClass(CLASS_CALENDAR_NUMBER);
+		tableCell.add(new Text(String.valueOf(rowNumber)));
+		
+		tableCell = tableRow.createCell();
+		tableCell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		tableCell.setStyleClass(CLASS_CALENDAR_NAME);
+		tableCell.add(new Text(calendar.getName()));
+
+		Link edit = new Link(getIWBundle(iwc).getImage(FILE_CALENDAR_IMAGE_EDIT, 
+				getLocalizedString("edit", "Edit", iwc)));
+		edit.addParameter(PARAMETER_ACTION, PARAMETER_EDIT);
+		edit.addParameter(ATTRIBUTE_CALENDAR_ID, calendar.getId());
+		
+		tableCell = tableRow.createCell();
+		tableCell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		tableCell.setStyleClass(CLASS_CALENDAR_BUTTON_EDIT);
+		tableCell.add(edit);
+		
+		Link delete = new Link(getIWBundle(iwc).getImage(FILE_CALENDAR_IMAGE_DELETE, 
+				getLocalizedString("remove", "Remove", iwc))	);
+		delete.addParameter(PARAMETER_ACTION, PARAMETER_DELETE);
+		delete.addParameter(ATTRIBUTE_CALENDAR_ID, calendar.getId());
+		
+		tableCell = tableRow.createCell();
+		tableCell.setStyleClass(CLASS_CALENDARS_TABLE_CELL);
+		tableCell.setStyleClass(CLASS_CALENDAR_BUTTON_DELETE);
+		tableCell.add(delete);
+		
+		return Boolean.TRUE;
+	}
+	
+	/**
+	 * <p>Creates field for {@link CalendarEntity#getName()}.</p>
+	 * @param iwc not <code>null</code>.
+	 * @param name {@link CalendarEntity#getName()}
+	 * @return Layer with input and label or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private Layer getNameLayer(IWContext iwc, String name) {
 		Layer textInputLayer = new Layer();
-		textInputLayer.setStyleClass("calendar_name_layer");
+		textInputLayer.setStyleClass(CLASS_CALENDAR_LAYER_NAME_INPUT);
+		
+		if (StringUtil.isEmpty(name)) {
+			name = iwc.getParameter(ATTRIBUTE_NAME);
+		}
 		
 		TextInput textInput =  new TextInput(ATTRIBUTE_NAME);
-		textInput.setStyleClass("calendar_name");
+		textInput.setStyleClass(CLASS_CALENDAR_NAME_INPUT);
 		
-		String name = iwc.getParameter(ATTRIBUTE_NAME);
 		if (!StringUtil.isEmpty(name)) {
 			textInput.setContent(name);
 		}
@@ -274,12 +595,21 @@ public class BedeworkCalendarCreator extends Block {
 		return textInputLayer;
 	}
 	
+	/**
+	 * <p>Adds field for {@link CalendarEntity#getDescription()}.</p>
+	 * @param iwc not <code>null</code>
+	 * @return {@link Layer} with {@link Label} and {@link TextArea} for description. 
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	@SuppressWarnings("unused")
 	private Layer getDescriptionLayer(IWContext iwc) {
 		Layer descriptionLayer = new Layer();
-		descriptionLayer.setStyleClass("calendar_description_layer");
+		
+		descriptionLayer.setStyleClass(CLASS_CALENDAR_LAYER_DESCRIPTION);
 		
 		TextArea textInput =  new TextArea(ATTRIBUTE_DESCRIPTION);
-		textInput.setStyleClass("calendar_description");
+		textInput.setStyleClass(CLASS_CALENDAR_DESCRIPTION_INPUT);
 		
 		String description = iwc.getParameter(ATTRIBUTE_DESCRIPTION);
 		if (!StringUtil.isEmpty(description)) {
@@ -296,13 +626,25 @@ public class BedeworkCalendarCreator extends Block {
 		return descriptionLayer;
 	}
 	
-	private Layer getSummaryLayer(IWContext iwc) {
+	/**
+	 * <p>Adds field for {@link CalendarEntity#getSummary()}.</p>
+	 * @param iwc not <code>null</code>.
+	 * @param summary to be added as value. Optional.
+	 * @return {@link Layer} with {@link Label} and {@link TextArea} for summary or 
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private Layer getSummaryLayer(IWContext iwc, String summary) {
 		Layer summaryLayer = new Layer();
-		summaryLayer.setStyleClass("calendar_summary_layer");
+		summaryLayer.setStyleClass(CLASS_CALENDAR_LAYER_SUMMARY);
 		
 		TextArea textInput =  new TextArea(ATTRIBUTE_SUMMARY);
-		textInput.setStyleClass("calendar_summary");
-		String summary = iwc.getParameter(ATTRIBUTE_SUMMARY);
+		textInput.setStyleClass(CLASS_CALENDAR_SUMMARY_INPUT);
+		
+		if (StringUtil.isEmpty(summary)) {
+			summary = iwc.getParameter(ATTRIBUTE_SUMMARY);
+		}
+		
 		if (!StringUtil.isEmpty(summary)) {
 			textInput.setContent(summary);
 		}
@@ -317,6 +659,13 @@ public class BedeworkCalendarCreator extends Block {
 		return summaryLayer;
 	}
 	
+	/**
+	 * <p>Gives list of {@link CalendarEntity#getColPath()} to select.</p>
+	 * @param iwc not <code>null</code>.
+	 * @return {@link Layer} with {@link Label} and {@link DropdownMenu} for 
+	 * {@link CalendarEntity#getColPath()} selection or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
 	@SuppressWarnings("unused")
 	private Layer getFolderSelectLayer(IWContext iwc) {
 		if (iwc == null) {
@@ -324,7 +673,7 @@ public class BedeworkCalendarCreator extends Block {
 		}
 		
 		Layer folderDropdownLayer = new Layer();
-		folderDropdownLayer.setStyleClass("calendar_folder_dropdown_layer");
+		folderDropdownLayer.setStyleClass(CLASS_CALENDAR_LAYER_FOLDER_SELECTION);
 		
 		DropdownMenu folderDropdown = getBedeworkCalendarPresentationComponentsService()
 				.getUserFoldersDropdown(iwc.getCurrentUser());
@@ -339,12 +688,11 @@ public class BedeworkCalendarCreator extends Block {
 						.getLocalizedString("select_folder", "Select folder:"), "-1"
 						)
 				);
-		folderDropdown.setStyleClass("calendar_folder_dropdown");
+		folderDropdown.setStyleClass(CLASS_CALENDAR_FOLDER_SELECTION);
 		
 		String folder = iwc.getParameter(ATTRIBUTE_FOLDER);
 		if (!StringUtil.isEmpty(folder)) {
 			folderDropdown.setSelectedElement(folder);
-			folderDropdown.setDisabled(Boolean.TRUE);
 		}
 		
 		Label inputLabel = new Label(getResourceBundle(iwc)
@@ -362,6 +710,13 @@ public class BedeworkCalendarCreator extends Block {
 		return null;
 	}
 	
+	/**
+	 * <p>Checkbox for marking calendar as unremovable.</p>
+	 * @param iwc not <code>null</code>.
+	 * @return {@link Layer} with {@link Label} and {@link CheckBox} or <code>null</code>
+	 *  on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
 	@SuppressWarnings("unused")
 	private Layer getUnremovableCheckbox(IWContext iwc) {
 		if (iwc == null) {
@@ -369,10 +724,10 @@ public class BedeworkCalendarCreator extends Block {
 		}
 		
 		Layer checkBoxLayer = new Layer();
-		checkBoxLayer.setStyleClass("calendar_is_unremovable_layer");
+		checkBoxLayer.setStyleClass(CLASS_CALENDAR_LAYER_REMOVABLE);
 		
 		CheckBox checkBox = new CheckBox(ATTRIBUTE_IS_REMOVABLE);
-		checkBox.setStyleClass("calendar_is_unremovable");
+		checkBox.setStyleClass(CLASS_CALENDAR_REMOVABLE_CHECKBOX);
 		
 		String checkboxValue = iwc.getParameter(ATTRIBUTE_IS_REMOVABLE);
 		if (!StringUtil.isEmpty(checkboxValue)) {
@@ -388,53 +743,116 @@ public class BedeworkCalendarCreator extends Block {
 		return checkBoxLayer;
 	}
 	
-	private Layer getPublicPrivateSelection(IWContext iwc) {
+	private Layer getPublicPrivateSelection(IWContext iwc, Boolean isPublic) {
 		if (iwc == null) {
 			return null;
 		}
 		
 		Layer radioButtonLayer = new Layer();
-		radioButtonLayer.setStyleClass("calendar_publicity_layer");
+		radioButtonLayer.setStyleClass(CLASS_CALENDAR_LAYER_PRIVACY);
 		
-		RadioGroup radioButton = new RadioGroup(ATTRIBUTE_IS_PUBLIC);
-		radioButton.addRadioButton("public", 
-				new Text(getResourceBundle(iwc).getLocalizedString("public",	 "Public")));
-		radioButton.addRadioButton("private", 
-				new Text(getResourceBundle(iwc).getLocalizedString("private",	 "Private")), 
+		Layer innerRadioButtonLayer = new Layer();
+		innerRadioButtonLayer.setStyleClass(CLASS_CALENDAR_LAYER_BUTTON_PRIVACY);
+		RadioGroup radioButtonGroup = new RadioGroup(ATTRIBUTE_IS_PRIVATE);
+		
+		RadioButton publicButton = new RadioButton(CLASS_CALENDAR_BUTTON_PRIVACY, 
+				VALUE_CALENDAR_PUBLIC);
+		publicButton.setOnClick("BedeworkCalendarCreator.hide('"
+				+ CLASS_CALENDAR_LAYER_GROUPS_SELECTION
+				+ "');");
+		radioButtonGroup.addRadioButton(publicButton, 
+				new Text(getLocalizedString(VALUE_CALENDAR_PUBLIC, "No", iwc)));
+		
+		RadioButton privateButton = new RadioButton(CLASS_CALENDAR_BUTTON_PRIVACY, 
+				VALUE_CALENDAR_PRIVATE);
+		privateButton.setOnClick("BedeworkCalendarCreator.show('" 
+				+ CLASS_CALENDAR_LAYER_GROUPS_SELECTION
+				+ "');");
+		radioButtonGroup.addRadioButton(privateButton, 
+				new Text(getLocalizedString(VALUE_CALENDAR_PRIVATE, "Yes", iwc)), 
 				Boolean.TRUE);
 		
-		radioButton.setStyleClass("calendar_publicity");
+		innerRadioButtonLayer.add(radioButtonGroup);
 		
-		String radioButtonValue = iwc.getParameter(ATTRIBUTE_IS_PUBLIC);
-		if (!StringUtil.isEmpty(radioButtonValue)) {
-			radioButton.setSelected(radioButtonValue);
+		if (isPublic != null) {
+			if (isPublic) {
+				publicButton.setSelected();
+				privateButton.setSelected(Boolean.FALSE);
+			} else {
+				privateButton.setSelected();
+				publicButton.setSelected(Boolean.FALSE);
+			}
+		}
+		
+		String radioButtonValue = iwc.getParameter(CLASS_CALENDAR_BUTTON_PRIVACY);
+		if (!StringUtil.isEmpty(radioButtonValue) && isPublic == null) {
+			privateButton.setSelected(Boolean.FALSE);
+			publicButton.setSelected(Boolean.FALSE);
+			radioButtonGroup.setSelected(radioButtonValue);
 		}
 		
 		Label inputLabel = new Label(getResourceBundle(iwc)
 				.getLocalizedString(
-						"is_calendar_private_or_public", 
-						"Is calendar private or public?"
-						), radioButton);
+						"private", 
+						"Private:"
+						), radioButtonGroup);
 		
 		radioButtonLayer.add(inputLabel);
-		radioButtonLayer.add(radioButton);
+		radioButtonLayer.add(innerRadioButtonLayer);
 		
 		return radioButtonLayer;
 	}
-
-	private Layer getButtonsLayer(IWContext iwc) {
+	
+	/**
+	 * <p>Buttons for linking to form of new calendar.</p>
+	 * @param iwc not <code>null</code>
+	 * @return {@link Layer} with "back" and "new calendar" buttons. <code>null</code>
+	 * on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private Layer getButtonsForCalendarAdditionLayer(IWContext iwc) {
 		if (iwc == null) {
 			return null;
 		}
 		
 		Layer buttonsLayer = new Layer();
-		buttonsLayer.setStyleClass("buttonsLayer");
+		buttonsLayer.setStyleClass(CLASS_BUTTONS_LAYER_FOR_CALENDAR_EDIT);
 		
-		SubmitButton cancelButton = new SubmitButton(
-				getResourceBundle(iwc).getLocalizedString("cancel", "Cancel"), 
-				PARAMETER_ACTION, 
-				PARAMETER_CANCEL);
-		cancelButton.setStyleClass("cancel_button");
+		BackButton backButton = new BackButton(
+				getResourceBundle(iwc).getLocalizedString("back", "Back"));
+		backButton.setStyleClass(CLASS_CALENDAR_BUTTON_CANCEL);
+		buttonsLayer.add(backButton);
+		
+		SubmitButton addButton = new SubmitButton(
+				getResourceBundle(iwc)
+						.getLocalizedString("new_calendar", "New calendar"),
+						PARAMETER_ACTION, 
+						PARAMETER_ADD);
+
+		addButton.setStyleClass(CLASS_CALENDAR_BUTTON_ADD);
+		
+		buttonsLayer.add(addButton);
+		
+		return buttonsLayer;
+	}
+	
+	/**
+	 * <p>Creates {@link Layer} with buttons for {@link CalendarEntity} creation.</p>
+	 * @param iwc not <code>null</code>.
+	 * @return {@link Layer} with "cancel" and "create/update" buttons.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private Layer getButtonsForCalendarCreationLayer(IWContext iwc) {
+		if (iwc == null) {
+			return null;
+		}
+		
+		Layer buttonsLayer = new Layer();
+		buttonsLayer.setStyleClass(CLASS_BUTTONS_LAYER_FOR_CALENDAR_CREATION);
+		
+		BackButton cancelButton = new BackButton(
+				getResourceBundle(iwc).getLocalizedString("cancel", "Cancel"));
+		cancelButton.setStyleClass(CLASS_CALENDAR_BUTTON_CANCEL);
 		buttonsLayer.add(cancelButton);
 		
 		SubmitButton createButton = new SubmitButton(
@@ -442,8 +860,9 @@ public class BedeworkCalendarCreator extends Block {
 						.getLocalizedString("create_update_calendar", "Create/Update calendar"),
 				PARAMETER_ACTION, 
 				PARAMETER_CREATE);
-
-		createButton.setStyleClass("create_calendar_button");
+		createButton.setStyleClass(CLASS_CALENDAR_BUTTON_CREATE);
+		createButton.setOnClick("BedeworkCalendarCreator.showCreatingMessage('"
+				+ CLASS_CALENDAR_BUTTON_CREATE + "');");
 		buttonsLayer.add(createButton);
 		
 		return buttonsLayer;

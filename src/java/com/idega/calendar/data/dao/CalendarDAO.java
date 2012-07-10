@@ -111,7 +111,18 @@ public interface CalendarDAO extends GenericDao{
 	
 	/**
 	 * <p>Removes existing entity.</p>
-	 * @param calendarEntity - entity to remove.
+	 * @param calendarID - {@link CalendarEntity#getId()} of entity to remove. Not <code>null</code>.
+	 * @param user who has such calendar/directory.
+	 * @return <code>true</code> if entity successfully removed, <code>false</code>
+	 * otherwise.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean removeCalendar(User user, int calendarID);
+	
+	/**
+	 * <p>Removes existing entity.</p>
+	 * @param calendarEntity - entity to remove. Not <code>null</code>.
+	 * @param user who has the calendar.
 	 * @return <code>true</code> if entity successfully removed, <code>false</code>
 	 * otherwise.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
