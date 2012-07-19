@@ -147,6 +147,24 @@ public class BwAPI {
 		return bedeworkAPI;
 	}
 	
+	// TODO Document this
+	public org.bedework.calsvci.SynchI getSynchronizer() {
+		if (!openBedeworkAPI()) {
+			return null;
+		}
+		
+		org.bedework.calsvci.SynchI synchronizer = null;
+		try {
+			synchronizer = getBedeworkAPI().getSynch();
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to get events handler: ", e);
+			return null;
+		}
+		
+		return synchronizer;
+	}
+
+	
 	/**
 	 * <p>Tries to open Bedework API.</p>
 	 * @return <code>true</code> if API is now ready for transactions, <code>false</code>
@@ -255,7 +273,6 @@ public class BwAPI {
 			LOGGER.log(Level.WARNING, "Unable to get users handler: ", e);
 			return null;
 		}
-		
 		return calendarsHandler;
 	}
 

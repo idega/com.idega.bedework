@@ -1,0 +1,24 @@
+<!--  This will not be autoloaded, unnless you delete the root.xml file. I recoment to 
+copy paste it manually into server.xml GlobalNamingResources tag-->
+<Context>
+     <Resource name="jms/BedeworkConnectionFactory" 
+			  auth="Container" 
+			  type="org.apache.activemq.ActiveMQConnectionFactory"
+			  description="JMS Connection Factory"
+			  factory="org.apache.activemq.jndi.JNDIReferenceFactory"
+			  brokerURL="tcp://localhost:61616" 
+			  brokerName="ActiveMQBroker" 
+			  useEmbeddedBroker="false"/>
+
+	<Resource name="activemq/TopicConnectionFactory" 
+	          auth="Container"
+	          type="org.apache.activemq.command.ActiveMQTopic"
+	          factory="org.apache.activemq.jndi.JNDIReferenceFactory"
+	          physicalName="APP.JMS.TOPIC"/>
+
+	<Resource name="activemq/QueueConnectionFactory" 
+			  auth="Container" 
+			  type="org.apache.activemq.command.ActiveMQQueue" 
+			  factory="org.apache.activemq.jndi.JNDIReferenceFactory"
+			  physicalName="APP.JMS.QUEUE"/>
+</Context>

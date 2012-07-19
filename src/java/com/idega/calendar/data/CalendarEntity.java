@@ -113,13 +113,16 @@ public class CalendarEntity extends BwCalendar {
 											GET_BY_ID = "getIdegaCalendarById",
 											GET_PUBLIC_CALENDARS = "getIdegaPublicCalendarCollections",
 											GET_PRIVATE_CALENDARS = "getUserIdegaCalendarCollections",
+											GET_CALENDARS_BY_GROUPS = "getIdegaCalendarsByGroups",
 											GET_NUMBER_OF_EVENTS = "countCalendarEventRefs",
-											GET_NUMBER_OF_CHILD_CALENDARS= "countIdegaCalendarChildren";
+											GET_NUMBER_OF_CHILD_CALENDARS= "countIdegaCalendarChildren",
+											GET_BY_MULTIPLE_PATH = "getIdegaCalendarsByMultiplePath";
 	
-	public static final String 	COL_PATH_PROP = "colPath",
-											NAME_PROP = "name",
-											PATH_PROP = "path",
-											ID_PROP = "id";
+	public static final String 	PROP_COL_PATH = "colPath",
+											PROP_NAME = "name",
+											PROP_PATH = "path",
+											PROP_GROUPS = "paramGroupsIds",
+											PROP_ID = "id";
 	
 	private Set<Long> groups;
 

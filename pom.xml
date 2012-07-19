@@ -24,6 +24,14 @@
 		<dependency>
 			<groupId>com.idega.block.platform</groupId>
 			<artifactId>com.idega.core</artifactId>
+			<!-- <exclusions>
+				<exclusion>
+					<artifactId>
+						hibernate-commons-annotations
+					</artifactId>
+					<groupId>org.hibernate</groupId>
+				</exclusion>
+			</exclusions> -->
 		</dependency>
 		<dependency>
 			<groupId>com.idega.block.platform</groupId>
@@ -40,6 +48,16 @@
 		<dependency>
 			<groupId>com.idega.block.platform</groupId>
 			<artifactId>com.idega.hibernate</artifactId>
+			<exclusions>
+				<!-- <exclusion>
+					<artifactId>hibernate-entitymanager</artifactId>
+					<groupId>org.hibernate</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>hibernate-core</artifactId>
+					<groupId>org.hibernate</groupId>
+				</exclusion> -->
+			</exclusions>
 		</dependency>
 		<dependency>
             <groupId>com.idega.block.addon</groupId>
@@ -47,22 +65,7 @@
         </dependency>
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-calcore</artifactId>
-			<version>3.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-calcorei</artifactId>
-			<version>3.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jasig.bedework</groupId>
 			<artifactId>bw-alarms</artifactId>
-			<version>3.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-calsvc</artifactId>
 			<version>3.8</version>
 		</dependency>
 		<dependency>
@@ -108,6 +111,21 @@
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
 			<artifactId>bw-tzsvr-svc</artifactId>
+			<version>3.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jasig.bedework</groupId>
+			<artifactId>bw-synch</artifactId>
+			<version>3.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jasig.bedework</groupId>
+			<artifactId>bw-synch-common</artifactId>
+			<version>3.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jasig.bedework</groupId>
+			<artifactId>bw-synchsvc</artifactId>
 			<version>3.8</version>
 		</dependency>
 	</dependencies>

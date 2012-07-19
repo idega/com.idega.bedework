@@ -82,7 +82,10 @@
  */
 package com.idega.calendar.data.dao.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,8 +99,12 @@ import com.idega.bedework.bussiness.BwAPI;
 import com.idega.calendar.data.CalendarEntity;
 import com.idega.calendar.data.dao.CalendarDAO;
 import com.idega.core.persistence.Param;
+import com.idega.core.persistence.Query;
 import com.idega.core.persistence.impl.GenericDaoImpl;
+import com.idega.data.SimpleQuerier;
+import com.idega.user.data.Group;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
@@ -134,7 +141,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 		}
 		
 		try {
-			CalendarEntity calendar = getIdegaCalendarById(calendarEntity.getId());
+			CalendarEntity calendar = getCalendarById(calendarEntity.getId());
 
 			if (calendar == null) {
 				calendarsHandler.add(calendarEntity, calendarEntity.getColPath());
@@ -181,7 +188,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getNumberOfIdegaCalendarChildren(java.lang.String)
 	 */
 	@Override
-	public Integer getNumberOfIdegaCalendarChildren(String calendarPath) {
+	public Integer getNumberOfCalendarChildren(String calendarPath) {
 		if (StringUtil.isEmpty(calendarPath)) {
 			LOGGER.log(Level.WARNING, "Calendar path not given.");
 			return null;
@@ -190,7 +197,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 		Collection<CalendarEntity> calendars = getResultList(
 				CalendarEntity.GET_NUMBER_OF_CHILD_CALENDARS, 
 				CalendarEntity.class,
-                new Param(CalendarEntity.COL_PATH_PROP, calendarPath));
+                new Param(CalendarEntity.PROP_COL_PATH, calendarPath));
 
 		if (ListUtil.isEmpty(calendars)) {
 			return 0;
@@ -203,7 +210,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getNumberOfIdegaCalendarEvents(java.lang.String)
 	 */
 	@Override
-	public Integer getNumberOfIdegaCalendarEvents(String calendarPath) {
+	public Integer getNumberOfCalendarEvents(String calendarPath) {
 		if (StringUtil.isEmpty(calendarPath)) {
 			LOGGER.log(Level.WARNING, "Calendar path not given.");
 			return null;
@@ -212,7 +219,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 		Collection<BwEventObj> events = getResultList(
 				CalendarEntity.GET_NUMBER_OF_EVENTS, 
 				BwEventObj.class,
-                new Param(CalendarEntity.COL_PATH_PROP, calendarPath));
+                new Param(CalendarEntity.PROP_COL_PATH, calendarPath));
 
 		if (ListUtil.isEmpty(events)) {
 			return 0;
@@ -225,7 +232,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getUserIdegaCalendarCollections(com.idega.user.data.User)
 	 */
 	@Override
-	public Collection<CalendarEntity> getUserIdegaCalendarCollections() {
+	public Collection<CalendarEntity> getPrivateCalendars() {
 		return getResultList(CalendarEntity.GET_PRIVATE_CALENDARS, CalendarEntity.class);
 	}
 
@@ -233,7 +240,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaPublicCalendarCollections()
 	 */
 	@Override
-	public Collection<CalendarEntity> getIdegaPublicCalendarCollections() {
+	public Collection<CalendarEntity> getPublicCalendars() {
 		return getResultList(CalendarEntity.GET_PUBLIC_CALENDARS, CalendarEntity.class);
 	}
 
@@ -241,11 +248,11 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaCalendarById(java.lang.String)
 	 */
 	@Override
-	public CalendarEntity getIdegaCalendarById(int id) {
+	public CalendarEntity getCalendarById(int id) {
 		return this.getSingleResult(
 				CalendarEntity.GET_BY_ID, 
 				CalendarEntity.class, 
-				new Param(CalendarEntity.ID_PROP, id)
+				new Param(CalendarEntity.PROP_ID, id)
 				);
 	}
 
@@ -253,7 +260,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaCalendarByPath(java.lang.String)
 	 */
 	@Override
-	public CalendarEntity getIdegaCalendarByPath(String calendarPath) {
+	public CalendarEntity getCalendarByPath(String calendarPath) {
 		if (StringUtil.isEmpty(calendarPath)) {
 			LOGGER.log(Level.WARNING, "Calendar path not given.");
 			return null;
@@ -262,7 +269,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 		return this.getSingleResult(
 				CalendarEntity.GET_BY_PATH,
 				CalendarEntity.class, 
-				new Param(CalendarEntity.PATH_PROP, calendarPath)
+				new Param(CalendarEntity.PROP_PATH, calendarPath)
 				);
 	}
 
@@ -270,14 +277,14 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	 * @see com.idega.calendar.data.dao.CalendarDAO#getIdegaCalendarsByName(java.lang.String)
 	 */
 	@Override
-	public Collection<CalendarEntity> getIdegaCalendarsByName(String name) {
+	public Collection<CalendarEntity> getCalendarsByName(String name) {
 		if (StringUtil.isEmpty(name)) {
 			LOGGER.log(Level.WARNING, "Calendar name not given.");
 			return null;
 		}
 		
 		return getResultList(CalendarEntity.GET_BY_NAME, CalendarEntity.class,
-                new Param(CalendarEntity.NAME_PROP, name));
+                new Param(CalendarEntity.PROP_NAME, name));
 	}
 
 	@Override
@@ -286,11 +293,142 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			return Boolean.FALSE;
 		}
 		
-		CalendarEntity calendar = getIdegaCalendarById(calendarID);
+		CalendarEntity calendar = getCalendarById(calendarID);
 		if (calendar == null) {
 			return Boolean.FALSE;
 		}
 		
 		return removeCalendar(user, calendar);
+	}
+
+	/**
+	 * <p>Fetches {@link CalendarEntity#getId()}s by {@link Group#getPrimaryKey()} from
+	 * database.</p>
+	 * @param groupIDs - {@link Group#getPrimaryKey()}s. Not <code>null</code>.
+	 * @return {@link List} of {@link CalendarEntity#getId()}s or <code>null</code> on 
+	 * failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	private List<Integer> getCalendarIDsByGroupIDs(Set<Long> groupIDs) {
+		if (ListUtil.isEmpty(groupIDs)) {
+			LOGGER.log(Level.WARNING, "No group ID's are given.");
+			return null;
+		}
+		
+		StringBuilder queryForCalendarIDs = new StringBuilder();
+		queryForCalendarIDs.append("SELECT DISTINCT id FROM ca_calendar_group c ")
+			.append("WHERE ic_group_id in (");
+		for (java.util.Iterator<Long> iterator = groupIDs.iterator(); iterator.hasNext();) {
+			queryForCalendarIDs.append(String.valueOf(iterator.next()));
+			if (iterator.hasNext()) {
+				queryForCalendarIDs.append(CoreConstants.COMMA);
+				queryForCalendarIDs.append(CoreConstants.SPACE);
+			}
+		}
+		queryForCalendarIDs.append(")");
+		
+		List<Integer> ids = null;
+		try {
+			String[] arrayOfIDs = SimpleQuerier.executeStringQuery(
+					queryForCalendarIDs.toString());
+			
+			ids = new ArrayList<Integer>(arrayOfIDs.length);
+			for (String arrayID : arrayOfIDs) {
+				try {
+					ids.add(Integer.valueOf(arrayID));
+				} catch (NumberFormatException e1) {}
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Unable to get calendar ids: ", e);
+		}
+		
+		return ids;
+	}
+	
+	@Override
+	public Collection<CalendarEntity> getAllCalendars(Set<Long> groupIDs, 
+			Boolean isPublic, Integer calendarType, boolean showDeleted,
+			Integer resultsNumber, Integer firstResultNumber) {
+		
+		StringBuilder inlineQuery = new StringBuilder();
+		inlineQuery.append("from com.idega.calendar.data.CalendarEntity as cal");
+		if (!ListUtil.isEmpty(groupIDs) || isPublic != null || calendarType != null
+				|| !showDeleted) {
+			inlineQuery.append(" where ");
+		}
+		
+		if (calendarType != null && calendarType <= 9 && calendarType >=0) {
+			inlineQuery.append("cal.calType=").append(calendarType);
+		}
+		
+		if (isPublic != null) {
+			inlineQuery.append(" and ").append("cal.publick=").append(isPublic);
+		}
+		
+		if (!showDeleted) {
+			inlineQuery.append(" and ").append("(cal.filterExpr = null").append(" or ")
+				.append("cal.filterExpr <> '--TOMBSTONED--')");
+		}
+		
+		List<Integer> ids = null;
+		if (!ListUtil.isEmpty(groupIDs)) {
+			ids = getCalendarIDsByGroupIDs(groupIDs);
+			if (!ListUtil.isEmpty(ids)) {
+				inlineQuery.append(" and ").append("cal.id in (")
+				.append(CoreConstants.COLON).append(CalendarEntity.PROP_ID)
+				.append(") ");
+			}
+		}
+		
+		if (resultsNumber != null && resultsNumber > 0) {
+			inlineQuery.append("limit ").append(resultsNumber);
+			
+			if (firstResultNumber != null && firstResultNumber > 0) {
+				inlineQuery.append(CoreConstants.COMMA).append(firstResultNumber);
+			}
+		}
+
+		Query query = this.getQueryInline(inlineQuery.toString());
+
+		List<CalendarEntity> entities = null;
+		if (ListUtil.isEmpty(ids)) {
+			entities = query.getResultList(CalendarEntity.class);
+		} else {
+			entities = query.getResultList(CalendarEntity.class, 
+					new Param(CalendarEntity.PROP_ID, ids));
+		}
+
+		return entities;
+	}
+	
+	@Override
+	public Collection<CalendarEntity> getPrivateCalendarsByGroupIDs(
+			Set<Long> groupIDs, Integer resultsNumber, Integer firstResultNumber) {
+		if (ListUtil.isEmpty(groupIDs)) {
+			LOGGER.log(Level.WARNING, "No group ID's are given.");
+			return null;
+		}
+		
+		return getAllCalendars(groupIDs, Boolean.FALSE,
+				CalendarEntity.calTypeCalendarCollection, 
+				Boolean.FALSE, resultsNumber, firstResultNumber);
+	}
+	
+	@Override
+	public Collection<CalendarEntity> getPrivateCalendarsByGroupIDs(Set<Long> groupIDs) {
+		if (ListUtil.isEmpty(groupIDs)) {
+			LOGGER.log(Level.WARNING, "No group ID's are given.");
+			return null;
+		}
+		
+		return getAllCalendars(groupIDs, Boolean.FALSE,
+				CalendarEntity.calTypeCalendarCollection, Boolean.FALSE, null, null);
+	}
+
+	@Override
+	public List<CalendarEntity> getCalendarsByPaths(
+			Collection<String> calendarPath) {
+		return getResultList(CalendarEntity.GET_BY_MULTIPLE_PATH, CalendarEntity.class,
+                new Param(CalendarEntity.PROP_PATH, calendarPath));
 	}
 }

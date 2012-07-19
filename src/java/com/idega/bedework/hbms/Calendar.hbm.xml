@@ -122,7 +122,7 @@
     		<key column="id"/>
     		<set name="groups" table="CA_CALENDAR_GROUP" lazy="false">
       		<key column="id" />
-      		<element column="ic_group_id" type="long" ></element>
+      		<element type="long"  column="ic_group_id"></element>
     		</set>
   	</joined-subclass>
   </class>
@@ -183,6 +183,12 @@
 		where cal.path=:path and 
 		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
   	]]></query>
+  	
+  	<query name="getIdegaCalendarsByMultiplePath"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+		where cal.path in (:path) and 
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+  	]]></query>
 
 	<query name="getCalendarById"><![CDATA[
 		from org.bedework.calfacade.BwCalendar as cal
@@ -215,6 +221,12 @@
 		from com.idega.calendar.data.CalendarEntity as cal
 		where cal.calType=1 and cal.publick=false and  
 		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
+	]]></query>
+	
+	<query name="getIdegaCalendarsByGroups"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+		where cal.calType=1 and cal.publick=false and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--') and cal.groups in (:paramGroupsIds)
 	]]></query>
 
 	<query name="countCalendarEventRefs"><![CDATA[

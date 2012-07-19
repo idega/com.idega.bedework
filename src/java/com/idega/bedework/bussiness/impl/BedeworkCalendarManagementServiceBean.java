@@ -95,6 +95,7 @@ import javax.ejb.FinderException;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -459,7 +460,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 			return Boolean.FALSE;
 		}
 		
-		if (calendar == null || getCalendarDAO().getIdegaCalendarById(calendar.getId()) == null) {
+		if (calendar == null || getCalendarDAO().getCalendarById(calendar.getId()) == null) {
 			return createCalendarDirectory(user, calendarName, folderPath, summary, 
 					description, isReadOnly, isPublic, calendarDirectoryType, groupsIDs);
 		}
@@ -475,48 +476,180 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 
 	@Override
 	public boolean subscribeCalendar(User user, String calendarPath) {
-		// TODO Auto-generated method stub
-		return false;
+		if (user == null || StringUtil.isEmpty(calendarPath)) {
+			return Boolean.FALSE;
+		}
+		
+		CalendarEntity calendar = getCalendarDAO().getCalendarByPath(calendarPath);
+		return subscribeCalendar(user, calendar);
 	}
 
 	@Override
 	public boolean subscribeCalendar(com.idega.user.data.User user,
 			BwCalendar calendar) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		if (user == null || calendar == null) {
+			return Boolean.FALSE;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return Boolean.FALSE;
+		}
+		
+		org.bedework.calsvci.SynchI synchronizer = bwAPI.getSynchronizer();
+		if (synchronizer == null) {
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
+		
+		boolean isSubscribed = Boolean.FALSE;
+		try { 
+			isSubscribed = synchronizer.subscribe(calendar);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to subscribe calendar: " 
+					+ calendar.getName() + " cause of: ", e);
+		}
+		
+		return isSubscribed && bwAPI.closeBedeworkAPI();
 	}
 
 	@Override
 	public boolean subscribeCalendars(User user, Collection<String> calendarPaths) {
-		// TODO Auto-generated method stub
-		return false;
+		if (user == null || ListUtil.isEmpty(calendarPaths)) {
+			return Boolean.FALSE;
+		}
+		
+		Collection<CalendarEntity> calendarEntities = getCalendarDAO()
+				.getCalendarsByPaths(calendarPaths);
+		if (ListUtil.isEmpty(calendarEntities)) {
+			return Boolean.FALSE;
+		}
+		
+		for (CalendarEntity calendar : calendarEntities) {
+			if (!subscribeCalendar(user, calendar)) {
+				return Boolean.FALSE;
+			}
+		}
+		
+		return Boolean.TRUE;
 	}
 
 	@Override
 	public boolean unSubscribeCalendar(User user, String calendarPath) {
-		// TODO Auto-generated method stub
-		return false;
+		if (user == null || StringUtil.isEmpty(calendarPath)) {
+			return Boolean.FALSE;
+		}
+		
+		CalendarEntity calendar = getCalendarDAO().getCalendarByPath(calendarPath);
+		return unSubscribeCalendar(user, calendar);
 	}
 
 	@Override
 	public boolean unSubscribeCalendar(com.idega.user.data.User user,
 			BwCalendar calendar) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		if (user == null || calendar == null) {
+			return Boolean.FALSE;
+		}
+		
+		BwAPI bwAPI = new BwAPI(user);
+		if (!bwAPI.openBedeworkAPI()) {
+			return Boolean.FALSE;
+		}
+		
+		org.bedework.calsvci.SynchI synchronizer = bwAPI.getSynchronizer();
+		if (synchronizer == null) {
+			bwAPI.closeBedeworkAPI();
+			return Boolean.FALSE;
+		}
+		
+		boolean isUnsubscribed = Boolean.FALSE;
+		try {
+			isUnsubscribed = synchronizer.unsubscribe(calendar);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to unsubscribe calendar: " 
+					+ calendar.getName() + " cause of: ", e);
+		}
+		
+		return isUnsubscribed && bwAPI.closeBedeworkAPI();
 	}
 
 	@Override
 	public boolean unsubscribeCalendars(User user,
 			Collection<String> calendarPaths) {
-		// TODO Auto-generated method stub
-		return false;
+		if (user == null || ListUtil.isEmpty(calendarPaths)) {
+			return Boolean.FALSE;
+		}
+		
+		Collection<CalendarEntity> calendarEntities = getCalendarDAO()
+				.getCalendarsByPaths(calendarPaths);
+		if (ListUtil.isEmpty(calendarEntities)) {
+			return Boolean.FALSE;
+		}
+		
+		for (CalendarEntity calendar : calendarEntities) {
+			if (!unSubscribeCalendar(user, calendar)) {
+				return Boolean.FALSE;
+			}
+		}
+		
+		return Boolean.TRUE;
 	}
 
-	// TODO
 	@Override
-	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user) {
+	public List<CalendarEntity> getSubscribedCalendars(com.idega.user.data.User user) {
 		if (user == null) {
 			return null;
+		}
+		
+		List<CalDAVCalendar> calendars = getSubscribedCalendars(user, null, null);
+		if (ListUtil.isEmpty(calendars)) {
+			return null;
+		}
+		
+		List<CalendarEntity> calendarEntities = new ArrayList<CalendarEntity>(calendars.size());
+		for (CalDAVCalendar calendar : calendars) {
+			calendarEntities.add((CalendarEntity) calendar);
+		}
+		
+		return calendarEntities;
+	}
+
+	@Override
+	public List<CalDAVCalendar> getSubscribedCalendars(
+			com.idega.user.data.User user, Integer maxResults, Integer firstResult) {
+		if (user == null) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> calendars = getAllVisibleCalendars(user, maxResults, firstResult);
+		if (ListUtil.isEmpty(calendars)) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> subscribedCalendars = new ArrayList<CalDAVCalendar>();
+		for (CalDAVCalendar calendar : calendars) {
+			// FIXME remove that check of type somehow
+			if (!(calendar instanceof BwCalendar || calendar instanceof CalendarEntity)) {
+				continue;
+			}
+			
+			if (isSubscribed(user, (BwCalendar) calendar)) {
+				subscribedCalendars.add(calendar);
+			}
+		}
+		
+		return subscribedCalendars;
+	}
+	
+	public Boolean isSubscribed(User user, BwCalendar calendar) {
+		if (user == null || calendar == null) {
+			return null;
+		}
+		
+		if (StringUtil.isEmpty(calendar.getSubscriptionId())) {
+			return Boolean.FALSE;
 		}
 		
 		BwAPI bwAPI = new BwAPI(user);
@@ -524,47 +657,96 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 			return null;
 		}
 		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
+		org.bedework.calsvci.SynchI synchronizer = bwAPI.getSynchronizer();
+		if (synchronizer == null) {
+			bwAPI.closeBedeworkAPI();
 			return null;
+		}
+		
+		CheckSubscriptionResult subscriptionResult = null;
+		try {
+			subscriptionResult = synchronizer.checkSubscription(calendar);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to check for subscription: ", e);
+		}
+		
+		bwAPI.closeBedeworkAPI();
+		
+		if (subscriptionResult == null) {
+			return null;
+		}
+
+		if (subscriptionResult.compareTo(CheckSubscriptionResult.ok) == 0) {
+			return Boolean.TRUE;
+		}
+		
+		if (subscriptionResult.compareTo(CheckSubscriptionResult.resubscribed) == 0) {
+			LOGGER.log(Level.SEVERE, "Calendars are getting resubscribed! " +
+					"It should be fixed as soon as possible!");
+			return Boolean.TRUE;
+		}
+		
+		if (subscriptionResult.compareTo(CheckSubscriptionResult.failed) == 0) {
+			return Boolean.FALSE;
+		}
+		
+		if (subscriptionResult.compareTo(CheckSubscriptionResult.notExternal) == 0) {
+			return Boolean.FALSE;
+		}
+		
+		if (subscriptionResult.compareTo(CheckSubscriptionResult.notFound) == 0) {
+			return Boolean.FALSE;
+		}
+		
+		if (subscriptionResult.compareTo(CheckSubscriptionResult.noSynchService) == 0) {
+			LOGGER.log(Level.WARNING, "Bedework Sync service is not working!");
+			return Boolean.FALSE;
 		}
 		
 		return null;
 	}
 
 	@Override
-	public List<CalDAVCalendar> getSubscribedCalendars(
-			com.idega.user.data.User user, int maxResults, int firstResult) {
-		if (user == null || maxResults < 1 || maxResults - firstResult < 1) {
-			return null;
-		}
-		
-		List<BwCalendar> calendars = getSubscribedCalendars(user);
+	public List<CalendarEntity> getUnSubscribedCalendars(User user) {
+		List<CalDAVCalendar> calendars = getUnSubscribedCalendars(user, null, null);
 		if (ListUtil.isEmpty(calendars)) {
 			return null;
 		}
 		
-		if (calendars.size() <= firstResult) {
-			return null;
+		List<CalendarEntity> bedeworkCalendars = new ArrayList<CalendarEntity>(
+				calendars.size());
+		for (CalDAVCalendar calendar : calendars) {
+			if (calendar instanceof CalendarEntity) {
+				bedeworkCalendars.add((CalendarEntity) calendar);
+			}
 		}
 		
-		if (calendars.size() <= maxResults) {
-			maxResults = calendars.size();
-		}
-		
-		return new ArrayList<CalDAVCalendar>(calendars.subList(firstResult, maxResults)); 
-	}
-
-	@Override
-	public List<BwCalendar> getUnSubscribedCalendars(User user) {
-		// TODO Auto-generated method stub
-		return null;
+		return bedeworkCalendars;
 	}
 
 	@Override
 	public List<CalDAVCalendar> getUnSubscribedCalendars(User user,
-			int maxResults, int firstResult) {
-		// TODO Auto-generated method stub
+			Integer maxResults, Integer firstResult) {
+		if (user == null) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> visibleCalendars = getAllVisibleCalendars(user, 
+				maxResults, firstResult);
+		if (visibleCalendars == null) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> subscribedCalendars = getSubscribedCalendars(user, 
+				maxResults, firstResult);
+		if (ListUtil.isEmpty(subscribedCalendars)) {
+			return visibleCalendars;
+		}
+		
+		if (visibleCalendars.removeAll(subscribedCalendars)) {
+			return visibleCalendars;
+		}
+		
 		return null;
 	}
 
@@ -626,32 +808,117 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		
 		return folders;
 	}
-
+	
 	@Override
-		public List<CalDAVCalendar> getAllVisibleCalendars(com.idega.user.data.User user, int maxResults, int firstResult) {
-			if (user == null) {
-				return null;
-			}
-			
-			List<CalDAVCalendar> visibleCalendars = new ArrayList<CalDAVCalendar>();
-			
-			List<CalDAVCalendar> unsubscribed = getUnSubscribedCalendars(user, maxResults, firstResult);
-			if (!ListUtil.isEmpty(unsubscribed)) {
-				visibleCalendars.addAll(unsubscribed);
-			}
-			
-			List<CalDAVCalendar> subscribed = getSubscribedCalendars(user, maxResults, firstResult);
-			if (!ListUtil.isEmpty(subscribed)) {
-				visibleCalendars.addAll(subscribed);
-			}
-			
-	//		List<CalDAVCalendar> owned = getAllUserCalendarDirectories(user.getPrimaryKey().toString());
-	//		if (!ListUtil.isEmpty(owned)) {
-	//			visibleCalendars.addAll(owned);
-	//		}
-			
-			return subscribed;
+	public List<CalDAVCalendar> getAllPrivateCalendarsByGroupIDs(List<String> groupIDs, 
+			Integer maxResult, Integer firstResult) {
+		Set<Long> ids = convertGroupIDs(groupIDs);
+		if (ListUtil.isEmpty(ids)) {
+			return null;
 		}
+		
+		return getAllPrivateCalendarsByGroupIDs(ids, maxResult, firstResult);
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getAllPrivateCalendarsByGroupIDs(List<String> groupIDs) {
+		Set<Long> ids = convertGroupIDs(groupIDs);
+		if (ListUtil.isEmpty(ids)) {
+			return null;
+		}
+		
+		return getAllPrivateCalendarsByGroupIDs(ids, null, null);
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getAllPrivateCalendarsByGroupIDs(Set<Long> groupIDs,
+			Integer maxResult, Integer firstResult) {
+		Collection<CalendarEntity> privateCalendars = getCalendarDAO()
+				.getPrivateCalendarsByGroupIDs(groupIDs, maxResult, firstResult);
+
+		if (ListUtil.isEmpty(privateCalendars)) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> calendars = new ArrayList<CalDAVCalendar>(privateCalendars);
+		return calendars;
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getAllPrivateCalendars() {
+		Collection<CalendarEntity> privateCalendars = getCalendarDAO()
+				.getPrivateCalendars();
+
+		if (ListUtil.isEmpty(privateCalendars)) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> calendars = new ArrayList<CalDAVCalendar>(privateCalendars);
+		return calendars;
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getAllPublicCalendars() {
+		Collection<CalendarEntity> publicCalendars = getCalendarDAO()
+				.getPublicCalendars();
+
+		if (ListUtil.isEmpty(publicCalendars)) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> calendars = new ArrayList<CalDAVCalendar>(publicCalendars);
+		return calendars;
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getAllVisibleCalendars(com.idega.user.data.User user) {
+		return getAllVisibleCalendars(user, null, null);
+	}
+	
+	@Override
+	public List<CalDAVCalendar> getAllVisibleCalendars(com.idega.user.data.User user, 
+			Integer maxResults, Integer firstResult) {
+		if (user == null) {
+			return null;
+		}
+		
+		List<CalDAVCalendar> visibleCalendars = new ArrayList<CalDAVCalendar>();
+		
+		List<String> groupIDs = null;
+		Collection<com.idega.user.data.Group> userGroups = null;
+		try {
+			Collection<?> groups = getUserBusiness().getUserGroups(user);
+			userGroups = new ArrayList<com.idega.user.data.Group>(groups.size());
+			for (Object group : groups) {
+				if (group instanceof com.idega.user.data.Group) {
+					userGroups.add((com.idega.user.data.Group) group);
+				}
+			}
+		} catch (RemoteException e) {
+			LOGGER.log(Level.WARNING, "Unable to get user groups: ", e);
+		}
+			
+		if (!ListUtil.isEmpty(userGroups)) {
+			groupIDs = new ArrayList<String>(userGroups.size());
+			
+			for (Group group : userGroups) {
+				groupIDs.add(group.getPrimaryKey().toString());
+			}
+		}
+			
+		List<CalDAVCalendar> owned = getAllPrivateCalendarsByGroupIDs(groupIDs,
+				maxResults, firstResult);
+		if (!ListUtil.isEmpty(owned)) {
+			visibleCalendars.addAll(owned);
+		}
+			
+		owned = getAllPublicCalendars();
+		if (!ListUtil.isEmpty(owned)) {
+			visibleCalendars.addAll(owned);
+		}
+		
+		return visibleCalendars;
+	}
 
 	@Override
 	public List<Group> getAllGroups(Set<Long> groupIDs) {
@@ -791,7 +1058,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		
 		path = path + CoreConstants.SLASH + calendarName;
 
-		CalendarEntity calendar = getCalendarDAO().getIdegaCalendarByPath(path);
+		CalendarEntity calendar = getCalendarDAO().getCalendarByPath(path);
  		if (calendar == null) {
 			calendar = new CalendarEntity(bwCalendar, groupsIDs);
 		}
@@ -849,6 +1116,6 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 			return null;
 		}
 		
-		return getCalendarDAO().getIdegaCalendarById(id);
+		return getCalendarDAO().getCalendarById(id);
 	}
 }

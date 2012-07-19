@@ -83,9 +83,14 @@
 package com.idega.calendar.data.dao;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import org.bedework.calfacade.BwCalendar;
 
 import com.idega.calendar.data.CalendarEntity;
 import com.idega.core.persistence.GenericDao;
+import com.idega.user.data.Group;
 import com.idega.user.data.User;
 
 /**
@@ -137,7 +142,7 @@ public interface CalendarDAO extends GenericDao{
 	 * @return number of calendars in folder or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Integer getNumberOfIdegaCalendarChildren(String calendarPath);
+	public Integer getNumberOfCalendarChildren(String calendarPath);
 	
 	/**
 	 * <p>Gives a number of existing events, todo's and similar stuff in calendar.</p>
@@ -147,21 +152,21 @@ public interface CalendarDAO extends GenericDao{
 	 * @return number of references of events stuff. <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Integer getNumberOfIdegaCalendarEvents(String calendarPath);
+	public Integer getNumberOfCalendarEvents(String calendarPath);
 	
 	/**
 	 * <p>Fetches from database user calendars, which holds events and are private.</p>
 	 * @return <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<com.idega.calendar.data.CalendarEntity> getUserIdegaCalendarCollections();
+	public Collection<com.idega.calendar.data.CalendarEntity> getPrivateCalendars();
 	
 	/**
 	 * <p>Fetches from database all public calendars, which holds events and are public.</p>
 	 * @return <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<com.idega.calendar.data.CalendarEntity> getIdegaPublicCalendarCollections();
+	public Collection<com.idega.calendar.data.CalendarEntity> getPublicCalendars();
 	
 	/**
 	 * <p>Fetches calendar from database by id.</p>
@@ -170,7 +175,7 @@ public interface CalendarDAO extends GenericDao{
 	 * <code>null</code> on failure. 
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public com.idega.calendar.data.CalendarEntity getIdegaCalendarById(int id);
+	public com.idega.calendar.data.CalendarEntity getCalendarById(int id);
 	
 	/**
 	 * <p>Fetches calendar from database by {@link com.idega.calendar.data.CalendarEntity#getPath()}.</p>
@@ -180,7 +185,17 @@ public interface CalendarDAO extends GenericDao{
 	 * @return {@link com.idega.calendar.data.CalendarEntity} or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public com.idega.calendar.data.CalendarEntity getIdegaCalendarByPath(String calendarPath);
+	public com.idega.calendar.data.CalendarEntity getCalendarByPath(String calendarPath);
+	
+	/**
+	 * <p>Fetches calendar from database by {@link com.idega.calendar.data.CalendarEntity#getPath()}.</p>
+	 * @param calendarPath - {@link com.idega.calendar.data.CalendarEntity#getPath()}, for 
+	 * example: "/principals/users/{@link User#getPrimaryKey()}/calendarName". 
+	 * Not <code>null</code>.
+	 * @return {@link List} of {@link com.idega.calendar.data.CalendarEntity}s or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<com.idega.calendar.data.CalendarEntity> getCalendarsByPaths(Collection<String> calendarPath);
 	
 	/**
 	 * <p>Fetches calendar by {@link com.idega.calendar.data.CalendarEntity#getName()}.</p>
@@ -189,5 +204,61 @@ public interface CalendarDAO extends GenericDao{
 	 * @return {@link CalendarEntity}s with that name or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<com.idega.calendar.data.CalendarEntity>getIdegaCalendarsByName(String name);
+	public Collection<com.idega.calendar.data.CalendarEntity>getCalendarsByName(String name);
+	
+	/**
+	 * <p>Fetches calendars by {@link Group#getPrimaryKey()}s.</p>
+	 * @param groupIDs - {@link Group#getPrimaryKey()}s. Not <code>null</code>.
+	 * @return {@link CalendarEntity}s where groups with given ID's can see. 
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<com.idega.calendar.data.CalendarEntity>getPrivateCalendarsByGroupIDs(Set<Long> groupIDs);
+
+	/**
+	 * <p>Fetches {@link CalendarEntity}s by: </p>
+	 * @param groupIDs -  {@link Group#getPrimaryKey()}s,
+	 * @param isPublic - <code>true</code> for public {@link CalendarEntity}s,
+	 * <code>false</code> for private ones, <code>null</code> for all of them. 
+	 * @param calendarType - type of directory:
+	 * <li>{@link BwCalendar#calTypeAlias}</li>
+	 * <li>{@link BwCalendar#calTypeBusy}</li>
+	 * <li>{@link BwCalendar#calTypeCalendarCollection}</li>
+	 * <li>{@link BwCalendar#calTypeDeleted}</li>
+	 * <li>{@link BwCalendar#calTypeExtSub}</li>
+	 * <li>{@link BwCalendar#calTypeFolder}</li>
+	 * <li>{@link BwCalendar#calTypeInbox}</li>
+	 * <li>{@link BwCalendar#calTypeOutbox}</li>
+	 * <li>{@link BwCalendar#calTypeResourceCollection}</li>
+	 * <li>{@link BwCalendar#calTypeUnknown}</li>
+	 * If <code>null</code>, then all of them, but author recommends to use
+	 * {@link BwCalendar#calTypeCalendarCollection}.
+	 * @param showDeleted - <code>true</code> or <code>null</code> shows all
+	 * {@link CalendarEntity}s, <code>false</code> shows only not deleted.
+	 * @param resultsNumber - - tells how much results should be fetched, 
+	 * in "SQL" query would be: "LIMIT resultsNumber, firstResultNumber". 
+	 * <code>null</code> will ignore parameter.
+	 * @param firstResultNumber - tells which result in row should be fetched first. 
+	 * In "SQL" query would be: "LIMIT resultsNumber, firstResultNumber".
+	 * @return
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<CalendarEntity> getAllCalendars(Set<Long> groupIDs,
+			Boolean isPublic, Integer calendarType, boolean showDeleted,
+			Integer resultsNumber, Integer firstResultNumber);
+
+	/**
+	 * <p>Fetches {@link CalendarEntity}s by: </p>
+	 * @param groupIDs -  {@link Group#getPrimaryKey()}s,
+	 * @param resultsNumber - - tells how much results should be fetched, 
+	 * in "SQL" query would be: "LIMIT resultsNumber, firstResultNumber". 
+	 * <code>null</code> will ignore parameter.
+	 * @param firstResultNumber - tells which result in row should be fetched first. 
+	 * In "SQL" query would be: "LIMIT resultsNumber, firstResultNumber".
+	 * @return
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<CalendarEntity> getPrivateCalendarsByGroupIDs(
+			Set<Long> groupIDs, Integer resultsNumber, Integer firstResultNumber);
+
 }

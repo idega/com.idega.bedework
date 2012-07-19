@@ -1,7 +1,12 @@
 package com.idega.bedework;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.management.ObjectName;
 
+import org.bedework.caldav.server.soap.synch.SynchConnections;
+import org.bedework.caldav.server.soap.synch.SynchConnectionsMBean;
 import org.bedework.dumprestore.BwDumpRestore;
 import org.bedework.dumprestore.BwDumpRestoreMBean;
 import org.bedework.indexer.BwIndexer;
@@ -16,6 +21,8 @@ import com.idega.presentation.IWContext;
 
 public class IWBundleStarter implements IWBundleStartable {
 
+	private static final Logger LOGGER = Logger.getLogger(IWBundleStarter.class.getName());
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -26,22 +33,20 @@ public class IWBundleStarter implements IWBundleStartable {
 		
 		javax.management.MBeanServer mbs = java.lang.management.ManagementFactory
 				.getPlatformMBeanServer();
-		
-//		org.apache.activemq.ActiveMQConnection activeMQConnection;
-//		try {
-//			activeMQConnection = org.apache.activemq.ActiveMQConnection.makeConnection("tcp://localhost:61616");
-//			activeMQConnection.start();
-//			//Get queues
-//			org.apache.activemq.advisory.DestinationSource destinationSource = 
-//					activeMQConnection.getDestinationSource();
-//			java.util.Set<org.apache.activemq.command.ActiveMQQueue> queues = 
-//					destinationSource.getQueues();
-//		} catch (JMSException e1) {
-//			e1.printStackTrace();
-//		} catch (URISyntaxException e1) {
-//			e1.printStackTrace();
-//		}
  
+		SynchConnectionsMBean connectionsMbean = new SynchConnections();
+		try {
+			ObjectName connectionsMbeanName = new ObjectName(connectionsMbean.getName());
+			if (!mbs.isRegistered(connectionsMbeanName)) {
+				mbs.registerMBean(connectionsMbean, connectionsMbeanName);
+			}
+			
+			connectionsMbean.create();
+			connectionsMbean.start();
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Unable to register CalDAVSynchConnections MBean: ",e);
+		}
+		
 		BwIndexerMBean indexerMBean = new BwIndexer();
 		try {
 			ObjectName indexerName = new ObjectName(indexerMBean.getName());
@@ -49,7 +54,7 @@ public class IWBundleStarter implements IWBundleStartable {
 				mbs.registerMBean(indexerMBean, indexerName);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "Unable to register Bedework indexer MBean: ", e);
 		}
 
 		TzsvcMBean timeServerMBean = new Tzsvc();
@@ -59,7 +64,7 @@ public class IWBundleStarter implements IWBundleStartable {
 				mbs.registerMBean(timeServerMBean, timeServerName);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "Unable to register timezones MBean: ", e);
 		}
 		
 		BwDumpRestoreMBean dumpRestoreMBean = new BwDumpRestore();
@@ -69,7 +74,7 @@ public class IWBundleStarter implements IWBundleStartable {
 				mbs.registerMBean(dumpRestoreMBean, dumpRestoreName);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "Unable to register Bedework restorer MBean: ", e);
 		}
 
 		IWMainApplicationSettings settings = null;

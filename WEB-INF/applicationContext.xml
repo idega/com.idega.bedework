@@ -10,5 +10,7 @@
     	    </property>
     	    <property name="start" value="true" />
   	</bean>
+  	
+  	<!-- <import resource="synch-config.xml"/> -->
 
 </beans>

@@ -132,11 +132,12 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
 
 	/**
-	 * TODO
-	 * @param user
-	 * @param calendarName
-	 * @param calendarFolder
-	 * @return
+	 * <p>Fetches {@link BwCalendar} of {@link com.idega.user.data.User} from database by:
+	 * </p>
+	 * @param user - {@link com.idega.user.data.User}. Not <code>null</code>.
+	 * @param calendarName - {@link BwCalendar#getName()}, not <code>null</code>.
+	 * @param calendarFolder - {@link BwCalendar#getColPath()}.
+	 * @return Fetched {@link BwCalendar} or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public BwCalendar getUserCalendar(
@@ -201,9 +202,9 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 */
 	public List<com.idega.user.data.Group> getAllGroups(Set<Long> groupIDs);
 
-	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
+	public List<CalendarEntity> getSubscribedCalendars(com.idega.user.data.User user);
 
-	public List<BwCalendar> getUnSubscribedCalendars(com.idega.user.data.User user);
+	public List<CalendarEntity> getUnSubscribedCalendars(com.idega.user.data.User user);
 
 	/**
 	 * <p>Creates calendar for given {@link User}.</p>
