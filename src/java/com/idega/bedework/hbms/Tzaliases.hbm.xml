@@ -17,10 +17,10 @@
 
     <version name="seq" column="bw_seq" type="integer" />
 
-    <property name="fromId" column="bw_from" type="string" length="500"
+    <property name="fromId" column="bw_from" type="string"
               index="bwidx_tz_aliasfrom" />
 
-    <property name="toId" column="bw_to" type="string" length="500"
+    <property name="toId" column="bw_to" type="string"
               index="bwidx_tz_aliasto" />
   </class>
 </hibernate-mapping>

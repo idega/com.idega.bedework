@@ -149,7 +149,9 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	
 	@Override
 	public CalendarEntry getEntry(int entryID) {
-		BwAPI bwAPI = new BwAPI(null);
+		// FIXME What was that???
+		// BwAPI bwAPI = new BwAPI(null);
+		BwAPI bwAPI = new BwAPI(getCurrentUser());
 		
 		EventsI eventsHandler = bwAPI.getEventsHandler();
 		

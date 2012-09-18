@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent the configuration state of the synch engine.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.synch.db.SynchConfig"
+         table="bwsynch_config" >
+    <cache usage="read-write"/>
+    
+    <id name="id" type="long" column="bwsyn_id">
+      <generator class="native"/>
+    </id>
+
+    <!-- db entity properties -->
+
+    <version name="seq" column="bwsyn_seq" type="integer" />
+
+    <property name="synchlingPoolSize" 
+              column="bwsyn_sling_poolsv" type="integer" />
+
+    <property name="synchlingPoolTimeout" 
+              column="bwsyn_sling_pooltout" type="long" />
+
+    <property name="missingTargetRetries" 
+              column="bwsyn_missing_retries" type="integer" />
+
+    <property name="callbackURI" column="bwsyn_callback_uri" 
+              type="string" length="1000" />
+
+    <property name="timezonesURI" column="bwsyn_tzs_uri" 
+              type="string" length="1000" />
+
+    <property name="keystore" column="bwsyn_keystore" 
+              type="string" length="1000" />
+
+    <property name="privKeys" column="bwsyn_privKeys" 
+              type="string" length="1000" />
+
+    <property name="pubKeys" column="bwsyn_pubKeys" 
+              type="string" length="1000" />
+
+    <set name="ipInfo" table="bwsyn_ipinfo"
+         cascade="all,delete-orphan"
+         lazy="false"
+         sort="natural" >
+      <key column="bwsynipinfo_id" foreign-key="bwsynipinfo_fk" />
+
+      <composite-element class="org.bedework.synch.db.IpAddrInfo">
+        <property name="order" column="bwsyn_order"/>
+        <property name="addr" column="bwsyn_addr" not-null="true"/>
+        <property name="block" column="bwsyn_block" type="true_false" />
+      </composite-element>
+    </set>
+
+    <set name="connectors" table="bwsyn_connectors"
+         cascade="all,delete-orphan"
+         lazy="false">
+      <key column="bwsyncnctr_id" foreign-key="bwsynconn_fk" />
+      <one-to-many class="org.bedework.synch.db.ConnectorConfig" />
+    </set>
+  </class>
+</hibernate-mapping>
+

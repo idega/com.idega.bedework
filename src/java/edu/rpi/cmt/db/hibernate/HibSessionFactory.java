@@ -1,5 +1,5 @@
 /**
- * @(#)Configurator.java    1.0.0 2:43:46 PM
+ * @(#)HibSessionFactory.java    1.0.0 1:24:56 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,92 +80,23 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package net.fortuna.ical4j.util;
+package edu.rpi.cmt.db.hibernate;
+
+import org.hibernate.SessionFactory;
+
+import com.idega.hibernate.HibernateUtil;
 
 /**
- * Copyright (c) 2012, Ben Fortuna
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  o Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- *  o Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- *  o Neither the name of Ben Fortuna nor the names of any other contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-import java.io.FileInputStream;
-import java.util.Properties;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.idega.bedework.BedeworkConstants;
-
-/**
- * $Id$
- *
- * Created on 06/02/2008
- *
- * Provides configuration properties specified either as system properties
- * or in an ical4j.properties configuration file.
- * @author Ben
- * @author martynasstake
+ * <p>Difficult to extend, so let's trick them.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
- * 
+ *
+ * @version 1.0.0 Aug 20, 2012
+ * @author martynasstake
  */
-public final class Configurator {
-
-    private static final Log LOG = LogFactory.getLog(Configurator.class);
-    
-    private static final Properties CONFIG = new Properties();
-    
-    static {
-        try {
-        		java.io.File file = new java.io.File(BedeworkConstants.FILE_PATH_ICAL4J_PROPERTIES);
-            CONFIG.load(new FileInputStream(file));
-        }
-        catch (Exception e) {
-            LOG.info("ical4j.properties not found.");
-        }
-    }
-    
-    /**
-     * Constructor made private to enforce static nature.
-     */
-    private Configurator() {
-    }
-    
-    /**
-     * @param key a compatibility hint key
-     * @return true if the specified compatibility hint is enabled, otherwise false
-     */
-    public static String getProperty(final String key) {
-        String property = CONFIG.getProperty(key);
-        if (property == null) {
-            property = System.getProperty(key);
-        }
-        return property;
-    }
+public class HibSessionFactory {
+	public static SessionFactory getSessionFactory() throws HibException {
+		return HibernateUtil.getSessionFactory();
+	}
 }

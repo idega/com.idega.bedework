@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent the configuration state of the synch engine.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.synch.db.ConnectorConfig"
+         table="bwsynch_conn" >
+    <cache usage="read-write"/>
+    
+    <id name="id" type="long" column="bwsyn_id">
+      <generator class="native"/>
+    </id>
+
+    <!-- db entity properties -->
+
+    <version name="seq" column="bwsyn_seq" type="integer" />
+
+    <property name="name" column="bwsyn_name" type="string" length="250"
+              unique="true"
+              not-null="true"
+              index="bwsynconnidx_name" />
+
+    <property name="className" column="bwsyn_cname" 
+              type="string" length="1000" />
+
+    <property name="readOnly" column="bwsyn_readonly" 
+              type="true_false" not-null="true" />
+
+    <property name="trustLastmod" column="bwsyn_trustLastmod" 
+              type="true_false" not-null="true" />
+
+    <set name="properties" table="bwsynconn_properties"
+         cascade="all,delete-orphan"
+         lazy="false">
+      <key column="id" foreign-key="bwsynconn_pid_fk" />
+      <composite-element class="org.bedework.synch.db.SynchProperty">
+        <property name="name" type="string" length="200"
+                  column="bwsyn_pname"  />
+
+        <property name="value" column="bwsyn_pvalue" type="text"/>
+      </composite-element>
+    </set>
+  </class>
+</hibernate-mapping>
+

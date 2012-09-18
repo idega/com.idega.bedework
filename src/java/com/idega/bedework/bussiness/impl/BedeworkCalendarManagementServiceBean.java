@@ -94,7 +94,9 @@ import java.util.logging.Logger;
 import javax.ejb.FinderException;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -509,9 +511,47 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		} catch (CalFacadeException e) {
 			LOGGER.log(Level.WARNING, "Unable to subscribe calendar: " 
 					+ calendar.getName() + " cause of: ", e);
+		} finally {
+			isSubscribed = bwAPI.closeBedeworkAPI();
 		}
 		
-		return isSubscribed && bwAPI.closeBedeworkAPI();
+		if (isSubscribed) {
+			return saveSubscription(calendar);
+		}
+		
+		return isSubscribed;
+	}
+	
+	/**
+	 * <p>Persists subscription to database.</p>
+	 * @param calendar - subscribed/unsubscribed calendar.
+	 * @return <code>true</code> if  updated, <code>false</code> otherwise.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public boolean saveSubscription(BwCalendar calendar) {
+		if (calendar == null) {
+			return Boolean.FALSE;
+		}
+		
+		String href = calendar.getCreatorHref();
+		BwAPI bwAPI = new BwAPI(UserAdapter.getBedeworkSystemUserByID(href.substring(href.length()-1)));
+		
+		CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			return Boolean.FALSE;
+		}
+		
+		try {
+			calendarsHandler.update(calendar);
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.WARNING, "Unable to save calendar subscription: " 
+					+ calendar.getName() + " cause of: ", e);
+			return Boolean.FALSE;
+		} finally {
+			bwAPI.closeBedeworkAPI();
+		}
+		
+		return Boolean.TRUE;
 	}
 
 	@Override
@@ -558,6 +598,11 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 			return Boolean.FALSE;
 		}
 		
+		CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
+		if (calendarsHandler == null) {
+			return Boolean.FALSE;
+		}
+		
 		org.bedework.calsvci.SynchI synchronizer = bwAPI.getSynchronizer();
 		if (synchronizer == null) {
 			bwAPI.closeBedeworkAPI();
@@ -570,9 +615,15 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		} catch (CalFacadeException e) {
 			LOGGER.log(Level.WARNING, "Unable to unsubscribe calendar: " 
 					+ calendar.getName() + " cause of: ", e);
+		} finally {
+			isUnsubscribed = bwAPI.closeBedeworkAPI();
 		}
 		
-		return isUnsubscribed && bwAPI.closeBedeworkAPI();
+		if (isUnsubscribed) {
+			return saveSubscription(calendar);
+		}
+		
+		return isUnsubscribed;
 	}
 
 	@Override
@@ -647,7 +698,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		if (user == null || calendar == null) {
 			return null;
 		}
-		
+				
 		if (StringUtil.isEmpty(calendar.getSubscriptionId())) {
 			return Boolean.FALSE;
 		}
@@ -662,7 +713,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 			bwAPI.closeBedeworkAPI();
 			return null;
 		}
-		
+
 		CheckSubscriptionResult subscriptionResult = null;
 		try {
 			subscriptionResult = synchronizer.checkSubscription(calendar);
@@ -691,7 +742,7 @@ public class BedeworkCalendarManagementServiceBean extends DefaultSpringBean imp
 		}
 		
 		if (subscriptionResult.compareTo(CheckSubscriptionResult.notExternal) == 0) {
-			return Boolean.FALSE;
+			return Boolean.TRUE;
 		}
 		
 		if (subscriptionResult.compareTo(CheckSubscriptionResult.notFound) == 0) {

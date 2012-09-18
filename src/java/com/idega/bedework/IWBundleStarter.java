@@ -11,6 +11,7 @@ import org.bedework.dumprestore.BwDumpRestore;
 import org.bedework.dumprestore.BwDumpRestoreMBean;
 import org.bedework.indexer.BwIndexer;
 import org.bedework.indexer.BwIndexerMBean;
+
 import org.bedework.timezones.service.Tzsvc;
 import org.bedework.timezones.service.TzsvcMBean;
 
@@ -31,20 +32,18 @@ public class IWBundleStarter implements IWBundleStartable {
 	 */
 	public void start(IWBundle starterBundle) {
 		
+		/* Starts MBeans */
 		javax.management.MBeanServer mbs = java.lang.management.ManagementFactory
 				.getPlatformMBeanServer();
- 
+		
 		SynchConnectionsMBean connectionsMbean = new SynchConnections();
 		try {
 			ObjectName connectionsMbeanName = new ObjectName(connectionsMbean.getName());
 			if (!mbs.isRegistered(connectionsMbeanName)) {
 				mbs.registerMBean(connectionsMbean, connectionsMbeanName);
 			}
-			
-			connectionsMbean.create();
-			connectionsMbean.start();
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Unable to register CalDAVSynchConnections MBean: ",e);
+			LOGGER.log(Level.WARNING, "Unable to register SynchConnectionsMBean: ",e);
 		}
 		
 		BwIndexerMBean indexerMBean = new BwIndexer();
@@ -76,7 +75,7 @@ public class IWBundleStarter implements IWBundleStartable {
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Unable to register Bedework restorer MBean: ", e);
 		}
-
+		
 		IWMainApplicationSettings settings = null;
 		if (starterBundle != null) {
 			settings = starterBundle.getApplication().getSettings();
@@ -90,6 +89,9 @@ public class IWBundleStarter implements IWBundleStartable {
 			dumpRestoreMBean.restoreData();
 			settings.setProperty(BedeworkConstants.BEDEWORK_INITIATED_APP_PROP, Boolean.TRUE.toString());
 		}
+		
+		//FIXME Remove this hack later
+		(new com.idega.bedework.webservice.sync.IWBundleStarter()).start(starterBundle);
 	}
 
 	/*

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent a synch subscription.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <typedef class="edu.rpi.cmt.db.hibernate.GenericEnumUserType"
+           name="direction">
+    <param name="enumClassname">org.bedework.synch.wsmessages.SynchDirectionType</param>
+  </typedef>
+  
+  <typedef class="edu.rpi.cmt.db.hibernate.GenericEnumUserType"
+           name="master">
+    <param name="enumClassname">org.bedework.synch.wsmessages.SynchMasterType</param>
+  </typedef>
+  
+  <class name="org.bedework.synch.db.Subscription"
+         table="bwsynch_subs" >
+    <cache usage="read-write"/>
+    
+    <id name="id" type="long" column="bwsyn_id">
+      <generator class="native"/>
+    </id>
+
+    <!-- db entity properties -->
+
+    <version name="seq" column="bwsyn_seq" type="integer" />
+
+    <property name="subscriptionId" column="bwsyn_subid" type="string" length="250"
+              unique="true"
+              not-null="true"
+              index="bwsynidx_subid" />
+
+    <property name="owner" column="bwsyn_owner" type="string"
+              not-null="true"
+              index="bwsynidx_subowner" />
+
+    <property name="lastRefresh" column="bwsyn_lrefresh" type="string" length="20" />
+
+    <property name="errorCt" column="bwsyn_errorct" type="integer" />
+
+    <property name="missingTarget" column="bwsyn_missing" 
+              type="true_false" not-null="true" />
+
+    <component name="endAConnectorInfo"
+               class="org.bedework.synch.db.SubscriptionConnectorInfo" >
+      <property name="connectorId" column="bwsyn_connectorid_a" 
+                type="string" length="100" />
+      <property name="synchProperties" column="bwsyn_conn_props_a" 
+                type="string" length="3000" />
+    </component>
+
+    <component name="endBConnectorInfo"
+               class="org.bedework.synch.db.SubscriptionConnectorInfo" >
+      <property name="connectorId" column="bwsyn_connectorid_b" 
+                type="string" length="100" />
+      <property name="synchProperties" column="bwsyn_conn_props_b" 
+                type="string" length="3000" />
+    </component>
+
+    <component name="info"
+               class="org.bedework.synch.db.SubscriptionInfo" >
+      <property name="synchProperties" column="bwsyn_props" 
+                type="string" length="3000" />
+    </component>
+
+    <property name="direction" column="bwsyn_dir" type="direction" length="25"
+              not-null="true" />
+
+    <property name="master" column="bwsyn_mstr" type="master"  length="25"
+              not-null="true" />
+  </class>
+</hibernate-mapping>
+

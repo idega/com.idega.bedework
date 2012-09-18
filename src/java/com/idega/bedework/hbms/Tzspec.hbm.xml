@@ -17,7 +17,7 @@
 
     <version name="seq" column="bw_seq" type="integer" />
 
-    <property name="name" column="bw_name" type="string" length="500"
+    <property name="name" column="bw_name" type="string"
               index="bwidx_tz_name" />
 
     <property name="etag" column="bw_etag" type="string" length="200" />

@@ -31,6 +31,9 @@
     <!--
     <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
     -->
+	<ResourceLink	global="jdbc/DefaultDS"
+    				name="jdbc/DefaultDS"
+					type="javax.sql.DataSource"/>
     
     <ResourceLink global="jms/BedeworkConnectionFactory" 
                   name="jms/BedeworkConnectionFactory"

@@ -85,6 +85,7 @@ package com.idega.bedework.bussiness;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.configs.DbConfig;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.CalSvcIdega;
@@ -110,13 +111,24 @@ public class BwAPI {
 	
 	private static final Logger LOGGER = Logger.getLogger(BwAPI.class.getName());
 	private CalSvcI bedeworkAPI = null;
-	private User user = null;
+	private String userID = null;
 	
 	public BwAPI (User user) {
-		this.user = user;
+		this.userID = user.getPrimaryKey().toString();
 		openBedeworkAPI();
 	}
 	
+	public BwAPI(BwUser bwUser) {
+		String[] account = bwUser.getAccountSplit();
+		this.userID = String.valueOf(account[account.length - 1]);
+		openBedeworkAPI();
+	}
+	
+	public BwAPI(String userID) {
+		this.userID = userID;
+		openBedeworkAPI();
+	}
+
 	/**
 	 * <p>Initiates Bedework API.</p>
 	 * @return {@link CalSvcI}, which provides basic services in communicating with Bedework.
@@ -125,14 +137,14 @@ public class BwAPI {
 	 */
 	public CalSvcI getBedeworkAPI(){
 		if (bedeworkAPI == null) {
-			if (this.user == null) {
+			if (this.userID == null) {
 				return null;
 			}
 			
 			DbConfig dbConfig = new DbConfig();
 			dbConfig.setCachingOn(false);
 			
-			CalSvcIPars params = new CalSvcIPars(user.getPrimaryKey().toString(), "MainCampus", true, false, false, 
+			CalSvcIPars params = new CalSvcIPars(userID, "MainCampus", true, false, false, 
 					true, true, true, false, dbConfig);
 
 			bedeworkAPI = new CalSvcIdega();

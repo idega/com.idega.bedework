@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
   "-//Hibernate/Hibernate Mapping DTD//EN"
-  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <!-- ===================================================================
      A scheduling message definition in Bedework.
@@ -32,7 +32,7 @@
     <property name="principalHref" column="bw_principal_href" type="string"
               index="bwidx_smsg_principal" />
 
-    <property name="eventName" column="bw_eventname" type="string" length="500"
+    <property name="eventName" column="bw_eventname" type="string"
               index="bwidx_smsg_eventname" />
 
     <property name="rid" column="bw_recurrence_id" type="string"

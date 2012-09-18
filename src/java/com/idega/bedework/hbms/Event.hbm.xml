@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
   "-//Hibernate/Hibernate Mapping DTD//EN"
-  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <!-- ===================================================================
      An Event in Bedework.
@@ -20,15 +20,15 @@
 
     <property name="entityType" column="bw_entity_type" type="integer" />
 
-    <property name="colPath" column="bw_col_path" type="string" length="3000"
+    <property name="colPath" column="bw_col_path" type="string"
               not-null="true"
               index="bwidx_ev_colpath" />
 
     <!-- (ownerid +) calendarid + uid + recurrence-id is usually a unique key. -->
-    <property name="uid" column="bw_uid" type="string" length="1000"
+    <property name="uid" column="bw_uid" type="string"
               index="bwidx_event_cal_name_uid" />
 
-    <property name="name" column="eventname" type="string" length="500"
+    <property name="name" column="eventname" type="string"
               index="bwidx_event_cal_name_uid" />
 
     <property name="creatorHref" column="bw_creator" type="string"

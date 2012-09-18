@@ -82,7 +82,7 @@
  */
 package org.bedework.dumprestore.restore;
 
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -109,6 +109,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 import com.idega.bedework.BedeworkConstants;
+import com.idega.util.IOUtil;
 
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
@@ -133,9 +134,6 @@ public class Restore implements Defs {
 	private transient Logger log;
 
 	  private String appName;
-
-	  /* File we restore from */
-	  private String filename;
 
 	  private RestoreGlobals globals;
 
@@ -173,9 +171,7 @@ public class Restore implements Defs {
 	  /**
 	   * @param val - filename to restore from
 	   */
-	  public void setFilename(final String val) {
-	    filename = val;
-	  }
+	  public void setFilename(final String val) {}
 
 	  /**
 	   * @throws Throwable
@@ -217,8 +213,13 @@ public class Restore implements Defs {
 	    globals.digester.setRules(new RegexRules(m));
 
 	    globals.digester.addRuleSet(new RestoreRuleSet(globals));
-	    globals.digester.parse(new InputStreamReader(new FileInputStream(filename == null ? BedeworkConstants.FILE_PATH_INIT_BEDEWORK : filename),
-	                                         "UTF-8"));
+	    
+	    InputStream initBedeworkStream = IOUtil.getStreamFromJar(
+	    		BedeworkConstants.BUNDLE_IDENTIFIER,
+	    		BedeworkConstants.FILE_PATH_INIT_BEDEWORK
+	    		);
+	    
+	    globals.digester.parse(new InputStreamReader(initBedeworkStream, "UTF-8"));
 	  }
 
 	  /**
@@ -401,23 +402,6 @@ public class Restore implements Defs {
 	        globals.skipSpecialCals = true;
 	      } else if (args.ifMatch("-indexroot", 1)) {
 	        globals.getSyspars().setIndexRoot(args.next());
-	      } else if (args.ifMatch("-f", 1)) {
-	        filename = args.next();
-	        /* Can we override these in the hibernate properties?
-	      } else if (argpar("-d", args, i)) {
-	        i++;
-	        driver = args[i];
-	      } else if (argpar("-i", args, i)) {
-	        i++;
-	        id = args[i];
-	      } else if (argpar("-p", args, i)) {
-	        i++;
-	        pw = args[i];
-	      } else if (argpar("-u", args, i)) {
-	        i++;
-	        url = args[i];
-	        */
-
 	      } else if (args.ifMatch("-onlyusers", 1)) {
 	        String par = args.next();
 

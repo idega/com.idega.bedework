@@ -82,11 +82,8 @@
  */
 package com.idega.bedework;
 
-import com.idega.idegaweb.IWMainApplication;
-
-
 /**
- * Class description goes here.
+ * <p>Module constants goes here.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
@@ -100,12 +97,10 @@ public interface BedeworkConstants {
 	public static final String CLASS_IDEGA_SVCI = "org.bedework.calsvc.CalSvcIdega";
 	public static final String CLASS_IDEGA_CALINF_IMPL = "com.idega.bedework.bussiness.CalintfImplIdega";
 	
-	public static final String FILE_PATH_BUNDLE = IWMainApplication.getDefaultIWMainApplication().getBundle(BUNDLE_IDENTIFIER).getBundleBaseRealPath();
-	public static final String FILE_PATH_HIBERNATE = "/com/idega/hibernate/hibernate.cfg.xml";
-	public static final String FILE_PATH_SYSEVENTS_PROPERTIES = FILE_PATH_BUNDLE+"/properties/sysevents.properties";
-	public static final String FILE_PATH_ICAL4J_PROPERTIES = FILE_PATH_BUNDLE+"/properties/ical4j.properties";
+	public static final String FILE_PATH_SYNCH_CONFIG = "/WEB-INF/synch-config.xml";
+	public static final String FILE_PATH_SYSEVENTS_PROPERTIES = "properties/sysevents.properties";
 	
-	public static final String FILE_PATH_INIT_BEDEWORK = FILE_PATH_BUNDLE+"/WEB-INF/initbedework.xml";
+	public static final String FILE_PATH_INIT_BEDEWORK = "WEB-INF/initbedework.xml";
 	
 	public static final String BEDEWORK_INITIATED_APP_PROP = "is_bedework_initiated";
 	

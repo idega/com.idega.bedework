@@ -3,7 +3,12 @@ Please don't use this now. It not works.
 FOR DEVELOPERS:
 First, you must copy/paste configurations of context.xml and <GlobalNamingResources> 
 of server.xml into Tomcat/conf directory, otherwise JNDI and JMS won't work. Also, you 
-should put web-inf/activemq.xml to your-app/web-inf/activemq.xml
+should put activemq-all-{version}.jar file to tomcat/libs if not loaded automatically.
+
+Instructions for eclipse you may need:
+-Dwebconsole.type=properties
+-Dwebconsole.jms.url=tcp://localhost:61616
+-Dwebconsole.jmx.url=service:jmx:rmi:///jndi/rmi://localhost:1099/Jmxrmi
 
 Second, to get first exception of Bedework, you should add BedeworkPersonalCalendarView
 component. If you get NotImplementedException for
@@ -20,13 +25,14 @@ Fourth: Add this to tomcat settings, when use eclipse:
 -Dwebconsole.jms.url=tcp://localhost:61616
 -Dwebconsole.jmx.url=service:jmx:rmi:///jndi/rmi://localhost:1099/Jmxrmi
 
+####################################TODO########################################
+
 What is problematic but should be done:
 
 1) Integrate timezone server - the one is used now: http://stable.bedework.org/tzsvr;
 2) Fix efcache.xml usage, it seems it is not used now;
 3) Exclude duplicates of jar files between bedework and idega systems;
 4) Place content of context.xml to web.xml and server.xml to ROOT.xml;
-5) Find way, that applicationContext.xml use activeMQ.xml in current /web-inf directory, 
 but not in your-webapp/web-inf;
 6) Move options.xml to web-inf;
 7) Fix JmsConnectionHandler in way, that "sysevents" JMS Queue would be found from 
@@ -34,3 +40,10 @@ context, but not created dynamically. (at 94 row).
 
 What is not so problematic:
 1) Implement unimplemented methods in BwCalBussinessBean.
+2) Place context.xml to META-INF, so it will be automatically moved to tomcat.
+3) Extend Jasig Bedework Entities with Idega ones.
+
+Please notice, that net.fortuna.ical4j package is for merging differences 
+between Jasig Bedework ical4j 0.95 build and original ical4j 1.0.3 build.
+There is Configurator.java file, there place of ical4j.properties file could be
+set. 

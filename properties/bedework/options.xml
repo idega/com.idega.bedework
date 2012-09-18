@@ -75,8 +75,9 @@
           <hostPrincipalRoot>/principals/hosts</hostPrincipalRoot>
         </systemRoots>
         
-        <synchWsdlUri>http://localhost:8080/wsdls/synch/wssvc.wsdl</synchWsdlUri>
+        <synchWsdlUri>http://localhost:8080/wsdls/synch/synchws.wsdl</synchWsdlUri>
         <synchManagerUri>http://localhost:8080/synch/manager</synchManagerUri>
+        <!-- <synchManagerUri>http://localhost:8080/synch/manager</synchManagerUri> -->
         
         <!-- This must match the connector id in the synch config. 
              It identifies which connection we are using for communication
@@ -660,44 +661,6 @@
         </Feeder>
 
         <!-- ==================================================================
-                          Demo departmental Public web client SoEDept
-             ================================================================== -->
-        <SoEDept classname="org.bedework.calfacade.configs.ClientConfig">
-          <cachingOn>true</cachingOn>
-          <cachePrefix>bwpubevents</cachePrefix>
-
-          <autoCreateContacts>false</autoCreateContacts>
-          <autoDeleteContacts>false</autoDeleteContacts>
-          <autoCreateLocations>false</autoCreateLocations>
-          <autoDeleteLocations>false</autoDeleteLocations>
-
-          <appType>webpublic</appType>
-          <publicAdmin>false</publicAdmin>
-          <guestMode>true</guestMode>
-
-          <!-- Default value for 24 hour mode -->
-          <hour24>true</hour24>
-
-          <!-- Default value for minute increments -->
-          <minIncrement>5</minIncrement>
-
-          <showYearData>false</showYearData>
-
-          <logPrefix>SoEDept</logPrefix>
-
-          <!-- Where the browser finds css and other resources -->    
-          <browserResourceRoot>/calrsrc</browserResourceRoot>
-          
-          <!-- Where the server finds xsl etc -->    
-          <appRoot>http://localhost:8080/calrsrc</appRoot>
-
-          <refreshAction>setup.do</refreshAction>
-          <refreshInterval>300</refreshInterval>
-
-          <calSuite>SoEDepartmental</calSuite>
-        </SoEDept>
-
-        <!-- ==================================================================
                           User web client UserCal
              ================================================================== -->
         <UserCal classname="org.bedework.calfacade.configs.ClientConfig">
@@ -766,7 +729,7 @@
           
           <!-- This corresponds to the deployment path in the properties file.
                Defined as a global deployment property  -->
-          <calSoapWsWSDLURI>http://localhost:8080/wsdls/calws-soap/wssvc.wsdl</calSoapWsWSDLURI>
+          <calSoapWsWSDLURI>http://localhost:8080/wsdls/calws-soap/calws-soap.wsdl</calSoapWsWSDLURI>
         </Usercaldav>
 
         <!-- ==================================================================
@@ -804,7 +767,7 @@
                Coming up on a separate port might help to lock it down.
                Comment out or delete for no synch service 
                -->
-          <synchWsURI>/synchws/</synchWsURI>
+          <synchWsURI>/pubcaldav/synchws</synchWsURI>
         </Pubcaldav>
 
         <!-- ==================================================================

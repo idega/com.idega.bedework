@@ -28,4 +28,45 @@
         <res-type>javax.jms.Queue</res-type>
         <res-auth>Container</res-auth>
     </resource-ref>
+    
+   
+    <display-name>Bedework public caldav</display-name>
+
+	<context-param>
+    	<param-name>bwappname</param-name>
+        <param-value>Pubcaldav</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>edu.rpi.sss.util.jsp.SessionListener</listener-class>
+    </listener>
+
+    <servlet>
+        <servlet-name>CaldavBWServlet</servlet-name>
+        <servlet-class>
+            org.bedework.caldav.server.CaldavBWServlet
+        </servlet-class>
+        <init-param>
+            <param-name>application</param-name>
+            <param-value>servlet</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dumpContent</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>CaldavBWServlet</servlet-name>
+        <url-pattern>/pubcaldav/synchws/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>CaldavBWServlet</servlet-name>
+        <url-pattern>/pubcaldav/*</url-pattern>
+    </servlet-mapping>
+
+    <session-config>
+        <session-timeout>1</session-timeout>
+    </session-config>
 </web-app>

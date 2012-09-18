@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
   "-//Hibernate/Hibernate Mapping DTD//EN"
-  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <!-- ===================================================================
                          Calendar Suites
@@ -39,11 +39,11 @@
                 foreign-key="bw_cs_ag_fk" />
 
     <property name="rootCollectionPath" column="bw_root_collection"
-              type="string" length="3000"
+              type="string" length="255"
               index="bwidx_cs_rootcol" />
 
     <property name="submissionsRootPath" column="bw_submissions_root"
-              type="string" length="3000"
+              type="string" length="255"
               index="bwidx_cs_subroot" />
   </class>
 

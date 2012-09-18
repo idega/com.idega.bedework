@@ -88,14 +88,18 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJBException;
 
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
+import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.UsersI;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.user.data.User;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
+import com.idega.util.StringUtil;
 
 
 /**
@@ -122,6 +126,23 @@ public class UserAdapter {
 	public UserAdapter(com.idega.user.data.User user) {
 		this.idegaUser = user;
 	}
+	
+	/**
+	 * @param bwPrincipal - not <code>null</code>, should be instance of 
+	 * {@link BwUser}.
+	 * @return {@link BwUser} object or <code>null</code>, if {@link BwPrincipal}
+	 * is not instance of {@link BwUser}.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public static org.bedework.calfacade.BwUser getBwUser(BwPrincipal bwPrincipal) {
+		BwUser user = null;
+		
+		if (bwPrincipal instanceof BwUser) {
+			user = (BwUser) bwPrincipal; 
+		}
+		
+		return user;
+	}
 
 	/**
 	 * <p>We use this id for calendar and directory names.</p>
@@ -135,6 +156,38 @@ public class UserAdapter {
 		}
 		
 		return String.valueOf(user.getPrimaryKey());
+	}
+	
+	/**
+	 * <p>Tries searching {@link BwUser} in Bedework system.</p>
+	 * @param accountID - {@link User#getPrimaryKey()} or {@link BwUser#getId()}.
+	 * @return {@link BwUser} if found, <code>null</code> if not found.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public static org.bedework.calfacade.BwUser getBedeworkSystemUserByID(String accountID) {
+		if (StringUtil.isEmpty(accountID)) {
+			return null;
+		}
+		
+		BwAPI bwAPI = new BwAPI(accountID);
+		if (!bwAPI.openBedeworkAPI()) {
+			return null;
+		}
+		
+		UsersI usersHandler = bwAPI.getUsersHandler();
+		
+		BwUser bedeworkUser = null;
+		try {
+			bedeworkUser = usersHandler.getUser(accountID);
+		} catch (EJBException e) {
+			LOGGER.log(Level.WARNING, "Unable to find primary key of user.");
+		} catch (CalFacadeException e) {
+			LOGGER.log(Level.INFO, "Unable to get such user from Bedework. ");
+		} finally {
+			bwAPI.closeBedeworkAPI();
+		}
+		
+		return bedeworkUser;
 	}
 	
 	/**

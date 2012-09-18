@@ -1,7 +1,6 @@
-<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC
+<?xml version="1.0"?> <!DOCTYPE hibernate-mapping PUBLIC
   "-//Hibernate/Hibernate Mapping DTD//EN"
-  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <!-- ===================================================================
      A resource definition in Bedework.
@@ -17,7 +16,7 @@
 
     <version name="seq" column="bwseq" type="integer" />
 
-    <property name="colPath" column="bw_col_path" type="string" length="3000"
+    <property name="colPath" column="bw_col_path" type="string"
               not-null="true"
               index="bwidx_rsrc_colpath" />
 

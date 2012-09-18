@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:maven="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -7,7 +8,7 @@
 		<artifactId>com.idega.block.addon</artifactId>
 		<version>4.1.3-SNAPSHOT</version>
 	</parent>
-	<name>Bedework</name>
+	<name>Bedework - Idega integration</name>
 	<packaging>jar</packaging>
 	<artifactId>com.idega.bedework</artifactId>
 	<inceptionYear>2011</inceptionYear>
@@ -23,18 +24,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.idega.block.platform</groupId>
-			<artifactId>com.idega.core</artifactId>
-			<!-- <exclusions>
-				<exclusion>
-					<artifactId>
-						hibernate-commons-annotations
-					</artifactId>
-					<groupId>org.hibernate</groupId>
-				</exclusion>
-			</exclusions> -->
-		</dependency>
-		<dependency>
-			<groupId>com.idega.block.platform</groupId>
 			<artifactId>com.idega.block.web2.0</artifactId>
 		</dependency>
 		<dependency>
@@ -46,47 +35,18 @@
 			<artifactId>com.idega.block.login</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.idega.block.platform</groupId>
-			<artifactId>com.idega.hibernate</artifactId>
-			<exclusions>
-				<!-- <exclusion>
-					<artifactId>hibernate-entitymanager</artifactId>
-					<groupId>org.hibernate</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>hibernate-core</artifactId>
-					<groupId>org.hibernate</groupId>
-				</exclusion> -->
-			</exclusions>
+			<groupId>com.idega.block.addon</groupId>
+			<artifactId>com.idega.block.cal</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>com.idega.block.addon</groupId>
-            <artifactId>com.idega.block.cal</artifactId>
-        </dependency>
-		<dependency>
-			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-alarms</artifactId>
-			<version>3.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-inoutsched</artifactId>
-			<version>3.8</version>
+			<groupId>com.idega.block.addon</groupId>
+			<artifactId>com.idega.bedework.webservice.sync</artifactId>
+			<version>4.1.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
 			<artifactId>bw-dumpres</artifactId>
 			<version>3.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-all</artifactId>
-			<version>5.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.xbean</groupId>
-			<artifactId>xbean-spring</artifactId>
-			<version>3.9</version>
 		</dependency>
 		<dependency>
 			<groupId>com.yahoo.platform.yui</groupId>
@@ -97,11 +57,31 @@
 			<groupId>org.jasig.bedework</groupId>
 			<artifactId>bw-indexer</artifactId>
 			<version>3.8</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>bw-sysevents</artifactId>
+					<groupId>org.jasig.bedework</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
 			<artifactId>bw-tzsvr</artifactId>
 			<version>3.8</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jboss-as-ejb3</artifactId>
+					<groupId>org.jboss.jbossas</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jboss-ejb3-core</artifactId>
+					<groupId>org.jboss.ejb3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jboss-metadata-common</artifactId>
+					<groupId>org.jboss.metadata</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
@@ -114,19 +94,29 @@
 			<version>3.8</version>
 		</dependency>
 		<dependency>
+			<groupId>com.idega.block.addon</groupId>
+			<artifactId>com.idega.bedework.events</artifactId>
+			<version>4.1.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-synch</artifactId>
+			<artifactId>bw-caldav</artifactId>
 			<version>3.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-synch-common</artifactId>
+			<artifactId>bw-webcommon</artifactId>
 			<version>3.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jasig.bedework</groupId>
-			<artifactId>bw-synchsvc</artifactId>
+			<artifactId>bw-appcommon</artifactId>
 			<version>3.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.idega.block.addon</groupId>
+			<artifactId>com.idega.bedework.core</artifactId>
+			<version>4.1.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<repositories>
@@ -146,19 +136,19 @@
 			<layout>default</layout>
 		</repository>
 		<repository>
-            <id>maven-nuxeo</id>
-            <name>Maven Nuxeo Repository</name>
-            <url>https://maven.nuxeo.org/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
+			<id>maven-nuxeo</id>
+			<name>Maven Nuxeo Repository</name>
+			<url>https://maven.nuxeo.org/nexus/content/groups/public/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
 	</repositories>
 	<description>Idega ePlatform adapter for Jasig Bedework API</description>
 </project>
