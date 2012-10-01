@@ -95,7 +95,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.bedework.BedeworkConstants;
-import com.idega.bedework.bussiness.BedeworkCalendarManagementService;
+import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
 import com.idega.bedework.bussiness.BwAPI;
 import com.idega.block.cal.data.CalDAVCalendar;
@@ -126,15 +126,15 @@ public class BedeworkCalendarPresentationComponentsServiceBean extends DefaultSp
 implements BedeworkCalendarPresentationComponentsService {
 
 	@Autowired
-	private BedeworkCalendarManagementService bcms;
+	private BedeworkCalendarsService bcms;
 	
 	/**
 	 * <p>Initializes service if down.</p>
-	 * @return {@link BedeworkCalendarManagementServiceBean} instance or 
+	 * @return {@link BedeworkCalendarServiceBean} instance or 
 	 * <code>null</code>.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	private BedeworkCalendarManagementService getBedeworkCalendarManagementService() {
+	private BedeworkCalendarsService getBedeworkCalendarManagementService() {
 		if (this.bcms == null) {
 			ELUtil.getInstance().autowire(this);
 		}
@@ -152,7 +152,7 @@ implements BedeworkCalendarPresentationComponentsService {
 		}
 
 		Collection<BwCalendar> calendars = getBedeworkCalendarManagementService()
-				.getAllUserCalendarDirectories(user);
+				.getUserCalendarDirectories(user);
 
 		if (ListUtil.isEmpty(calendars)) {
 			return null;

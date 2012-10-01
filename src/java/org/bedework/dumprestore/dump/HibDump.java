@@ -105,7 +105,7 @@ import org.bedework.calfacade.svc.prefs.BwPreferences;
 import org.bedework.dumprestore.HibSession;
 import org.hibernate.SessionFactory;
 
-import com.idega.hibernate.SessionFactoryHelper;
+import com.idega.hibernate.SessionFactoryUtil;
 
 /**
  * Class which implements the functions needed to dump the
@@ -128,7 +128,7 @@ public class HibDump implements DumpIntf{
 	  /**
 	   */
 	  public HibDump() {
-	    this(SessionFactoryHelper.getInstance().getSessionFactory());
+	    this(SessionFactoryUtil.getSessionFactory());
 	  }
 
 	  /**

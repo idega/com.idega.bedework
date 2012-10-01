@@ -129,7 +129,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import com.idega.hibernate.SessionFactoryHelper;
+import com.idega.hibernate.SessionFactoryUtil;
 
 import edu.rpi.cmt.access.AccessException;
 import edu.rpi.cmt.access.AccessPrincipal;
@@ -167,7 +167,7 @@ public class HibRestore implements RestoreIntf {
 	  /**
 	   */
 	  public HibRestore() {
-	    this(SessionFactoryHelper.getInstance().getSessionFactory());
+	    this(SessionFactoryUtil.getSessionFactory());
 	  }
 
 	  /**

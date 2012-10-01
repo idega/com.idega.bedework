@@ -84,7 +84,7 @@ package edu.rpi.cmt.db.hibernate;
 
 import org.hibernate.SessionFactory;
 
-import com.idega.hibernate.HibernateUtil;
+import com.idega.hibernate.SessionFactoryUtil;
 
 /**
  * <p>Difficult to extend, so let's trick them.</p>
@@ -97,6 +97,6 @@ import com.idega.hibernate.HibernateUtil;
  */
 public class HibSessionFactory {
 	public static SessionFactory getSessionFactory() throws HibException {
-		return HibernateUtil.getSessionFactory();
+		return SessionFactoryUtil.getSessionFactory();
 	}
 }

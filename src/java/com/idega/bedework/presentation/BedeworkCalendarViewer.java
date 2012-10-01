@@ -1,5 +1,5 @@
 /**
- * @(#)CalDAVCalendar.java    1.0.0 8:32:56 AM
+ * @(#)BedeworkCalendarViewer.java    1.0.0 3:12:29 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,110 +80,93 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.calendar.data;
+package com.idega.bedework.presentation;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.annotations.Dump;
-import org.bedework.calfacade.annotations.Wrapper;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.idega.bedework.BedeworkConstants;
+import com.idega.bedework.bussiness.BedeworkCalendarsService;
+import com.idega.bedework.bussiness.BedeworkEventsService;
+import com.idega.block.cal.presentation.CalendarViewer;
+import com.idega.cal.bean.CalendarPropertiesBean;
+import com.idega.presentation.IWContext;
+import com.idega.util.ListUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
- * <p>Entity for IDEGA functionality.</p>
+ * Class description goes here.
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jul 3, 2012
+ * @version 1.0.0 Sep 28, 2012
  * @author martynasstake
  */
-@Wrapper(quotas = true)
-@Dump(elementName="collection", keyFields={"path"})
-public class CalendarEntity extends BwCalendar {
+public class BedeworkCalendarViewer extends CalendarViewer {
+	
+	@Autowired
+	private BedeworkCalendarsService bcms;
+	
+	private BedeworkCalendarsService getBedeworkCalendarsService() {
+		if (this.bcms == null) {
+			ELUtil.getInstance().autowire(this);
+		}
 
-	/**
-	 * 
+		return this.bcms;
+	}
+	
+	@Autowired
+	private BedeworkEventsService bes;
+	
+	private BedeworkEventsService getBedeworkEventsService() {
+		if (this.bes == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bes;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.idega.block.cal.presentation.CalendarViewer#main(com.idega.presentation.IWContext)
 	 */
-	private static final long serialVersionUID = 4815408307028947282L;
-	
-	/* Queries */
-	public static final String 	GET_BY_NAME = "getNamedIdegaCalendar",
-								GET_BY_PATH = "getIdegaCalendarByPath",
-								GET_BY_ID = "getIdegaCalendarById",
-								GET_PUBLIC_CALENDARS = "getIdegaPublicCalendarCollections",
-								GET_PRIVATE_CALENDARS = "getUserIdegaCalendarCollections",
-								GET_CALENDARS_BY_GROUPS = "getIdegaCalendarsByGroups",
-								GET_NUMBER_OF_EVENTS = "countCalendarEventRefs",
-								GET_NUMBER_OF_CHILD_CALENDARS= "countIdegaCalendarChildren",
-								GET_BY_MULTIPLE_PATH = "getIdegaCalendarsByMultiplePath",
-								GET_SUBSCRIPTIONS_BY_USER = "getIdegaSubscriptionsByUser";
-	
-	public static final String 	PROP_COL_PATH = "colPath",
-								PROP_NAME = "name",
-								PROP_PATH = "path",
-								PROP_GROUPS = "paramGroupsIds",
-								PROP_ID = "id",
-								PROP_USER_HREF = "userHRef";
-	
-	private Set<Long> groups;
-
-	public CalendarEntity() {}
-	
-	public CalendarEntity(BwCalendar entity, Set<Long> groupIDs) {
-		setAccess(entity.getAccess());
-		setAffectsFreeBusy(entity.getAffectsFreeBusy());
-		setAliasTarget(entity.getAliasTarget());
-		setByteSize(entity.getByteSize());
-		setCalType(entity.getCalType());
-		setCategories(entity.getCategories());
-		setColor(entity.getColor());
-		setColPath(entity.getColPath());
-		setCreated(entity.getCreated());
-		setCreatorEnt(entity.getCreatorEnt());
-		setCreatorHref(entity.getCreatorHref());
-		setDescription(entity.getDescription());
-		setDisplay(entity.getDisplay());
-		setFilterExpr(entity.getFilterExpr());
-		setGroups(groupIDs);
-		setId(entity.getId());
-		setIgnoreTransparency(entity.getIgnoreTransparency());
-		setIsTopicalArea(entity.getIsTopicalArea());
-		setLastEtag(entity.getLastEtag());
-		setLastmod(entity.getLastmod());
-		setLastRefresh(entity.getLastRefresh());
-		setLastRefreshStatus(entity.getLastRefreshStatus());
-		setMailListId(entity.getMailListId());
-		setName(entity.getName());
-		setOwnerHref(entity.getOwnerHref());
-		setPath(entity.getPath());
-		setProperties(entity.getProperties());
-		setPublick(entity.getPublick());
-		setPwNeedsEncrypt(entity.getPwNeedsEncrypt());
-		setRefreshRate(entity.getRefreshRate());
-		setRemoteId(entity.getRemoteId());
-		setRemotePw(entity.getRemotePw());
-		setTimezone(entity.getTimezone());
-		setSeq(entity.getSeq());
-		setSubscriptionId(entity.getSubscriptionId());
-		setSummary(entity.getSummary());
-		setUnremoveable(entity.getUnremoveable());
+	@Override
+	public void main(IWContext iwc) {
+		ArrayList<String> list = new ArrayList<String>();
 		
-		try {
-			setCurrentAccess(entity.getCurrentAccess());
-			setDisabled(entity.getDisabled());
-			setOpen(entity.getOpen());
-		} catch (CalFacadeException e) {}
-	}	
+		Collection<String> names = getBedeworkEventsService().getNamesOfEvents(
+				getBedeworkEventsService().getEvents(
+						iwc.getCurrentUser()
+				)
+		);
+		
+		if (!ListUtil.isEmpty(names)) {
+			list.addAll(names);
+		}
+		
+		setEvents(list);
+//		CalendarPropertiesBean cpb = new CalendarPropertiesBean();
+//				
+//		cpb.setShowAddress(Boolean.TRUE);
+//		cpb.setShowDescription(Boolean.TRUE);
+//		cpb.setShowEmails(Boolean.TRUE);
+//		cpb.setShowEntriesAsList(Boolean.TRUE);
+//		cpb.setShowExtraInfo(Boolean.TRUE);
+//		cpb.setShowLabels(Boolean.TRUE);
+//		cpb.setShowTime(Boolean.TRUE);
+//		
+//		setCalendarProperties(cpb);
+		super.main(iwc);
+	}
 
-	public Set<Long> getGroups() {
-    		return this.groups;
+	/* (non-Javadoc)
+	 * @see com.idega.block.cal.presentation.CalendarViewer#getBundleIdentifier()
+	 */
+	@Override
+	public String getBundleIdentifier() {
+		return BedeworkConstants.BUNDLE_IDENTIFIER;
 	}
 	
-	/**
-	 * @param groups the groups to set
-	 */
-	public void setGroups(Set<Long> groups) {
-		this.groups = groups;
-	}
 }

@@ -1,5 +1,5 @@
 /**
- * @(#)CalDAVCalendar.java    1.0.0 8:32:56 AM
+ * @(#)BedeworkDateService.java    1.0.0 2:43:09 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,110 +80,51 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.calendar.data;
+package com.idega.bedework.bussiness;
 
-import java.util.Set;
+import java.sql.Timestamp;
+import java.util.Date;
 
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.annotations.Dump;
-import org.bedework.calfacade.annotations.Wrapper;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.BwDateTime;
 
 /**
- * <p>Entity for IDEGA functionality.</p>
+ * Class description goes here.
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jul 3, 2012
+ * @version 1.0.0 Sep 29, 2012
  * @author martynasstake
  */
-@Wrapper(quotas = true)
-@Dump(elementName="collection", keyFields={"path"})
-public class CalendarEntity extends BwCalendar {
+public interface BedeworkDateService {
 
 	/**
-	 * 
+	 * <p>Method for converting date from {@link java.sql.Timestamp} to 
+	 * {@link org.bedework.calfacade.BwDateTime}.</p>
+	 * @param date to convert.
+	 * @return Converted date or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	private static final long serialVersionUID = 4815408307028947282L;
-	
-	/* Queries */
-	public static final String 	GET_BY_NAME = "getNamedIdegaCalendar",
-								GET_BY_PATH = "getIdegaCalendarByPath",
-								GET_BY_ID = "getIdegaCalendarById",
-								GET_PUBLIC_CALENDARS = "getIdegaPublicCalendarCollections",
-								GET_PRIVATE_CALENDARS = "getUserIdegaCalendarCollections",
-								GET_CALENDARS_BY_GROUPS = "getIdegaCalendarsByGroups",
-								GET_NUMBER_OF_EVENTS = "countCalendarEventRefs",
-								GET_NUMBER_OF_CHILD_CALENDARS= "countIdegaCalendarChildren",
-								GET_BY_MULTIPLE_PATH = "getIdegaCalendarsByMultiplePath",
-								GET_SUBSCRIPTIONS_BY_USER = "getIdegaSubscriptionsByUser";
-	
-	public static final String 	PROP_COL_PATH = "colPath",
-								PROP_NAME = "name",
-								PROP_PATH = "path",
-								PROP_GROUPS = "paramGroupsIds",
-								PROP_ID = "id",
-								PROP_USER_HREF = "userHRef";
-	
-	private Set<Long> groups;
+	public BwDateTime convertDate(Timestamp date);
 
-	public CalendarEntity() {}
-	
-	public CalendarEntity(BwCalendar entity, Set<Long> groupIDs) {
-		setAccess(entity.getAccess());
-		setAffectsFreeBusy(entity.getAffectsFreeBusy());
-		setAliasTarget(entity.getAliasTarget());
-		setByteSize(entity.getByteSize());
-		setCalType(entity.getCalType());
-		setCategories(entity.getCategories());
-		setColor(entity.getColor());
-		setColPath(entity.getColPath());
-		setCreated(entity.getCreated());
-		setCreatorEnt(entity.getCreatorEnt());
-		setCreatorHref(entity.getCreatorHref());
-		setDescription(entity.getDescription());
-		setDisplay(entity.getDisplay());
-		setFilterExpr(entity.getFilterExpr());
-		setGroups(groupIDs);
-		setId(entity.getId());
-		setIgnoreTransparency(entity.getIgnoreTransparency());
-		setIsTopicalArea(entity.getIsTopicalArea());
-		setLastEtag(entity.getLastEtag());
-		setLastmod(entity.getLastmod());
-		setLastRefresh(entity.getLastRefresh());
-		setLastRefreshStatus(entity.getLastRefreshStatus());
-		setMailListId(entity.getMailListId());
-		setName(entity.getName());
-		setOwnerHref(entity.getOwnerHref());
-		setPath(entity.getPath());
-		setProperties(entity.getProperties());
-		setPublick(entity.getPublick());
-		setPwNeedsEncrypt(entity.getPwNeedsEncrypt());
-		setRefreshRate(entity.getRefreshRate());
-		setRemoteId(entity.getRemoteId());
-		setRemotePw(entity.getRemotePw());
-		setTimezone(entity.getTimezone());
-		setSeq(entity.getSeq());
-		setSubscriptionId(entity.getSubscriptionId());
-		setSummary(entity.getSummary());
-		setUnremoveable(entity.getUnremoveable());
-		
-		try {
-			setCurrentAccess(entity.getCurrentAccess());
-			setDisabled(entity.getDisabled());
-			setOpen(entity.getOpen());
-		} catch (CalFacadeException e) {}
-	}	
-
-	public Set<Long> getGroups() {
-    		return this.groups;
-	}
-	
 	/**
-	 * @param groups the groups to set
+	 * <p>Method for converting date from {@link java.util.Date} to 
+	 * {@link org.bedework.calfacade.BwDateTime}.</p>
+	 * @param date to convert.
+	 * @return Converted date or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public void setGroups(Set<Long> groups) {
-		this.groups = groups;
-	}
+	public BwDateTime convertDate(Date date);
+
+	/**
+	 * <p>Method for converting time in milliseconds to 
+	 * {@link org.bedework.calfacade.BwDateTime}.</p>
+	 * @param time to convert.
+	 * @return Converted date or <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public BwDateTime convertDate(long time);
+
+	public Long getTimeInMilliseconds(String date, String hour, String minute);
+
 }

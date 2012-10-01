@@ -1,5 +1,5 @@
 /**
- * @(#)CalDAVCalendar.java    1.0.0 8:32:56 AM
+ * @(#)BedeworkDateServiceBean.java    1.0.0 2:43:37 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,110 +80,111 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.calendar.data;
+package com.idega.bedework.bussiness.impl;
 
-import java.util.Set;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.logging.Level;
 
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.annotations.Dump;
-import org.bedework.calfacade.annotations.Wrapper;
+import net.fortuna.ical4j.model.DateTime;
+
+import org.apache.myfaces.dateformat.DateFormatSymbols;
+import org.apache.myfaces.dateformat.SimpleDateFormatter;
+import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import com.idega.bedework.bussiness.BedeworkDateService;
+import com.idega.core.business.DefaultSpringBean;
+import com.idega.util.StringUtil;
 
 /**
- * <p>Entity for IDEGA functionality.</p>
+ * Class description goes here.
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jul 3, 2012
+ * @version 1.0.0 Sep 29, 2012
  * @author martynasstake
  */
-@Wrapper(quotas = true)
-@Dump(elementName="collection", keyFields={"path"})
-public class CalendarEntity extends BwCalendar {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4815408307028947282L;
+@Service("bedeworkDateService")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
+public class BedeworkDateServiceBean extends DefaultSpringBean implements BedeworkDateService {
 	
-	/* Queries */
-	public static final String 	GET_BY_NAME = "getNamedIdegaCalendar",
-								GET_BY_PATH = "getIdegaCalendarByPath",
-								GET_BY_ID = "getIdegaCalendarById",
-								GET_PUBLIC_CALENDARS = "getIdegaPublicCalendarCollections",
-								GET_PRIVATE_CALENDARS = "getUserIdegaCalendarCollections",
-								GET_CALENDARS_BY_GROUPS = "getIdegaCalendarsByGroups",
-								GET_NUMBER_OF_EVENTS = "countCalendarEventRefs",
-								GET_NUMBER_OF_CHILD_CALENDARS= "countIdegaCalendarChildren",
-								GET_BY_MULTIPLE_PATH = "getIdegaCalendarsByMultiplePath",
-								GET_SUBSCRIPTIONS_BY_USER = "getIdegaSubscriptionsByUser";
+	private static final SimpleDateFormatter DATE_FORMATTER = 
+			new SimpleDateFormatter("yyyy-MM-dd hh:mm:ss.S", 
+					new DateFormatSymbols());
 	
-	public static final String 	PROP_COL_PATH = "colPath",
-								PROP_NAME = "name",
-								PROP_PATH = "path",
-								PROP_GROUPS = "paramGroupsIds",
-								PROP_ID = "id",
-								PROP_USER_HREF = "userHRef";
-	
-	private Set<Long> groups;
-
-	public CalendarEntity() {}
-	
-	public CalendarEntity(BwCalendar entity, Set<Long> groupIDs) {
-		setAccess(entity.getAccess());
-		setAffectsFreeBusy(entity.getAffectsFreeBusy());
-		setAliasTarget(entity.getAliasTarget());
-		setByteSize(entity.getByteSize());
-		setCalType(entity.getCalType());
-		setCategories(entity.getCategories());
-		setColor(entity.getColor());
-		setColPath(entity.getColPath());
-		setCreated(entity.getCreated());
-		setCreatorEnt(entity.getCreatorEnt());
-		setCreatorHref(entity.getCreatorHref());
-		setDescription(entity.getDescription());
-		setDisplay(entity.getDisplay());
-		setFilterExpr(entity.getFilterExpr());
-		setGroups(groupIDs);
-		setId(entity.getId());
-		setIgnoreTransparency(entity.getIgnoreTransparency());
-		setIsTopicalArea(entity.getIsTopicalArea());
-		setLastEtag(entity.getLastEtag());
-		setLastmod(entity.getLastmod());
-		setLastRefresh(entity.getLastRefresh());
-		setLastRefreshStatus(entity.getLastRefreshStatus());
-		setMailListId(entity.getMailListId());
-		setName(entity.getName());
-		setOwnerHref(entity.getOwnerHref());
-		setPath(entity.getPath());
-		setProperties(entity.getProperties());
-		setPublick(entity.getPublick());
-		setPwNeedsEncrypt(entity.getPwNeedsEncrypt());
-		setRefreshRate(entity.getRefreshRate());
-		setRemoteId(entity.getRemoteId());
-		setRemotePw(entity.getRemotePw());
-		setTimezone(entity.getTimezone());
-		setSeq(entity.getSeq());
-		setSubscriptionId(entity.getSubscriptionId());
-		setSummary(entity.getSummary());
-		setUnremoveable(entity.getUnremoveable());
+	@Override
+	public Long getTimeInMilliseconds(String date, String hour, String minute) {
+		Long time = null;
 		
-		try {
-			setCurrentAccess(entity.getCurrentAccess());
-			setDisabled(entity.getDisabled());
-			setOpen(entity.getOpen());
-		} catch (CalFacadeException e) {}
-	}	
-
-	public Set<Long> getGroups() {
-    		return this.groups;
+		if (!StringUtil.isEmpty(date)) {
+			java.util.Date dateIn = DATE_FORMATTER.parse(date);
+			if (dateIn != null) {
+				time = dateIn.getTime();
+			}
+		}
+		
+		if (!StringUtil.isEmpty(hour)) {
+			try {
+				long millis = Long.parseLong(hour)*60*60*1000; //From hour to milliseconds
+				if (time == null) {
+					time = millis;
+				} else {
+					time = time + millis;
+				}
+			} catch (NumberFormatException e) {
+				getLogger().log(Level.WARNING, 
+						"Unrecognizable number of hours: " + hour);
+			}
+		}
+			
+		if (!StringUtil.isEmpty(minute)) {
+			try {
+				long millis = Long.parseLong(minute)*60*1000; //From minute to milliseconds
+				if (time == null) {
+					time = millis;
+				} else {
+					time = time + millis;
+				}
+			} catch (NumberFormatException e) {
+				getLogger().log(Level.WARNING, 
+						"Unrecognizable number of minutes: " + minute);
+			}
+		}
+		
+		return time;
 	}
 	
-	/**
-	 * @param groups the groups to set
-	 */
-	public void setGroups(Set<Long> groups) {
-		this.groups = groups;
+	@Override
+	public BwDateTime convertDate(long time) {
+		DateTime date = new DateTime(time);
+		
+		BwDateTime bwDate = null;
+		try {
+			bwDate = BwDateTime.makeBwDateTime(date);
+		} catch (CalFacadeException e1) {
+			getLogger().log(Level.WARNING, "Unable to convert " + 
+					DateTime.class + " to " + BwDateTime.class);
+		}
+		
+		return bwDate;
+	}
+	
+	@Override
+	public BwDateTime convertDate(Timestamp date) {
+		if (date == null) {
+			return null;
+		}
+		
+		return convertDate(date.getTime());
+	}
+
+	@Override
+	public org.bedework.calfacade.BwDateTime convertDate(Date date) {
+		return convertDate(date.getTime()); 
 	}
 }

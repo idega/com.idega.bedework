@@ -87,6 +87,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwUser;
 
 import com.idega.calendar.data.CalendarEntity;
 import com.idega.core.persistence.GenericDao;
@@ -155,15 +157,23 @@ public interface CalendarDAO extends GenericDao{
 	public Integer getNumberOfCalendarEvents(String calendarPath);
 	
 	/**
-	 * <p>Fetches from database user calendars, which holds events and are private.</p>
-	 * @return <code>null</code> on failure.
+	 * <p>Fetches from database user calendars, which are private.
+	 * "Calendar" means, that entity is 
+	 * {@link BwCalendar#calTypeCalendarCollection} type.</p>
+	 * @return {@link Collection} of {@link CalendarEntity} with type 
+	 * {@link BwCalendar#calTypeCalendarCollection} or 
+	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public Collection<com.idega.calendar.data.CalendarEntity> getPrivateCalendars();
 	
 	/**
-	 * <p>Fetches from database all public calendars, which holds events and are public.</p>
-	 * @return <code>null</code> on failure.
+	 * <p>Fetches from database all public calendars, which are public.
+	 * "Calendar" means, that entity is 
+	 * {@link BwCalendar#calTypeCalendarCollection} type.</p>
+	 * @return {@link Collection} of {@link CalendarEntity} with type 
+	 * {@link BwCalendar#calTypeCalendarCollection} or 
+	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public Collection<com.idega.calendar.data.CalendarEntity> getPublicCalendars();
@@ -243,7 +253,7 @@ public interface CalendarDAO extends GenericDao{
 	 * @return
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public Collection<CalendarEntity> getAllCalendars(Set<Long> groupIDs,
+	public Collection<CalendarEntity> getCalendars(Set<Long> groupIDs,
 			Boolean isPublic, Integer calendarType, boolean showDeleted,
 			Integer resultsNumber, Integer firstResultNumber);
 
@@ -255,10 +265,36 @@ public interface CalendarDAO extends GenericDao{
 	 * <code>null</code> will ignore parameter.
 	 * @param firstResultNumber - tells which result in row should be fetched first. 
 	 * In "SQL" query would be: "LIMIT resultsNumber, firstResultNumber".
-	 * @return
+	 * @return {@link Collection} of {@link CalendarEntity} with type 
+	 * {@link BwCalendar#calTypeCalendarCollection} or <code>null</code> on 
+	 * failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public Collection<CalendarEntity> getPrivateCalendarsByGroupIDs(
 			Set<Long> groupIDs, Integer resultsNumber, Integer firstResultNumber);
-
+	
+	/**
+	 * <p>Fetches from database subscriptions.
+	 * "Subscription" means, that entity is 
+	 * {@link BwCalendar#calTypeExtSub} type.
+	 * </p>
+	 * FIXME remove inline query usage
+	 * @return {@link Collection} of {@link CalendarEntity} with type 
+	 * {@link BwCalendar#calTypeExtSub} or 
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<CalendarEntity> getSubscriptions();
+	
+	/**
+	 * <p>Fetches from database subscriptions.
+	 * "Subscription" means, that entity is 
+	 * {@link BwCalendar#calTypeExtSub} type.
+	 * </p>
+	 * @return {@link Collection} of {@link CalendarEntity} with type 
+	 * {@link BwCalendar#calTypeExtSub} or 
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public Collection<CalendarEntity> getSubscriptions(BwPrincipal user);
 }

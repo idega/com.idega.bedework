@@ -89,7 +89,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEventObj;
+import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -144,7 +147,13 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			CalendarEntity calendar = getCalendarById(calendarEntity.getId());
 
 			if (calendar == null) {
+				// FIXME hack
+				boolean publick = calendarEntity.getPublick();
 				calendarsHandler.add(calendarEntity, calendarEntity.getColPath());
+				if (calendarEntity.getPublick() != publick) {
+					calendarEntity.setPublick(publick);
+					calendarsHandler.update(calendarEntity);
+				}
 			} else {
 				calendarsHandler.update(calendarEntity);
 			}
@@ -346,7 +355,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 	}
 	
 	@Override
-	public Collection<CalendarEntity> getAllCalendars(Set<Long> groupIDs, 
+	public Collection<CalendarEntity> getCalendars(Set<Long> groupIDs, 
 			Boolean isPublic, Integer calendarType, boolean showDeleted,
 			Integer resultsNumber, Integer firstResultNumber) {
 		
@@ -388,7 +397,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			}
 		}
 
-		Query query = this.getQueryInline(inlineQuery.toString());
+		Query query = getQueryInline(inlineQuery.toString());
 
 		List<CalendarEntity> entities = null;
 		if (ListUtil.isEmpty(ids)) {
@@ -409,7 +418,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			return null;
 		}
 		
-		return getAllCalendars(groupIDs, Boolean.FALSE,
+		return getCalendars(groupIDs, Boolean.FALSE,
 				CalendarEntity.calTypeCalendarCollection, 
 				Boolean.FALSE, resultsNumber, firstResultNumber);
 	}
@@ -421,7 +430,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			return null;
 		}
 		
-		return getAllCalendars(groupIDs, Boolean.FALSE,
+		return getCalendars(groupIDs, Boolean.FALSE,
 				CalendarEntity.calTypeCalendarCollection, Boolean.FALSE, null, null);
 	}
 
@@ -430,5 +439,21 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			Collection<String> calendarPath) {
 		return getResultList(CalendarEntity.GET_BY_MULTIPLE_PATH, CalendarEntity.class,
                 new Param(CalendarEntity.PROP_PATH, calendarPath));
+	}
+
+	@Override
+	public Collection<CalendarEntity> getSubscriptions() {
+		return getCalendars(null, null, BwCalendar.calTypeExtSub, 
+				Boolean.TRUE, null, null);
+	}
+
+	@Override
+	public Collection<CalendarEntity> getSubscriptions(BwPrincipal user) {
+		if (user == null) {
+			return null;
+		}
+		
+		return getResultList(CalendarEntity.GET_SUBSCRIPTIONS_BY_USER, CalendarEntity.class,
+                new Param(CalendarEntity.PROP_USER_HREF, user.getPrincipalRef()));
 	}
 }

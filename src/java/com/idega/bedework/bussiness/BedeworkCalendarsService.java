@@ -88,11 +88,17 @@ import java.util.List;
 import java.util.Set;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwCollectionLastmod;
+import org.bedework.calfacade.BwProperty;
+import org.bedework.calfacade.BwUser;
 
 import com.idega.block.cal.business.CalendarManagementService;
 import com.idega.calendar.data.CalendarEntity;
 import com.idega.core.user.data.User;
 import com.idega.user.data.Group;
+
+import edu.rpi.cmt.access.Acl.CurrentAccess;
 
 /**
  * <p>Provides services from bedework API.</p>
@@ -103,7 +109,7 @@ import com.idega.user.data.Group;
  * @version 1.0.0 Apr 27, 2012
  * @author martynasstake
  */
-public interface BedeworkCalendarManagementService extends CalendarManagementService {
+public interface BedeworkCalendarsService extends CalendarManagementService {
 	
 	/**
 	 * <p>Gets main calendar from Bedework of {@link com.idega.user.data.User}.</p>
@@ -147,7 +153,11 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 			);
 
 	/**
-	 * <p>Gets all calendars, where user can write, edit events, todo's.</p>
+	 * <p>Gets all calendars, where user can write, edit events, todo's.
+	 * Calendars are entities of {@link BwCalendar#setCalType(int)}:
+	 * <li>{@link BwCalendar#calTypeCalendarCollection}</li>
+	 * <li>{@link BwCalendar#calTypeInbox}</li>
+	 * <li>{@link BwCalendar#calTypeOutbox}</li></p>
 	 * @param user
 	 * @return {@link List} of {@link BwCalendar}s, 
 	 * where {@link BwCalendar#calTypeCalendarCollection} or 
@@ -155,7 +165,7 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 * {@link BwCalendar#calTypeOutbox}.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<org.bedework.calfacade.BwCalendar> getAllUserCalendars(com.idega.user.data.User user);
+	public List<org.bedework.calfacade.BwCalendar> getUserCalendars(com.idega.user.data.User user);
 	
 	/**
 	 * <p>Gets all folders, where user can write, edit calendars.</p>
@@ -169,12 +179,12 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	
 	/**
 	 * <p>Searches Bedework system for calendars, folders, where given {@link User} is creator.</p>
-	 * @param userid {@link User#getPrimaryKey()};
+	 * @param user
 	 * @return {@link Collection} of {@link BwCalendar}s or {@link Collections#EMPTY_SET} 
 	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<org.bedework.calfacade.BwCalendar> getAllUserCalendarDirectories(com.idega.user.data.User user);
+	public List<org.bedework.calfacade.BwCalendar> getUserCalendarDirectories(com.idega.user.data.User user);
 	
 	/**
 	 * <p>Searches for all calendars, calendar folders where given 
@@ -317,7 +327,7 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	* @param user		user that will get data from Calendar
 	* @param calendar	calendar that will send data for user
 	*/
-	public boolean subscribeCalendar(com.idega.user.data.User user, BwCalendar calendar);
+	public boolean subscribeCalendar(com.idega.user.data.User user, CalendarEntity calendar);
 
 	/**
 	* Sets that user will not get data from this calendar.
@@ -396,4 +406,29 @@ public interface BedeworkCalendarManagementService extends CalendarManagementSer
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public boolean removeCalendar(CalendarEntity calendar, com.idega.user.data.User user);
+
+	public CalendarEntity setCalendarEntity(CalendarEntity calendar, String access,
+			CalendarEntity aliasEntity, String aliasURI, Integer byteSize,
+			Integer calendarDirectoryType, String calendarName,
+			Set<BwCategory> categories, String color,
+			CurrentAccess currentAccess, String created, String description,
+			Set<Long> groupsIDs, Boolean isDisabled, boolean isPublic,
+			boolean isReadOnly, Boolean isVisible, String filterExpression,
+			String folderPath, Boolean doIgnoreTransparency,
+			Boolean isTopicalArea, String lastETag,
+			BwCollectionLastmod lastModification, String lastRefresh,
+			String lastRefreshStatus, String mailingListID, Boolean isOpen,
+			Set<BwProperty> properties, Boolean doPasswordNeedsEncrypting,
+			Integer refreshRate, String remoteID, String remotePassword,
+			Integer seq, String subscriptionID, String summary,
+			String timezone, BwUser user);
+	
+	/**
+	 * <p>Returns all subscribed or owned {@link BwCalendar}s.</p>
+	 * @param user which subscribed or owned calendars. Not <code>null</code>.
+	 * @return all subscriber or owned {@link BwCalendar}s or 
+	 * <code>null</code> on failure.
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<BwCalendar> getPersonalVisibleDirectories(com.idega.user.data.User user);
 }

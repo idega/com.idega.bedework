@@ -80,7 +80,7 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness;
+package com.idega.bedework.bussiness.view;
 
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
@@ -108,9 +108,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import com.idega.bedework.BedeworkConstants;
+import com.idega.bedework.bussiness.BedeworkCalendarsService;
+import com.idega.bedework.bussiness.BedeworkDateService;
+import com.idega.bedework.bussiness.BedeworkEventsService;
+import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.bedework.data.BedeworkCalendarEntry;
 import com.idega.block.cal.business.CalBusiness;
+import com.idega.block.cal.business.CalBusinessBean;
 import com.idega.block.cal.data.AttendanceEntity;
 import com.idega.block.cal.data.AttendanceMark;
 import com.idega.block.cal.data.CalendarEntry;
@@ -118,17 +123,19 @@ import com.idega.block.cal.data.CalendarEntryGroup;
 import com.idega.block.cal.data.CalendarEntryType;
 import com.idega.block.cal.data.CalendarLedger;
 import com.idega.block.cal.presentation.CalendarEntryCreator;
-import com.idega.business.IBOServiceBean;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.user.business.GroupBusiness;
-import com.idega.user.business.UserGroupPlugInBusiness;
 import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
+
+import edu.rpi.cmt.calendar.IcalDefs;
+
 
 /**
  * <p>Bedework apdapter for {@link CalBusiness}.</p>
@@ -139,51 +146,35 @@ import com.idega.util.expression.ELUtil;
  * @version 1.0.0 Apr 19, 2012
  * @author martynasstake
  */
-public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, UserGroupPlugInBusiness {
+public class BwCalBusinessBean extends CalBusinessBean implements BwCalBusiness {
 
 	private static final long serialVersionUID = 7960798838568619167L;
-	private static final Logger LOGGER = Logger.getLogger(BwCalBussinessBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(
+			BwCalBusinessBean.class.getName());
+	
+	private BwCalendar currentCalendar = null;
+	
+	/**
+	 * @return the currentCalendar
+	 */
+	public BwCalendar getCurrentCalendar() {
+		return currentCalendar;
+	}
 
-	private static final SimpleDateFormatter DATE_FORMATTER = 
-			new SimpleDateFormatter("yyyy-MM-dd hh:mm:ss.S", new DateFormatSymbols());
+	/**
+	 * @param currentCalendar the currentCalendar to set
+	 */
+	public void setCurrentCalendar(BwCalendar currentCalendar) {
+		this.currentCalendar = currentCalendar;
+	}
 	
 	@Override
 	public CalendarEntry getEntry(int entryID) {
-		// FIXME What was that???
-		// BwAPI bwAPI = new BwAPI(null);
-		BwAPI bwAPI = new BwAPI(getCurrentUser());
+		EventInfo ei = getBedeworkEventsService()
+				.getEvent(entryID, getCurrentUser(), null, null, null, null, 
+						null, null);
 		
-		EventsI eventsHandler = bwAPI.getEventsHandler();
-		
-		if (eventsHandler == null) {
-			return null;
-		}
-		
-		Collection<EventInfo> events = null;
-		try {
-			events = eventsHandler.get(null, String.valueOf(entryID), null, null, false);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.INFO, "Event by ID: " + entryID + " not found.");
-		}
-		
-		if (ListUtil.isEmpty(events)) {
-			return null;
-		}
-		
-		BwEvent desiredEvent = null;
-		for (EventInfo ei : events) {
-			BwEvent tmp = ei.getEvent();
-			
-			if (tmp != null && tmp.getId() == entryID) {
-				desiredEvent = ei.getEvent();
-			}
-		}
-		
-		if (desiredEvent == null) {
-			return null;
-		}
-		
-		 return new BedeworkCalendarEntry(desiredEvent);
+		return new BedeworkCalendarEntry(ei.getEvent());
 	}
 
 	@Override
@@ -236,16 +227,6 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 
 	@Override
 	public Collection getEntryGroupsByLedgerID(int ledgerID) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public CalendarEntryType getEntryTypeByName(String entryTypeName) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public List getAllEntryTypes() {
 		throw new NotImplementedException();
 	}
 
@@ -333,10 +314,31 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	public void deleteMark(int markID) {
 		throw new NotImplementedException();
 	}
+	
+	public static final String CALENDAR_ENTRY_TYPES_APP_PROP = 
+			"calendar_entry_types_reloaded";
 
-	@Override
-	public boolean createNewEntryType(String typeName) {
-		throw new NotImplementedException();
+	public boolean recreateCalendarEntryTypes() {
+		IWMainApplicationSettings settings = getIWMainApplication().getSettings();
+		if (settings == null || settings.getBoolean(CALENDAR_ENTRY_TYPES_APP_PROP)) {
+			return Boolean.TRUE;
+		}
+		
+		List<CalendarEntryType> types = getAllEntryTypes();
+		if (!ListUtil.isEmpty(types)) {
+			for (CalendarEntryType type : types) {
+				deleteEntryType(Integer.valueOf(type.getId()));
+			}
+		}
+		
+		for (String name : IcalDefs.entityTypeNames) {
+			if (!createNewEntryType(name)) {
+				return Boolean.FALSE;
+			}
+		}
+		
+		settings.setProperty(CALENDAR_ENTRY_TYPES_APP_PROP, Boolean.TRUE.toString());
+		return settings.getBoolean(CALENDAR_ENTRY_TYPES_APP_PROP);
 	}
 
 	/*
@@ -371,186 +373,11 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 		} else {
 			reccur = Boolean.valueOf(repeat);
 		}
-		
-		java.util.Date begining = null;
-		if (!StringUtil.isEmpty(startDate)) {
-			begining = DATE_FORMATTER.parse(startDate);
-			
-			if (begining != null) {
-				if (!StringUtil.isEmpty(startHour)) {
-					try {
-						long time = begining.getTime();
-						time = time + Integer.parseInt(startHour)*60*60*1000; //From hour to milliseconds
-						begining.setTime(time);
-					} catch (NumberFormatException e) {
-						LOGGER.log(Level.WARNING, "Unrecognizable number of hours: " + startHour);
-					}
-				}
-				
-				if (!StringUtil.isEmpty(startMinute)) {
-					try {
-						long time = begining.getTime();
-						time = time + Integer.parseInt(startMinute)*60*1000; //From minute to milliseconds
-						begining.setTime(time);
-					} catch (NumberFormatException e) {
-						LOGGER.log(Level.WARNING, "Unrecognizable number of minutes: " + startMinute);
-					}
-				}
-			}
-		}
-		
-		java.util.Date ending = null;
-		if (!StringUtil.isEmpty(endDate)) {
-			ending = DATE_FORMATTER.parse(endDate);
-			
-			if (ending != null) {
-				if (!StringUtil.isEmpty(endHour)) {
-					try {
-						long time = ending.getTime();
-						time = time + Integer.parseInt(endHour)*60*60*1000; //From hour to milliseconds
-						ending.setTime(time);
-					} catch (NumberFormatException e) {
-						LOGGER.log(Level.WARNING, "Unrecognizable number of hours: " +endHour);
-					}
-				}
-				
-				if (!StringUtil.isEmpty(endMinute)) {
-					try {
-						long time = ending.getTime();
-						time = time + Integer.parseInt(endMinute)*60*1000; //From minute to milliseconds
-						ending.setTime(time);
-					} catch (NumberFormatException e) {
-						LOGGER.log(Level.WARNING, "Unrecognizable number of minutes: " + endMinute);
-					}
-				}
-			}
-		}
 
-		createNewBedeworkCalDAVEvent(user, headline, description, location, type, "kitas4", reccur, begining, ending, null);
-	}
-	
-	@Autowired
-	private BedeworkCalendarManagementService bcms;
-	
-	private BedeworkCalendarManagementService getBedeworkCalendarManagementService() {
-		if (this.bcms == null) {
-			ELUtil.getInstance().autowire(this);
-		}
-
-		return this.bcms;
-	}
-	
-	/**
-	 * <p>Creates CalDAV event to Bedework side of system.</p>
-	 * @param user - the one, who creates. Should not be <code>null</code>.
-	 * @param headline - Name, headline of event. Should not be <code>null</code>.
-	 * @param description - Description of event.
-	 * @param location - Location of event.
-	 * @param type - ?
-	 * @param calendarName - Name of calendar, where event should be placed. If 
-	 * <code>null</code>, then event will be placed on "default_userID" calendar. If 
-	 * calendar name was incorrect or not found, <code>false</code> will be returned.
-	 * @param reccuring - <code>true</code>, if events recur, <code>false</code> otherwise. 
-	 * @param startDate - {@link java.util.Date}, when event first occur. If set to 
-	 * <code>null</code>, then today will be used as event start.
-	 * @param endDate - {@link java.util.Date}, when event stops. Should not be 
-	 * <code>null</code>.
-	 * @param attendees - {@link List} of {@link User}s, who should see this event.
-	 * @return <code>true</code> if event successfully created, <code>false</code>
-	 * otherwise.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean createNewBedeworkCalDAVEvent(
-			User user, 
-			String headline,
-			String description, 
-			String location,
-			String type,
-			String calendarName,
-			boolean reccuring, 
-			java.util.Date startDate, 
-			java.util.Date endDate, 
-			List<User> attendees) {
-		
-		
-		if (user == null) {
-			return Boolean.FALSE;
-		}
-
-		if (StringUtil.isEmpty(calendarName)) {
-			if (getBedeworkCalendarManagementService().getUserCalendar(user, 
-					BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId()) == null) {
-				if (!getBedeworkCalendarManagementService().createCalendar(user, 
-						BedeworkConstants.BW_USER_CALENDAR_DEFAULT+user.getId())) {
-					LOGGER.log(Level.WARNING, "Unable to create default calendar for user.");
-					return Boolean.FALSE;
-				}
-			}
-		}
-		
-		BwCalendar calendar = getBedeworkCalendarManagementService().getUserCalendar(user, calendarName);
-		if (calendar == null) {
-			return Boolean.FALSE;
-		}
-		
-		BwAPI bwAPI = new BwAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return Boolean.FALSE;
-		}
-		
-		EventsI eventsHandler = bwAPI.getEventsHandler();
-		if (eventsHandler == null) {
-			return Boolean.FALSE;
-		}
-		
-		UserAdapter userAdapter = new UserAdapter(user);
-
-		BwEvent event = new BwEventObj();
-		event.setName(headline);
-		event.setDescription(description);
-		
-		event.setCreatorEnt(userAdapter.getBedeworkSystemUser());
-		event.setColPath(calendar.getPath());
-		
-		event.setCreatorHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		event.setOwnerHref(userAdapter.getBedeworkSystemUser().getPrincipalRef());
-		
-		event.setDuration("0");
-		if (reccuring) {
-			BwRecurrenceInstance bwRecurrenceInstance = new BwRecurrenceInstance();
-			bwRecurrenceInstance.setDtstart(null);
-			bwRecurrenceInstance.setRecurrenceId(bwRecurrenceInstance.getDtstart().getDate());
-			bwRecurrenceInstance.setMaster(event);
-			
-			event.setRecurring(reccuring);
-			event.setRecurrenceId(null);
-		}
-
-		event.setNoStart(Boolean.FALSE);
-		event.setAccess(userAdapter.getBedeworkSystemUser().getLocationAccess());
-		
-		if (startDate != null) {
-			event.setDtstart(getDateInBedeworkFormat(startDate));
-		} else {
-			event.setDtstart(getDateInBedeworkFormat(
-					new Timestamp(System.currentTimeMillis())));
-		}
-		
-		if (endDate != null) {
-			event.setDtend(getDateInBedeworkFormat(endDate));
-		} else {
-			return Boolean.FALSE;
-		}
-		
-		EventInfo ei = new EventInfo(event);
-		try {
-			eventsHandler.add(ei, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Failed to add event", e);
-			return Boolean.FALSE;
-		}
-		
-		return Boolean.TRUE;
+		getBedeworkEventsService().createEvent(
+				user, headline, description, location, type, 
+				getCurrentCalendar(), reccur, startDate, startHour, startMinute, 
+				endDate, endHour, endMinute, null);
 	}
 	
 	/**
@@ -578,7 +405,18 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 			String startMinute, String endDate, String endHour,
 			String endMinute, String attendees, String ledger,
 			String description, String location, String oneOrMany) {
-		throw new NotImplementedException();
+		
+		boolean reccur = Boolean.FALSE;
+		if (StringUtil.isEmpty(repeat)) {
+			reccur = Boolean.FALSE;
+		} else {
+			reccur = Boolean.valueOf(repeat);
+		}
+		
+		getBedeworkEventsService().updateEvent(entryID, headline, 
+				user, type, reccur, startDate, startHour, 
+				startMinute, endDate, endHour, endMinute, attendees, ledger, 
+				description, location, oneOrMany);
 	}
 
 	@Override
@@ -606,11 +444,6 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	@Override
 	public void updateAttendance(int attendanceID, int userID, int ledgerID,
 			CalendarEntry entry, String mark) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public void deleteEntryType(int typeID) {
 		throw new NotImplementedException();
 	}
 
@@ -744,7 +577,7 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	public List<CalendarLedger> getUserLedgers(String userId, IWContext iwc) {
 		throw new NotImplementedException();
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see com.idega.block.cal.business.CalBusiness#getUserEntriesBetweenTimestamps(
@@ -757,26 +590,15 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 	@Override
 	public List<CalendarEntry> getUserEntriesBetweenTimestamps(User user,
 			Timestamp fromStamp, Timestamp toStamp, IWContext iwc) {
-		BwAPI bwAPI = new BwAPI(user);
-		
-		org.bedework.calsvci.EventsI eventsHandler = bwAPI.getEventsHandler();
-		if (eventsHandler == null) {
-			return java.util.Collections.emptyList();
+		if (user == null) {
+			return null;
 		}
 		
-		BwDateTime bwStartDate = getDateInBedeworkFormat(fromStamp);
-		BwDateTime bwEndDate = getDateInBedeworkFormat(toStamp);
-		
-		org.bedework.calfacade.RecurringRetrievalMode rrm = new RecurringRetrievalMode();
-		
-		Collection<EventInfo> bedeworkEventsInfo = null;
-		try {
-			bedeworkEventsInfo = eventsHandler.getEvents(null, null, bwStartDate, 
-					bwEndDate, null, rrm);
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to get Collection<EventsInfo>: ", e);
-			return java.util.Collections.emptyList();
-		}
+		Collection<EventInfo> bedeworkEventsInfo = getBedeworkEventsService()
+				.getEvents(user, getCurrentCalendar(), null, 
+						getBedeworkDateService().convertDate(fromStamp), 
+						getBedeworkDateService().convertDate(toStamp), 
+						null, null);
 		
 		if (ListUtil.isEmpty(bedeworkEventsInfo)) {
 			return java.util.Collections.emptyList();
@@ -793,37 +615,25 @@ public class BwCalBussinessBean extends IBOServiceBean implements CalBusiness, U
 		return idegaCalendarEntries;
 	}
 	
-	/**
-	 * <p>Method for converting date from {@link java.sql.Timestamp} to 
-	 * {@link org.bedework.calfacade.BwDateTime}.</p>
-	 * @param date to convert.
-	 * @return Converted date or <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public org.bedework.calfacade.BwDateTime getDateInBedeworkFormat(Timestamp date) {
-		net.fortuna.ical4j.model.DateTime ical4jDate = new net.fortuna.ical4j.model.DateTime(
-				date.getTime());
-		
-		BwDateTime bwDate = null;
-		try {
-			bwDate = BwDateTime.makeBwDateTime(ical4jDate);
-		} catch (CalFacadeException e1) {
-			LOGGER.log(Level.WARNING, "Unable to convert net.fortuna.ical4j.model.Date to " +
-					"org.bedework.calfacade.BwDateTime");
-			return null;
+	@Autowired
+	private BedeworkDateService bts;
+	
+	private BedeworkDateService getBedeworkDateService() {
+		if (this.bts == null) {
+			ELUtil.getInstance().autowire(this);
 		}
-		
-		return bwDate;
+
+		return this.bts;
 	}
 	
-	/**
-	 * <p>Method for converting date from {@link java.util.Date} to 
-	 * {@link org.bedework.calfacade.BwDateTime}.</p>
-	 * @param date to convert.
-	 * @return Converted date or <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public org.bedework.calfacade.BwDateTime getDateInBedeworkFormat(java.util.Date date) {
-		return getDateInBedeworkFormat(new Timestamp(date.getTime())); 
+	@Autowired
+	private BedeworkEventsService bes;
+	
+	private BedeworkEventsService getBedeworkEventsService() {
+		if (this.bes == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bes;
 	}
 }

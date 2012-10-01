@@ -82,12 +82,37 @@
  */
 package com.idega.bedework.presentation;
 
-import com.idega.bedework.bussiness.BwCalBussinessBean;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.logging.Level;
+
+import org.bedework.calfacade.BwCalendar;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.idega.bedework.BedeworkConstants;
+import com.idega.bedework.bussiness.BedeworkCalendarsService;
+import com.idega.bedework.bussiness.view.BwCalBusiness;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.presentation.CalendarEntryCreator;
 import com.idega.block.cal.presentation.CalendarView;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.calendar.data.CalendarEntity;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWBundle;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.IWContext;
+import com.idega.presentation.Layer;
+import com.idega.presentation.text.Heading3;
+import com.idega.presentation.ui.DropdownMenu;
+import com.idega.presentation.ui.Form;
+import com.idega.presentation.ui.InterfaceObject;
+import com.idega.presentation.ui.Label;
+import com.idega.presentation.ui.SelectOption;
+import com.idega.util.CoreConstants;
+import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * <p>Presentation object for extending {@link CalendarView} to work with Bedework.</p>
@@ -100,19 +125,195 @@ import com.idega.presentation.IWContext;
  */
 public class BedeworkPersonalCalendarView extends CalendarView {
 	
+	public static final String 	ATTRIBUTE_CALENDAR_NAME = "attr_calendar_name",
+								PARAMETER_SHOW = "prm_show_calendar",
+								PARAMETER_ACTION = "prm_action";
+	
+	private IWBundle bundle;
+	private IWResourceBundle iwrb;
+	private BwCalBusiness bwCalBussinessBean;
+	
+	private BwCalBusiness getBwCalBussinessBean(IWApplicationContext iwc) {
+		if (this.bwCalBussinessBean == null) {
+			try {
+				this.bwCalBussinessBean = IBOLookup
+						.getServiceInstance(iwc, BwCalBusiness.class);
+				
+				this.bwCalBussinessBean.recreateCalendarEntryTypes();
+			} catch (IBOLookupException e) {
+				getLogger().log(Level.WARNING, 
+						"Unable to get BwCalBussinessBean: ", e);
+			}
+		}
+		
+		return this.bwCalBussinessBean;
+	}
+	
+	@Autowired
+	private BedeworkCalendarsService bcms;
+	
+	private BedeworkCalendarsService getBedeworkCalendarManagementService() {
+		if (this.bcms == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bcms;
+	}
+	
+	private BwCalendar getCalendarByPath(IWContext iwc, String path) {
+		if (iwc == null || StringUtil.isEmpty(path)) {
+			return null;
+		}
+		
+		Collection<BwCalendar> calendars = getCalendars(iwc);
+		if (ListUtil.isEmpty(calendars)) {
+			return null;
+		}
+		
+		for (BwCalendar calendar : calendars) {
+			if (path.equals(calendar.getPath())) {
+				return calendar;
+			}
+		}
+		
+		return null;
+	}
+	
+	private Collection<BwCalendar> getCalendars(IWContext iwc) {
+		if (iwc == null) {
+			return null;
+		}
+		
+		Collection<BwCalendar> calendars = new ArrayList<BwCalendar>();
+		
+		Collection<BwCalendar> calendarsFromdatabase = 
+				getBedeworkCalendarManagementService()
+				.getUserCalendars(iwc.getCurrentUser());
+		
+		if (!ListUtil.isEmpty(calendarsFromdatabase)) {
+			calendars.addAll(calendarsFromdatabase);
+		}
+		
+		Collection<CalendarEntity> calendarsEntytiesFromDatabase = 
+				getBedeworkCalendarManagementService()
+				.getSubscribedCalendars(iwc.getCurrentUser());
+		
+		if (!ListUtil.isEmpty(calendarsEntytiesFromDatabase)) {
+			calendars.addAll(calendarsEntytiesFromDatabase);
+		}
+
+		return calendars;
+	}
+	
+	private DropdownMenu getCalendarsSelectionDropdownMenu(IWContext iwc) {
+		if (iwc == null) {
+			return null;
+		}
+		
+		DropdownMenu calendarsSelection = new DropdownMenu(
+				ATTRIBUTE_CALENDAR_NAME
+				);
+		
+		calendarsSelection.setToSubmit();
+		
+		for (BwCalendar calendar : getCalendars(iwc)) {
+			calendarsSelection.addMenuElement(
+					calendar.getPath(), calendar.getName());
+		}
+		
+		if (calendarsSelection.isEmpty()) {
+			calendarsSelection.addFirstOption(new SelectOption(
+					iwrb.getLocalizedString(
+							"no_calendars_found", "No calendars found."),
+							"-1"));
+		} else {
+			calendarsSelection.addFirstOption(new SelectOption( 
+					iwrb.getLocalizedString(
+							"select_calendar", "Select calendar:"),
+							"-1"));
+		}
+		
+		String selectedCalendar = iwc.getParameter(ATTRIBUTE_CALENDAR_NAME);
+		if (StringUtil.isEmpty(selectedCalendar)) {
+			BwCalendar currentCalendar = getBwCalBussinessBean(iwc).getCurrentCalendar();
+			if (currentCalendar != null) {
+				selectedCalendar = currentCalendar.getPath();
+			}
+		}
+		
+		if (!StringUtil.isEmpty(selectedCalendar)) {
+			calendarsSelection.setSelectedElement(selectedCalendar);
+			
+			if (!selectedCalendar.equals("-1")) {
+				getBwCalBussinessBean(iwc).setCurrentCalendar(
+						getCalendarByPath(iwc, selectedCalendar));
+			}
+		}
+		
+		return calendarsSelection;
+	}
+	
+	private void addFormItem(Layer container, String label, InterfaceObject ui) {
+		Label labelUI = new Label(label.concat(CoreConstants.COLON), ui);
+		Layer itemContainer = new Layer();
+		itemContainer.setStyleClass("formItem");
+		itemContainer.add(labelUI);
+		
+		itemContainer.add(ui);
+		container.add(itemContainer);
+	}
+
+	@Override
+	public String getBundleIdentifier() {
+		return BedeworkConstants.BUNDLE_IDENTIFIER;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see com.idega.presentation.PresentationObject#main(com.idega.presentation.IWContext)
 	 */
 	@Override
 	public void main(IWContext iwc) throws Exception {
-		super.main(iwc);
-		CalendarEntryCreator creator = new BedeworkCalendarEntryCreator();
-
-		String save = iwc.getParameter(CalendarEntryCreator.saveButtonParameterName);
-		if(save != null) {
-			creator.saveEntry(iwc, getParentPage());
+		bundle = iwc.getIWMainApplication().getBundle(getBundleIdentifier());
+		iwrb = bundle.getResourceBundle(iwc);
+		
+		if (iwc == null || !iwc.isLoggedOn()) {
+			add(new Heading3(
+					iwrb.getLocalizedString("not_logged_on", "Not logged on!")
+					));
+			return;
 		}
+		
+		Form form = new Form();
+		add(form);
+		
+		Layer container = new Layer();
+		form.add(container);
+		container.setStyleClass("calendarSelection");
+		
+		addFormItem(container, 
+				iwrb.getLocalizedString("select_calendar", "Select calendar:"), 
+				getCalendarsSelectionDropdownMenu(iwc));
+	
+		if (getBwCalBussinessBean(iwc).getCurrentCalendar() != null) {
+			setViewInGroupID(iwc.getCurrentUser().getGroupID());
+			super.main(iwc);
+		}
+	}
+	
+	private BedeworkCalendarEntryCreator creator = null;
+	
+	/* (non-Javadoc)
+	 * @see com.idega.block.cal.presentation.CalendarView#getCalendarEntryCreator()
+	 */
+	@Override
+	protected CalendarEntryCreator getCalendarEntryCreator(IWContext iwc) {
+		if (this.creator == null) {
+			this.creator = new BedeworkCalendarEntryCreator();
+			this.creator.setBwCalBusiness(getBwCalBussinessBean(iwc));
+		}
+		
+		return this.creator;
 	}
 
 	/* (non-Javadoc)
@@ -120,7 +321,6 @@ public class BedeworkPersonalCalendarView extends CalendarView {
 	 */
 	@Override
 	public CalBusiness getCalBusiness(IWApplicationContext iwc) {
-		// TODO Auto-generated method stub
-		return new BwCalBussinessBean();
+		return getBwCalBussinessBean(iwc);
 	}
 }

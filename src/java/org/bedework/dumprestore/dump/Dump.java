@@ -94,7 +94,7 @@ import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.dump.dumpling.DumpAll;
 import org.hibernate.SessionFactory;
 
-import com.idega.hibernate.SessionFactoryHelper;
+import com.idega.hibernate.SessionFactoryUtil;
 
 /**
  * Application to dump calendar data.
@@ -131,7 +131,7 @@ public class Dump implements Defs {
 	   * @throws Throwable
 	   */
 	  public Dump() throws Throwable {
-	    this(SessionFactoryHelper.getInstance().getSessionFactory());
+	    this(SessionFactoryUtil.getSessionFactory());
 	  }
 
 	  /**

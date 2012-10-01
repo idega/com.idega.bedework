@@ -82,9 +82,13 @@
  */
 package com.idega.bedework.presentation;
 
-import com.idega.bedework.bussiness.BwCalBussinessBean;
+import java.util.logging.Level;
+
+import com.idega.bedework.bussiness.view.BwCalBusiness;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.presentation.CalendarEntryCreator;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 
 /**
@@ -97,12 +101,33 @@ import com.idega.idegaweb.IWApplicationContext;
  * @author martynasstake
  */
 public class BedeworkCalendarEntryCreator extends CalendarEntryCreator {
-
+		
+	private BwCalBusiness bwCalBussinessBean;
+	
+	private BwCalBusiness getBwCalBussinessBean(IWApplicationContext iwc) {
+		if (this.bwCalBussinessBean == null) {
+			try {
+				this.bwCalBussinessBean = IBOLookup
+						.getServiceInstance(iwc, BwCalBusiness.class);
+			} catch (IBOLookupException e) {
+				getLogger().log(Level.WARNING, 
+						"Unable to get BwCalBussinessBean: ", e);
+			}
+		}
+		
+		return this.bwCalBussinessBean;
+	}
+	
+	// FIXME This is nonsense, it shouldn't be set like this
+	public void setBwCalBusiness(BwCalBusiness bwCalBussinessBean) {
+		this.bwCalBussinessBean = bwCalBussinessBean;
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.idega.block.cal.presentation.CalendarEntryCreator#getCalBusiness(com.idega.idegaweb.IWApplicationContext)
 	 */
 	@Override
 	public CalBusiness getCalBusiness(IWApplicationContext iwc) {
-		return new BwCalBussinessBean();
+		return getBwCalBussinessBean(iwc);
 	}
 }

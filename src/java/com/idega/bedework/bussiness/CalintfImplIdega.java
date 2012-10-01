@@ -132,7 +132,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 
-import com.idega.hibernate.SessionFactoryHelper;
+import com.idega.hibernate.SessionFactoryUtil;
 
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
@@ -1180,7 +1180,7 @@ public class CalintfImplIdega extends CalintfBase implements PrivilegeDefs {
 				return sessionFactory;
 			}
 			
-			sessionFactory = SessionFactoryHelper.getInstance().getSessionFactory();
+			sessionFactory = SessionFactoryUtil.getSessionFactory();
 			return sessionFactory;
 		}
 	}

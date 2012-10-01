@@ -87,6 +87,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJBException;
+import javax.ejb.FinderException;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
@@ -235,7 +236,7 @@ public class UserAdapter {
 		}
 		
 		try {
-			this.idegaUser = getUserBusiness().getUser(this.bedeworkUser.getId());
+			this.idegaUser = getUserBusiness().getUser(Integer.valueOf(this.bedeworkUser.getAccount()));
 		} catch (RemoteException e) {
 			LOGGER.log(Level.WARNING, "Unable to get idega user.");
 		}

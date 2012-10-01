@@ -33,7 +33,7 @@ public class HibSessionImplIdega extends HibSessionImpl {
 			throws CalFacadeException {
 		try {
 			this.log = log;
-			sess = com.idega.hibernate.HibernateUtil.getSessionFactory()
+			sess = com.idega.hibernate.SessionFactoryUtil.getSessionFactory()
 					.getCurrentSession();
 			rolledBack = false;
 		} catch (Throwable t) {

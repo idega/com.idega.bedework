@@ -96,7 +96,7 @@ import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
 import org.bedework.indexer.BwIndexerMBean;
 
-import com.idega.hibernate.SessionFactoryHelper;
+import com.idega.hibernate.SessionFactoryUtil;
 
 import edu.rpi.cmt.jboss.MBeanUtil;
 import edu.rpi.sss.util.Args;
@@ -396,7 +396,7 @@ public class BwDumpRestore implements BwDumpRestoreMBean {
 
 			long startTime = System.currentTimeMillis();
 
-			Restore restorer = new Restore(SessionFactoryHelper.getInstance().getSessionFactory());
+			Restore restorer = new Restore(SessionFactoryUtil.getSessionFactory());
 
 			String[] args = new String[] { "-appname", appname };
 
@@ -563,7 +563,7 @@ public class BwDumpRestore implements BwDumpRestoreMBean {
 		try {
 			long startTime = System.currentTimeMillis();
 
-			Dump d = new Dump(SessionFactoryHelper.getInstance().getSessionFactory());
+			Dump d = new Dump(SessionFactoryUtil.getSessionFactory());
 
 			String[] args = new String[] { "-appname", appname };
 

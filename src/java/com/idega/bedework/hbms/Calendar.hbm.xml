@@ -245,4 +245,11 @@
 		where cal.colPath = :colPath and  
 		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')
 	]]></query>
+	
+	<query name="getIdegaSubscriptionsByUser"><![CDATA[
+		from com.idega.calendar.data.CalendarEntity as cal
+		where cal.calType=8 and  
+		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--') and 
+		cal.creatorHref = :userHRef
+	]]></query>
 </hibernate-mapping>

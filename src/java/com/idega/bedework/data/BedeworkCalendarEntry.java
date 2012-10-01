@@ -105,17 +105,27 @@ import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.EventsI;
+import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import com.idega.bedework.bussiness.BedeworkEventsService;
 import com.idega.bedework.bussiness.BwAPI;
 import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.block.cal.data.CalendarEntry;
 import com.idega.data.IDOEntity;
 import com.idega.data.IDOEntityDefinition;
 import com.idega.data.IDOStoreException;
+import com.idega.hibernate.SessionFactoryUtil;
+import com.idega.ical4j.ICal4JConstants;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.expression.ELUtil;
+
+import edu.rpi.cmt.calendar.IcalDefs;
 
 /**
  * <p>Adapter between {@link BwEvent} in Bedework and {@link CalendarEntry} in ePlatform.</p>
@@ -128,11 +138,37 @@ import com.idega.util.ListUtil;
  */
 public class BedeworkCalendarEntry implements CalendarEntry{
 
+	@Autowired
+	private BedeworkEventsService bes;
+	
+	private BedeworkEventsService getBedeworkEventsService() {
+		if (this.bes == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bes;
+	}
+	
 	private BwEvent entry = null;
+	private Integer entryID = null;
+	
+	private BwEvent getEntry() {
+		EventInfo ei = getBedeworkEventsService().getEvent(this.entryID,
+				CoreUtil.getIWContext().getCurrentUser(), null, null, null, 
+				null, null, null);
+		
+		if (ei == null) {
+			return null;
+		}
+		
+		return ei.getEvent();
+	}
+	
 	private static final Logger LOGGER = Logger.getLogger(BedeworkCalendarEntry.class.getName());
 	
 	public BedeworkCalendarEntry(BwEvent entry) {
 		this.entry = entry;
+		this.entryID = entry.getId();
 	}
 	
 	@Override
@@ -172,11 +208,11 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public Object getPrimaryKey() throws EJBException {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		return this.entry.getId();
+		return getEntry().getId();
 	}
 
 	@Override
@@ -207,7 +243,7 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 			return;
 		}
 		
-		EventInfo ei = new EventInfo(entry);
+		EventInfo ei = new EventInfo(getEntry());
 		try {
 			eventsHandler.delete(ei, Boolean.TRUE);
 		} catch (CalFacadeException e) {
@@ -219,11 +255,11 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 	}
 	
 	private BwUser getCreator() {
-		if (this.entry == null) {
+		if (this.getEntry() == null) {
 			return null;
 		}
 		
-		BwPrincipal principal = this.entry.getCreatorEnt();
+		BwPrincipal principal = this.getEntry().getCreatorEnt();
 		BwUser user = null;
 		if (principal instanceof BwUser) {
 			user = (BwUser) principal;
@@ -239,20 +275,20 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public int getEntryID() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return -1;
 		}
 		
-		return this.entry.getId();
+		return getEntry().getId();
 	}
 
 	@Override
 	public Timestamp getDate() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		BwDateTime startDate = this.entry.getDtstart();
+		BwDateTime startDate = getEntry().getDtstart();
 		if (startDate == null) {
 			return null;
 		}
@@ -274,7 +310,7 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public int getDay() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return -1;
 		}
 		
@@ -288,20 +324,28 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public String getDescription() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		return this.entry.getDescription();
+		Session session = SessionFactoryUtil.getSession();
+		if (session == null) {
+			return null;
+		}
+		
+		session.merge(getEntry());
+		String description = getEntry().getDescription();
+		session.close();
+		return description;
 	}
 
 	@Override
 	public String getLocation() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		BwLocation location = this.entry.getLocation();
+		BwLocation location = getEntry().getLocation();
 		if (location == null) {
 			return null;
 		}
@@ -320,11 +364,11 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 	 */
 	@Override
 	public Timestamp getEndDate() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		BwDateTime eventEnd = this.entry.getDtend();
+		BwDateTime eventEnd = getEntry().getDtend();
 		if (eventEnd == null) {
 			return null;
 		}
@@ -350,7 +394,7 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public String getEntryTypeName() {
-		throw new NotImplementedException();
+		return IcalDefs.entityTypeNames[getEntry().getEntityType()];
 	}
 
 	@Override
@@ -359,17 +403,9 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 	}
 
 	@Override
-	public int getGroupID() {
-		int userId = getUserID();
-		if (userId == -1) {
-			return -1;
-		}
-		
-		BwPrincipal principal = this.entry.getCreatorEnt();
-		BwUser user = null;
-		if (principal instanceof BwUser) {
-			user = (BwUser) principal;
-		} else {
+	public int getGroupID() {	
+		BwUser user = UserAdapter.getBedeworkSystemUserByID(getEntry().getCreatorHref());
+		if (user == null) {
 			return -1;
 		}
 		
@@ -394,16 +430,20 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 	 */
 	@Override
 	public String getName() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		return this.entry.getName();
+		return getEntry().getName();
 	}
 
 	@Override
 	public String getRepeat() {
-		throw new NotImplementedException();
+		if (getEntry().getRecurring()) {
+			throw new NotImplementedException();
+		} else {
+			return "No Repeat";
+		}
 	}
 
 	/*
@@ -412,11 +452,13 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 	 */
 	@Override
 	public int getUserID() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return -1;
 		}
 		
-		BwPrincipal creator = this.entry.getCreatorEnt();
+		BwPrincipal creator = UserAdapter.getBedeworkSystemUserByID(
+				getEntry().getCreatorHref());
+
 		if (creator == null) {
 			return -1;
 		}
@@ -426,11 +468,11 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 
 	@Override
 	public Collection<User> getUsers() {
-		if (this.entry == null) {
+		if (getEntry() == null) {
 			return null;
 		}
 		
-		Set<BwAttendee> attendees = this.entry.getAttendees();
+		Set<BwAttendee> attendees = getEntry().getAttendees();
 		if (ListUtil.isEmpty(attendees)) {
 			return null;
 		}
