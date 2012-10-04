@@ -90,6 +90,7 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.svc.EventInfo;
 
@@ -240,4 +241,11 @@ public interface BedeworkEventsService {
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public boolean updateEvent(User user, EventInfo event);
+
+	public boolean deleteEvent(User currentUser, int entryID);
+
+//	public BwEvent setEvent(BwEvent event, User user, String headline,
+//			String description, BwLocation location, String type,
+//			BwCalendar calendar, boolean reccuring, Date startDate,
+//			Date endDate, List<User> attendees);
 }

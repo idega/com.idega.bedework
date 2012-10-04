@@ -248,7 +248,7 @@
 	
 	<query name="getIdegaSubscriptionsByUser"><![CDATA[
 		from com.idega.calendar.data.CalendarEntity as cal
-		where cal.calType=8 and  
+		where cal.calType=7 and  
 		(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--') and 
 		cal.creatorHref = :userHRef
 	]]></query>

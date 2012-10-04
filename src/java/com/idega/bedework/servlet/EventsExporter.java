@@ -1,5 +1,5 @@
 /**
- * @(#)BwAPI.java    1.0.0 9:08:20 AM
+ * @(#)ICalExportServlet.java    1.0.0 9:51:42 AM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,220 +80,135 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework.bussiness;
+package com.idega.bedework.servlet;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bedework.calfacade.BwUser;
-import org.bedework.calfacade.configs.DbConfig;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.CalSvcIdega;
-import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
-import org.bedework.calsvci.UsersI;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import net.fortuna.ical4j.model.Calendar;
+
+import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.icalendar.IcalTranslator;
+import org.bedework.icalendar.Icalendar;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.idega.bedework.bussiness.BedeworkAPI;
+import com.idega.bedework.bussiness.BedeworkCalendarsService;
+import com.idega.bedework.bussiness.BedeworkEventsService;
+import com.idega.core.file.util.MimeTypeUtil;
+import com.idega.io.DownloadWriter;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.expression.ELUtil;
 
 /**
- * <p>Class for managing access to Bedework API. You needcto get diiferent instance
- * for different users, or else you get wrong results. Don't forget to open and close it.
- * If you leave it opened, it will be closed before garbage collection. If you won't open it,
- * you wont get handlers. </p>
+ * <p>Servlet for exporting Ical4j calendars to external device.</p>
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Apr 20, 2012
+ * @version 1.0.0 Oct 3, 2012
  * @author martynasstake
  */
-public class BwAPI {
+public class EventsExporter extends DownloadWriter {
+
+	public static final String 	PARAMETER_CALENDAR = "prm_calendar",
+								PARAMETER_DATE_TO = "prm_date_to",
+								PARAMETER_DATE_FROM = "prm_date_from";
 	
-	private static final Logger LOGGER = Logger.getLogger(BwAPI.class.getName());
-	private CalSvcI bedeworkAPI = null;
-	private String userID = null;
+	private static Logger LOGGER = Logger.getLogger(
+			EventsExporter.class.getName()
+			);
 	
-	public BwAPI (User user) {
-		this.userID = user.getPrimaryKey().toString();
-		openBedeworkAPI();
+	private HttpServletResponse response;
+	private Calendar iCal;
+	
+	@Autowired
+	private BedeworkCalendarsService bcs;
+
+	private BedeworkCalendarsService getBedeworkCalendarsService() {
+		if (this.bcs == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bcs;
 	}
 	
-	public BwAPI(BwUser bwUser) {
-		String[] account = bwUser.getAccountSplit();
-		this.userID = String.valueOf(account[account.length - 1]);
-		openBedeworkAPI();
+	@Autowired
+	private BedeworkEventsService bes;
+	
+	private BedeworkEventsService getBedeworkEventsService() {
+		if (this.bes == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bes;
 	}
 	
-	public BwAPI(String userID) {
-		this.userID = userID;
-		openBedeworkAPI();
+	@Override
+	public String getMimeType() {
+		return MimeTypeUtil.MIME_TYPE_CALENDAR;
 	}
 
-	/**
-	 * <p>Initiates Bedework API.</p>
-	 * @return {@link CalSvcI}, which provides basic services in communicating with Bedework.
-	 * <code>null</code> on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public CalSvcI getBedeworkAPI(){
-		if (bedeworkAPI == null) {
-			if (this.userID == null) {
-				return null;
-			}
-			
-			DbConfig dbConfig = new DbConfig();
-			dbConfig.setCachingOn(false);
-			
-			CalSvcIPars params = new CalSvcIPars(userID, "MainCampus", true, false, false, 
-					true, true, true, false, dbConfig);
-
-			bedeworkAPI = new CalSvcIdega();
-			try {
-				bedeworkAPI.init(params);
-			} catch (CalFacadeException e) {
-				LOGGER.log(Level.WARNING, "Unable to get Bedework API", e);
-				bedeworkAPI = null;
-			}
-		}
-		
-		return bedeworkAPI;
-	}
-	
-	// TODO Document this
-	public org.bedework.calsvci.SynchI getSynchronizer() {
-		if (!openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.SynchI synchronizer = null;
+	@Override
+	public void writeTo(OutputStream streamOut) throws IOException {
+		PrintWriter writer = response.getWriter();
 		try {
-			synchronizer = getBedeworkAPI().getSynch();
+			IcalTranslator.writeCalendar(iCal, writer);
 		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to get events handler: ", e);
-			return null;
+			e.printStackTrace();
 		}
 		
-		return synchronizer;
-	}
-
-	
-	/**
-	 * <p>Tries to open Bedework API.</p>
-	 * @return <code>true</code> if API is now ready for transactions, <code>false</code>
-	 *  otherwise.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean openBedeworkAPI() {
-		if (getBedeworkAPI() == null) {
-			return Boolean.FALSE;
-		}
-		
-		if (getBedeworkAPI().isOpen()) {
-			if(!closeBedeworkAPI()){
-				return Boolean.TRUE;
-			}
-		}
-		
-		try {
-			getBedeworkAPI().open();
-			return Boolean.TRUE;
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Bedewoork API was not opened cause of: ", e);
-			return Boolean.FALSE;
-		}
-	}
-	
-	/**
-	 * <p>Tries to close Bedework API.</p>
-	 * @return <code>true</code> if API is closed. No transactions should be available now,
-	 * <code>false</code> if API is still open.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public boolean closeBedeworkAPI() {
-		if (getBedeworkAPI() == null) {
-			return Boolean.TRUE;
-		}
-		
-		try {
-			getBedeworkAPI().close();
-			return Boolean.TRUE;
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Bedewoork API was not closed cause of: ", e);
-			return Boolean.FALSE;
-		}
-	}
-	
-	/**
-	 * <p>Returns new events handler instance.</p>
-	 * @return {@link org.bedework.calsvci.EventsI} of current API or <code>null</code>
-	 * on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public org.bedework.calsvci.EventsI getEventsHandler() {
-		if (!openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.EventsI eventsHandler = null;
-		try {
-			eventsHandler =getBedeworkAPI().getEventsHandler();
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to get events handler: ", e);
-			return null;
-		}
-		
-		return eventsHandler;
-	}
-	
-	/**
-	 * <p>Returns new users handler instance.</p>
-	 * @return {@link org.bedework.calsvci.UsersI} of current API or <code>null</code>
-	 * on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public org.bedework.calsvci.UsersI getUsersHandler() {
-		if (!openBedeworkAPI()) {
-			return null;
-		}
-		
-		UsersI usersHandler = null;
-		try {
-			usersHandler = getBedeworkAPI().getUsersHandler();
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to get users handler: ", e);
-			return null;
-		}
-		
-		return usersHandler;
-	}
-	
-	/**
-	 * <p>Returns new calendar handler instance.</p>
-	 * @return {@link org.bedework.calsvci.CalendarsI} of current API or <code>null</code>
-	 * on failure.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	public org.bedework.calsvci.CalendarsI getCalendarsHandler() {
-		if (!openBedeworkAPI()) {
-			return null;
-		}
-		
-		org.bedework.calsvci.CalendarsI calendarsHandler = null;
-		try {
-			calendarsHandler =getBedeworkAPI().getCalendarsHandler();
-		} catch (CalFacadeException e) {
-			LOGGER.log(Level.WARNING, "Unable to get users handler: ", e);
-			return null;
-		}
-		return calendarsHandler;
+		streamOut.close();
+		writer.close();
+		streamOut.flush();
+		writer.flush();
 	}
 
 	/* (non-Javadoc)
-	 * @see java.lang.Object#finalize()
+	 * @see com.idega.io.DownloadWriter#init(javax.servlet.http.HttpServletRequest, com.idega.presentation.IWContext)
 	 */
 	@Override
-	protected void finalize() throws Throwable {
-		closeBedeworkAPI();
-		super.finalize();
+	public void init(HttpServletRequest req, IWContext iwc) {
+		if (iwc == null)
+			return;
+		
+		User user = iwc.isLoggedOn() ? iwc.getCurrentUser() : null;
+		if (user == null)
+			return;
+		
+		Collection<EventInfo> events = getBedeworkEventsService().getEvents(
+				user, 
+				getBedeworkCalendarsService().getCalendarByPath(
+						user, 
+						iwc.getParameter(EventsExporter.PARAMETER_CALENDAR)), 
+				null, null, null, null, null);
+		
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
+		if (bwAPI.getIcalCallback() == null) {
+			return;
+		}
+		
+		IcalTranslator trans = new IcalTranslator(bwAPI.getIcalCallback());
+
+		int method = Icalendar.methodTypePublish;
+		response = iwc.getResponse();
+		try {
+			iCal = trans.toIcal(events, method);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error exporting events " + events, e);
+		}
+		if (iCal == null)
+			return;
+	    
+	    setAsDownload(iwc, "bla.ics", -1);
 	}
 }

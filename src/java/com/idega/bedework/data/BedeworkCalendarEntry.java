@@ -111,7 +111,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.idega.bedework.bussiness.BedeworkEventsService;
-import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.BedeworkAPI;
 import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.block.cal.data.CalendarEntry;
 import com.idega.data.IDOEntity;
@@ -230,7 +230,7 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 		
 		UserAdapter userAdapter = new UserAdapter(user);
 		
-		BwAPI bwAPI = new BwAPI(userAdapter.getIdegaSystemUser());
+		BedeworkAPI bwAPI = new BedeworkAPI(userAdapter.getIdegaSystemUser());
 		if (!bwAPI.openBedeworkAPI()) {
 			LOGGER.log(Level.WARNING, "Unable to get API.");
 			return;
@@ -345,17 +345,18 @@ public class BedeworkCalendarEntry implements CalendarEntry{
 			return null;
 		}
 		
-		BwLocation location = getEntry().getLocation();
-		if (location == null) {
-			return null;
-		}
-		
-		BwString address = location.getAddress();
-		if (address == null) {
-			return null;
-		}
-		
-		return address.getValue();
+		return getEntry().getSummary();
+//		BwLocation location = getEntry().getLocation();
+//		if (location == null) {
+//			return null;
+//		}
+//		
+//		BwString address = location.getAddress();
+//		if (address == null) {
+//			return null;
+//		}
+//		
+//		return address.getValue();
 	}
 
 	/*

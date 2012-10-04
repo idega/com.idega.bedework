@@ -111,7 +111,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.BedeworkDateService;
 import com.idega.bedework.bussiness.BedeworkEventsService;
-import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.BedeworkAPI;
 import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.bedework.data.BedeworkCalendarEntry;
 import com.idega.block.cal.business.CalBusiness;
@@ -287,7 +287,7 @@ public class BwCalBusinessBean extends CalBusinessBean implements BwCalBusiness 
 
 	@Override
 	public void deleteEntry(int entryID) {
-		throw new NotImplementedException();
+		getBedeworkEventsService().deleteEvent(getCurrentUser(), entryID);
 	}
 
 	@Override

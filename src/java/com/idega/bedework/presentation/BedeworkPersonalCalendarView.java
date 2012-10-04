@@ -92,6 +92,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.view.BwCalBusiness;
+import com.idega.bedework.servlet.EventsExporter;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.presentation.CalendarEntryCreator;
 import com.idega.block.cal.presentation.CalendarView;
@@ -103,6 +104,7 @@ import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Layer;
+import com.idega.presentation.text.DownloadLink;
 import com.idega.presentation.text.Heading3;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.Form;
@@ -188,7 +190,7 @@ public class BedeworkPersonalCalendarView extends CalendarView {
 		
 		Collection<BwCalendar> calendarsFromdatabase = 
 				getBedeworkCalendarManagementService()
-				.getUserCalendars(iwc.getCurrentUser());
+				.getCalendars(iwc.getCurrentUser());
 		
 		if (!ListUtil.isEmpty(calendarsFromdatabase)) {
 			calendars.addAll(calendarsFromdatabase);
@@ -196,7 +198,7 @@ public class BedeworkPersonalCalendarView extends CalendarView {
 		
 		Collection<CalendarEntity> calendarsEntytiesFromDatabase = 
 				getBedeworkCalendarManagementService()
-				.getSubscribedCalendars(iwc.getCurrentUser());
+				.getSubscriptions(iwc.getCurrentUser());
 		
 		if (!ListUtil.isEmpty(calendarsEntytiesFromDatabase)) {
 			calendars.addAll(calendarsEntytiesFromDatabase);
@@ -298,6 +300,13 @@ public class BedeworkPersonalCalendarView extends CalendarView {
 		if (getBwCalBussinessBean(iwc).getCurrentCalendar() != null) {
 			setViewInGroupID(iwc.getCurrentUser().getGroupID());
 			super.main(iwc);
+			Layer export = new Layer();
+			container.add(export);
+			DownloadLink eventsExporter = new DownloadLink(iwrb.getLocalizedString("export_events", "Export events"));
+			export.add(eventsExporter);
+			eventsExporter.setMediaWriterClass(EventsExporter.class);
+			eventsExporter.setParameter(EventsExporter.PARAMETER_CALENDAR, 
+					getBwCalBussinessBean(iwc).getCurrentCalendar().getPath());
 		}
 	}
 	

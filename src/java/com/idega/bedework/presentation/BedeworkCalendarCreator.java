@@ -495,7 +495,7 @@ public class BedeworkCalendarCreator extends Block {
 		}
 		
 		List<BwCalendar> calendars = getBedeworkCalendarManagementService()
-				.getUserCalendars(iwc.getCurrentUser());
+				.getCalendars(iwc.getCurrentUser());
 		
 		if (ListUtil.isEmpty(calendars)) {
 			return Boolean.FALSE;
@@ -703,11 +703,6 @@ public class BedeworkCalendarCreator extends Block {
 		folderDropdownLayer.add(folderDropdown);
 		
 		return folderDropdownLayer;
-	}
-	
-	private Layer getCategoriesSelectionLayer(IWContext iwc) {
-		// TODO
-		return null;
 	}
 	
 	/**

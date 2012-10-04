@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkConstants.java    1.0.0 12:16:24 PM
+ * @(#)BedeworkLocationService.java    1.0.0 1:34:16 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,27 +80,57 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package com.idega.bedework;
+package com.idega.bedework.bussiness;
+
+import java.util.Collection;
+
+import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwString;
+
+import com.idega.user.data.User;
 
 /**
- * <p>Module constants goes here.</p>
+ * Class description goes here.
  * <p>You can report about problems to: 
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Apr 4, 2012
+ * @version 1.0.0 Oct 1, 2012
  * @author martynasstake
  */
-public interface BedeworkConstants {
+public interface BedeworkLocationService {
+	public static final String BEAN_IDENTIFIER = "bedeworkLocationService";
+	
+	// TODO DOCUMENT
+	public BwLocation setLocation(User user, BwLocation location, 
+			String address, String subAddress, boolean isPublic);
+	
+	// TODO DOCUMENT
+	public BwLocation getLocation(User user, int ID);
+	
+	// TODO DOCUMENT
+	public boolean updateLocation(User user, Integer ID, String address, 
+			String subAddress, boolean isPublic);
+	
+	// TODO DOCUMENT
+	public boolean updateLocation(User user, BwLocation location);
+	
+	// TODO DOCUMENT
+	public boolean deleteLocation(User user, int locationID);
+	
+	// TODO DOCUMENT
+	public boolean deleteLocation(User user, BwLocation location);
 
-	public static final String BUNDLE_IDENTIFIER = "com.idega.bedework";
+	// TODO DOCUMENT
+	public Collection<BwLocation> getLocations(User user);
+
+	// TODO DOCUMENT
+	public BwLocation getLocation(User user, BwString address);
+
+	// TODO DOCUMENT
+	public BwLocation getLocation(User user, String address);
+
+	// TODO document this
+	public BwLocation getOrCreateLocation(User user, String address);
 	
-	public static final String FILE_PATH_SYNCH_CONFIG = "/WEB-INF/synch-config.xml";
-	public static final String FILE_PATH_SYSEVENTS_PROPERTIES = "properties/sysevents.properties";
-	
-	public static final String BEDEWORK_INITIATED_APP_PROP = "is_bedework_initiated";
-	
-	public static final String BW_PRINCIPAL_REF = "/principals/users/";
-	public static final String BW_USER_CALENDAR_ROOT_PATH = "/user/";
-	public static final String BW_USER_CALENDAR_DEFAULT = "calendar";
 }

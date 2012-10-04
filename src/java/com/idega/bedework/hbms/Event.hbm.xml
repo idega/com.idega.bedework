@@ -9,7 +9,7 @@
 
 <hibernate-mapping>
   <class name="org.bedework.calfacade.BwEventObj"
-         table="bw_events">
+         table="bw_events" lazy="false">
     <cache usage="read-write"/>
 
     <id name="id" type="integer" column="eventid" unsaved-value="-1">
@@ -88,7 +88,7 @@
 
     <set name="summaries" table="bw_event_summaries"
          cascade="all-delete-orphan"
-         fetch="subselect" >
+         fetch="subselect" lazy="false">
       <!-- <cache usage="read-write"/> -->
       <key column="bw_eventid" foreign-key="bw_eventsum_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwString"
@@ -99,7 +99,7 @@
 
     <set name="descriptions" table="bw_event_descriptions"
          cascade="all-delete-orphan"
-         fetch="subselect" >
+         fetch="subselect" lazy="false">
       <!-- <cache usage="read-write"/> -->
       <key column="bw_eventid" foreign-key="bw_eventdesc_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwLongString"
@@ -113,7 +113,7 @@
 
     <set name="comments" table="bw_event_comments"
          cascade="all-delete-orphan"
-         fetch="subselect" >
+         fetch="subselect" lazy="false">
       <!-- <cache usage="read-write"/> -->
       <key column="bw_eventid" foreign-key="bw_eventcom_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwString"
@@ -124,7 +124,7 @@
 
     <set name="contacts" table="bw_event_contacts"
          sort="natural"
-         fetch="subselect" >
+        	lazy="false">
       <!-- <cache usage="read-write"/> -->
       <key column="eventid" foreign-key="bw_eventcon_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwContact"
@@ -133,7 +133,7 @@
     </set>
 
     <set name="resources" table="bw_event_resources"
-         cascade="all-delete-orphan" >
+         cascade="all-delete-orphan" lazy="false" >
       <!-- <cache usage="read-write"/> -->
       <key column="bw_eventid" foreign-key="bw_eventres_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwString"
@@ -200,7 +200,7 @@
     </set>
 
     <set name="alarms" table="bw_entity_alarms"
-         lazy="true"
+         lazy="false"
          cascade="all-delete-orphan" >
       <key column="eventid" foreign-key="bw_eventalm_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwAlarm"
@@ -208,7 +208,7 @@
     </set>
 
     <set name="attachments" table="bw_entity_attachments"
-         lazy="true"
+         lazy="false"
          cascade="all-delete-orphan" >
       <key column="eventid" foreign-key="bw_eventattach_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwAttachment"
@@ -223,12 +223,12 @@
 
     <set name="rrules"
          cascade="lock"
-         table="bw_event_rrules">
+         table="bw_event_rrules" lazy="false">
       <key column="eventid" foreign-key="bw_event_rrule_fk" />
       <element type="string" column="rrule" not-null="true"/>
     </set>
 
-    <set name="rdates" table="bw_event_rdates">
+    <set name="rdates" table="bw_event_rdates" lazy="false">
       <key column="eventid" foreign-key="bw_event_rdate_fk" />
       <composite-element
                  class="org.bedework.calfacade.BwDateTime" >
@@ -245,12 +245,12 @@
 
     <set name="exrules"
          cascade="lock"
-         table="bw_event_exrules">
+         table="bw_event_exrules" lazy="false">
       <key column="eventid" foreign-key="bw_event_erule_fk" />
       <element type="string" column="exrule" not-null="true"/>
     </set>
 
-    <set name="exdates" table="bw_event_exdates">
+    <set name="exdates" table="bw_event_exdates" lazy="false">
       <key column="eventid" foreign-key="bw_event_edate_fk" />
       <composite-element
                  class="org.bedework.calfacade.BwDateTime" >
@@ -273,7 +273,7 @@
     <property name="originator" column="originator" type="string" />
 
     <set name="recipients" table="bw_event_recipients"
-         fetch="subselect" >
+         fetch="subselect" lazy="false">
       <key column="eventid" foreign-key="bw_event_recip_fk" />
       <element type="string" column="recipient" not-null="true"/>
     </set>
@@ -299,7 +299,7 @@
 
     <set name="attendees" table="bw_event_attendees"
          cascade="all-delete-orphan"
-         fetch="subselect" >
+         fetch="subselect" lazy="false">
       <key column="eventid" foreign-key="bw_eventatt_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwAttendee"
                     column="attendeeid"
@@ -307,7 +307,7 @@
     </set>
 
     <set name="requestStatuses" table="bw_rstatus"
-         cascade="all-delete-orphan">
+         cascade="all-delete-orphan" lazy="false">
       <key column="eventid" foreign-key="bw_eventrst_eid_fk" />
       <composite-element
                  class="org.bedework.calfacade.BwRequestStatus" >
@@ -344,7 +344,7 @@
               index="bw_idx_attsobj" />
 
     <list name="xproperties" table="bw_event_xprops"
-         cascade="all-delete-orphan" >
+         cascade="all-delete-orphan" lazy="false">
       <!-- <cache usage="read-write"/> -->
       <key column="bw_eventid" foreign-key="bw_eventxp_eid_fk" />
       <list-index column="bwxp_position"/>
@@ -361,7 +361,7 @@
 
     <!-- =============== Freebusy =============== -->
 
-    <list name="freeBusyPeriods" lazy="true"
+    <list name="freeBusyPeriods" lazy="false"
           cascade="all-delete-orphan">
       <key column="eventid" foreign-key="bw_eventfbc_eid_fk" />
       <list-index column="fbcomp_position"/>
@@ -372,7 +372,7 @@
 
     <property name="busyType"  column="busy_type" type="integer" />
 
-    <set name="availableUids" lazy="true" table="bw_event_availuids">
+    <set name="availableUids" lazy="false" table="bw_event_availuids">
       <key column="eventid" foreign-key="bw_event_avluid_fk" />
       <element type="string" column="avluid" not-null="true"/>
     </set>

@@ -92,13 +92,12 @@ import java.util.logging.Logger;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 
-import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.BedeworkAPI;
 import com.idega.calendar.data.CalendarEntity;
 import com.idega.calendar.data.dao.CalendarDAO;
 import com.idega.core.persistence.Param;
@@ -132,7 +131,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			return Boolean.FALSE;
 		}
 
-		BwAPI bwAPI = new BwAPI(user);
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
 		if (!bwAPI.openBedeworkAPI()) {
 			return Boolean.FALSE;
 		}
@@ -172,7 +171,7 @@ public class CalendarDAOImpl extends GenericDaoImpl implements CalendarDAO {
 			return Boolean.FALSE;
 		}
 
-		BwAPI bwAPI = new BwAPI(user);
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
 		if (!bwAPI.openBedeworkAPI()) {
 			return Boolean.FALSE;
 		}

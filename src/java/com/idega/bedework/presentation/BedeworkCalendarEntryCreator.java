@@ -82,14 +82,19 @@
  */
 package com.idega.bedework.presentation;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 
+import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.bussiness.view.BwCalBusiness;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.presentation.CalendarEntryCreator;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWBundle;
+import com.idega.presentation.IWContext;
+import com.idega.util.PresentationUtil;
 
 /**
  * Class description goes here.
@@ -118,6 +123,30 @@ public class BedeworkCalendarEntryCreator extends CalendarEntryCreator {
 		return this.bwCalBussinessBean;
 	}
 	
+	
+	
+	/* (non-Javadoc)
+	 * @see com.idega.block.cal.presentation.CalendarEntryCreator#main(com.idega.presentation.IWContext)
+	 */
+	@Override
+	public void main(IWContext iwc) {
+		if (iwc == null) {
+			return;
+		}
+		
+		IWBundle bundle = getBundle(iwc);
+		
+		PresentationUtil.addStyleSheetsToHeader(iwc, Arrays.asList(
+				iwc.getIWMainApplication().getBundle(
+						BedeworkConstants.BUNDLE_IDENTIFIER
+				).getVirtualPathWithFileNameString("style/eventCreate.css"),
+				bundle.getVirtualPathWithFileNameString("style/eventCreate.css")
+		));
+		super.main(iwc);
+	}
+
+
+
 	// FIXME This is nonsense, it shouldn't be set like this
 	public void setBwCalBusiness(BwCalBusiness bwCalBussinessBean) {
 		this.bwCalBussinessBean = bwCalBussinessBean;
@@ -129,5 +158,10 @@ public class BedeworkCalendarEntryCreator extends CalendarEntryCreator {
 	@Override
 	public CalBusiness getCalBusiness(IWApplicationContext iwc) {
 		return getBwCalBussinessBean(iwc);
+	}
+	
+	@Override
+	protected Class getConfirmDeleteWindowClass() {
+		return BedeworkConfirmDeleteWindow.class;
 	}
 }

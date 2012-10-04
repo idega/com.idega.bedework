@@ -107,7 +107,8 @@ import org.springframework.stereotype.Service;
 import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.BedeworkDateService;
 import com.idega.bedework.bussiness.BedeworkEventsService;
-import com.idega.bedework.bussiness.BwAPI;
+import com.idega.bedework.bussiness.BedeworkLocationService;
+import com.idega.bedework.bussiness.BedeworkAPI;
 import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.hibernate.SessionFactoryUtil;
@@ -129,8 +130,6 @@ import com.idega.util.expression.ELUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class BedeworkEventsServiceBean extends DefaultSpringBean implements BedeworkEventsService {
 
-	
-	
 	@Override
 	public EventInfo getEvent(int ID, User user, BwCalendar directory, 
 			FilterBase filter, BwDateTime start, BwDateTime end, 
@@ -161,6 +160,17 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 			String description, String location, String type, 
 			BwCalendar calendar, boolean reccuring, Date startDate, 
 			Date endDate, List<User> attendees) {
+//		
+//		return setEvent(event, user, headline, description, 
+//				getBedeworkLocationService().getOrCreateLocation(user, location), type, 
+//				calendar, reccuring, startDate, endDate, attendees);
+//	}
+	
+//	@Override
+//	public BwEvent setEvent(BwEvent event, User user, String headline,
+//			String description, BwLocation location, String type, 
+//			BwCalendar calendar, boolean reccuring, Date startDate, 
+//			Date endDate, List<User> attendees) {
 		
 		if (user == null || calendar == null) {
 			return null;
@@ -180,7 +190,8 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 		
 		// Calendar info:
 		event.setColPath(calendar.getPath());
-		event.setPublick(calendar.getPublick());
+//		event.setPublick(calendar.getPublick());
+		event.setPublick(Boolean.TRUE);
 
 		// Date info:
 		if (startDate != null) {
@@ -194,6 +205,8 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 		// Event info:
 		event.setName(headline);
 		event.setDescription(description);
+		event.setSummary(location);
+//		event.setLocation(location);
 		
 		// WTF????
 		event.setNoStart(Boolean.FALSE);
@@ -230,7 +243,7 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 			return Boolean.FALSE;
 		}
 
-		BwAPI bwAPI = new BwAPI(user);
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
 		EventsI eventsHandler = bwAPI.getEventsHandler();
 		if (eventsHandler == null) {
 			return Boolean.FALSE;
@@ -292,7 +305,7 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 			return null;
 		}
 		
-		BwAPI bwAPI = new BwAPI(user);
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
 		EventsI eventsHandler = bwAPI.getEventsHandler();
 		if (eventsHandler == null) {
 			return null;
@@ -350,7 +363,7 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 				calendarPath.lastIndexOf(CoreConstants.SLASH) + 1);
 		
 		BwCalendar calendar = getBedeworkCalendarsService()
-				.getUserCalendar(user, calendarName, null);
+				.getCalendar(user, calendarName, null);
 		
 		eventInfo.setEvent(setEvent(event, user, headline, description, 
 				location, type, calendar, reccur, 
@@ -369,7 +382,7 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 			return Boolean.FALSE;
 		}
 
-		BwAPI bwAPI = new BwAPI(user);
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
 		EventsI eventsHandler = bwAPI.getEventsHandler();
 		if (eventsHandler == null) {
 			return Boolean.FALSE;
@@ -393,6 +406,34 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 		return Boolean.TRUE;
 	}
 	
+	@Override
+	public boolean deleteEvent(User currentUser, int entryID) {
+		if (currentUser == null) {
+			return Boolean.FALSE;
+		}
+
+		EventInfo event = getEvent(entryID, currentUser, null, null, null, null, 
+				null, null);
+		if (event == null) {
+			return Boolean.FALSE;
+		}
+		
+		BedeworkAPI bwAPI = new BedeworkAPI(currentUser);
+		EventsI eventsHandler = bwAPI.getEventsHandler();
+		if (eventsHandler == null) {
+			return Boolean.FALSE;
+		}
+		
+		boolean isDeleted = Boolean.FALSE;
+		try {
+			isDeleted = eventsHandler.delete(event, Boolean.FALSE);
+		} catch (CalFacadeException e) {
+			getLogger().log(Level.WARNING, "Unable to delete event: ", e);
+		} 
+		
+		return bwAPI.closeBedeworkAPI() && isDeleted;
+	}
+	
 	@Autowired
 	private BedeworkCalendarsService bes;
 	
@@ -413,5 +454,16 @@ public class BedeworkEventsServiceBean extends DefaultSpringBean implements Bede
 		}
 
 		return this.bts;
+	}
+	
+	@Autowired
+	private BedeworkLocationService bls;
+	
+	private BedeworkLocationService getBedeworkLocationService() {
+		if (this.bls == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bls;
 	}
 }

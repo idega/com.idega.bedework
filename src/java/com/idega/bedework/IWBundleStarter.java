@@ -15,6 +15,7 @@ import org.bedework.indexer.BwIndexerMBean;
 import org.bedework.timezones.service.Tzsvc;
 import org.bedework.timezones.service.TzsvcMBean;
 
+import com.idega.bedework.manager.BedeworkManagerConstants;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWBundleStartable;
 import com.idega.idegaweb.IWMainApplicationSettings;
@@ -85,11 +86,11 @@ public class IWBundleStarter implements IWBundleStartable {
 		}
 		
 		if (!settings.getBoolean(BedeworkConstants.BEDEWORK_INITIATED_APP_PROP, Boolean.FALSE)) {
-			dumpRestoreMBean.setDataIn(BedeworkConstants.FILE_PATH_INIT_BEDEWORK);
+			dumpRestoreMBean.setDataIn(BedeworkManagerConstants.FILE_PATH_INIT_BEDEWORK);
 			dumpRestoreMBean.restoreData();
 			settings.setProperty(BedeworkConstants.BEDEWORK_INITIATED_APP_PROP, Boolean.TRUE.toString());
 		}
-		
+
 		//FIXME Remove this hack later
 		(new com.idega.bedework.webservice.sync.IWBundleStarter()).start(starterBundle);
 	}

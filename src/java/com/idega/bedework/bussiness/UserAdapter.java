@@ -170,7 +170,7 @@ public class UserAdapter {
 			return null;
 		}
 		
-		BwAPI bwAPI = new BwAPI(accountID);
+		BedeworkAPI bwAPI = new BedeworkAPI(accountID);
 		if (!bwAPI.openBedeworkAPI()) {
 			return null;
 		}
@@ -201,7 +201,7 @@ public class UserAdapter {
 			return this.bedeworkUser;
 		}
 		
-		BwAPI bwAPI = new BwAPI(idegaUser);
+		BedeworkAPI bwAPI = new BedeworkAPI(idegaUser);
 		if (!bwAPI.openBedeworkAPI()) {
 			return null;
 		}
@@ -253,7 +253,7 @@ public class UserAdapter {
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public boolean synchronizeUser() {
-		BwAPI bwAPI = new BwAPI(getIdegaSystemUser());
+		BedeworkAPI bwAPI = new BedeworkAPI(getIdegaSystemUser());
 		if (!bwAPI.openBedeworkAPI()) {
 			return Boolean.FALSE;
 		}

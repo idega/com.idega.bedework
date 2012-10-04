@@ -29,6 +29,16 @@
         <res-auth>Container</res-auth>
     </resource-ref>
     
+<!--     <servlet>
+		<display-name>ICalExportServlet</display-name>
+		<servlet-name>ICalExportServlet</servlet-name>
+		<servlet-class>com.idega.bedework.servlet.ICalExportServlet</servlet-class>
+		<load-on-startup>9</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ICalExportServlet</servlet-name>
+		<url-pattern>/ical/*</url-pattern>
+	</servlet-mapping> -->
    
     <display-name>Bedework public caldav</display-name>
 
@@ -64,5 +74,15 @@
     <servlet-mapping>
         <servlet-name>CaldavBWServlet</servlet-name>
         <url-pattern>/pubcaldav/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>CaldavBWServlet</servlet-name>
+        <url-pattern>/caldav/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>CaldavBWServlet</servlet-name>
+        <url-pattern>/ucaldav/*</url-pattern>
     </servlet-mapping>
 </web-app>

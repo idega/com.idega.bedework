@@ -86,7 +86,7 @@ import java.util.HashMap;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.configs.DbConfig;
-import org.bedework.calsvc.CalSvcIdega;
+import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
@@ -121,7 +121,7 @@ public class PublicCalendar extends Block {
 		
 		CalSvcIPars params = new CalSvcIPars("admin", "MainCampus", true, false, false, true, true, true, false, dbConfig);
 		
-		CalSvcI calendarSuiteAPI = new CalSvcIdega();
+		CalSvcI calendarSuiteAPI = new CalSvc();
 		calendarSuiteAPI.init(params);
 		calendarSuiteAPI.open();
 		CalendarsI calendarHandler = calendarSuiteAPI.getCalendarsHandler();

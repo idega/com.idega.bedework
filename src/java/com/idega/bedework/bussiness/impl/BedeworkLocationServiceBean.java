@@ -1,5 +1,5 @@
 /**
- * @(#)BedeworkCalendarPresentationComponentsServiceBean.java    1.0.0 10:22:08 AM
+ * @(#)BedeworkLocationServiceBean.java    1.0.0 1:44:56 PM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -83,33 +83,24 @@
 package com.idega.bedework.bussiness.impl;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.bedework.calsvci.EventProperties;
+import org.hsqldb.lib.StringUtil;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.bedework.BedeworkConstants;
-import com.idega.bedework.bussiness.BedeworkCalendarsService;
-import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
+import com.idega.bedework.bussiness.BedeworkLocationService;
 import com.idega.bedework.bussiness.BedeworkAPI;
-import com.idega.block.cal.data.CalDAVCalendar;
+import com.idega.bedework.bussiness.UserAdapter;
 import com.idega.core.business.DefaultSpringBean;
-import com.idega.idegaweb.IWResourceBundle;
-import com.idega.presentation.Layer;
-import com.idega.presentation.ui.DropdownMenu;
-import com.idega.presentation.ui.Label;
-import com.idega.presentation.ui.SelectionBox;
-import com.idega.user.data.Group;
 import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
-import com.idega.util.expression.ELUtil;
 
 /**
  * Class description goes here.
@@ -117,196 +108,208 @@ import com.idega.util.expression.ELUtil;
  * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
  * <p>You can expect to find some test cases notice in the end of the file.</p>
  *
- * @version 1.0.0 Jun 29, 2012
+ * @version 1.0.0 Oct 1, 2012
  * @author martynasstake
  */
-@Service("bedeworkCalendarPresentationComponentsService")
+@Service(BedeworkLocationService.BEAN_IDENTIFIER)
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-public class BedeworkCalendarPresentationComponentsServiceBean extends DefaultSpringBean
-implements BedeworkCalendarPresentationComponentsService {
+public class BedeworkLocationServiceBean extends DefaultSpringBean implements BedeworkLocationService{
 
-	@Autowired
-	private BedeworkCalendarsService bcms;
-	
-	/**
-	 * <p>Initializes service if down.</p>
-	 * @return {@link BedeworkCalendarServiceBean} instance or 
-	 * <code>null</code>.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	private BedeworkCalendarsService getBedeworkCalendarManagementService() {
-		if (this.bcms == null) {
-			ELUtil.getInstance().autowire(this);
+	@Override
+	public BwLocation getOrCreateLocation(User user, String address) {
+		if (user == null || StringUtil.isEmpty(address)) {
+			return null;
 		}
 		
-		return this.bcms;
+		BwLocation location = getLocation(user, address);
+		if (location != null) {
+			return location;
+		}
+		
+		if (updateLocation(user, null, address, null, true)) {
+			return getLocation(user, address);
+		}
+		
+		getLogger().log(Level.WARNING, "Unable to get location: " + address);
+		return null;
 	}
 	
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getAllUserCalendars(java.lang.String)
-	 */ 
 	@Override
-	public DropdownMenu getAllUserCalendarsDropDown(User user) {
-		if (user == null) {
+	public BwLocation setLocation(User user, BwLocation location, String address, String subAddress, boolean isPublic) {
+		if (user == null || StringUtil.isEmpty(address)) {
 			return null;
 		}
-
-		Collection<BwCalendar> calendars = getBedeworkCalendarManagementService()
-				.getCalendarDirectories(user);
-
-		if (ListUtil.isEmpty(calendars)) {
-			return null;
+		
+		UserAdapter adapter = new UserAdapter(user);
+		BwUser bedeworkUser = adapter.getBedeworkSystemUser();
+		
+		if (location == null) {
+			location = new BwLocation();
 		}
+		
+		location.setAddress(new BwString(getCurrentLocale().getLanguage(), address));
+		if (!StringUtil.isEmpty(subAddress)) {
+			location.setSubaddress(
+					new BwString(getCurrentLocale().getLanguage(), subAddress));
+		}
+		
+		// User info:
+		location.setCreatorEnt(bedeworkUser);
+		location.setCreatorHref(bedeworkUser.getPrincipalRef());
+		location.setOwnerHref(bedeworkUser.getPrincipalRef());
+		
+		// Visibility:
+		location.setPublick(isPublic);
+		
+		return location;
+	}
+	
+	@Override
+	public boolean updateLocation(User user, BwLocation location) {
+		if (user == null || location == null) {
+			return Boolean.FALSE;
+		}
+		
+		BwLocation locationInDatabase = getLocation(user, location.getId());
 		
 		BedeworkAPI bwAPI = new BedeworkAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
-			return null;
+		EventProperties<BwLocation> locationHandler = bwAPI.getLocationsHandler();
+		if (locationHandler == null) {
+			return Boolean.FALSE;
 		}
 		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
-			bwAPI.closeBedeworkAPI();
-			return null;
-		}
-		
-		IWResourceBundle iwrb = getResourceBundle(
-				getBundle(BedeworkConstants.BUNDLE_IDENTIFIER));
-		
-		DropdownMenu dropdownMenu = new DropdownMenu();
-		for (BwCalendar calendar : calendars) {
-			try {
-				if (calendarsHandler.isUserRoot(calendar)) {
-					dropdownMenu.addMenuElement(
-							calendar.getPath(),
-							user.getName() + CoreConstants.SPACE + 
-							iwrb.getLocalizedString("user_home_calendar", "User main calendar")
-							);
-					continue;
-				}
-			} catch (CalFacadeException e) {
-				getLogger().log(Level.WARNING, "Unable to check if calendar is user root.");
+		try {
+			if (locationInDatabase == null) {
+				return locationHandler.add(location);
+			} else {
+				locationHandler.update(location);
+				return Boolean.TRUE;
 			}
-			
-			dropdownMenu.addMenuElement(calendar.getPath(), calendar.getName());
+		} catch (CalFacadeException e) {
+			getLogger().log(Level.WARNING, "Unable to update location: ", e);
+			return Boolean.FALSE;
+		} finally {
+			bwAPI.closeBedeworkAPI();
 		}
-
-		return dropdownMenu;
+	}
+	
+	@Override
+	public boolean deleteLocation(User user, BwLocation location) {
+		if (user == null || location == null) {
+			return Boolean.FALSE;
+		}
+				
+		BedeworkAPI bwAPI = new BedeworkAPI(user);
+		EventProperties<BwLocation> locationHandler = bwAPI.getLocationsHandler();
+		if (locationHandler == null) {
+			return Boolean.FALSE;
+		}
+		
+		try {			
+			if (locationHandler.delete(location) == 0) {
+				return Boolean.TRUE;
+			} else {
+				return Boolean.FALSE;
+			}
+		} catch (CalFacadeException e) {
+			getLogger().log(Level.WARNING, "Unable to get locations: ", e);
+			return Boolean.FALSE;
+		} finally {
+			bwAPI.closeBedeworkAPI();
+		}
 	}
 
 	@Override
-	public SelectionBox getAllUserCalendarsSelectionBox(User user) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getHomeCalendarPath(com.idega.user.data.User)
-	 */
-	@Override
-	public Label getHomeCalendarPath(User user) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getUnSubscribedCalendars(com.idega.user.data.User)
-	 */
-	@Override
-	public DropdownMenu getUnSubscribedCalendars(User user) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#getSubscribedCalendars(com.idega.user.data.User)
-	 */
-	@Override
-	public DropdownMenu getSubscribedCalendars(User user) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#subscribeCalendar(com.idega.user.data.User, com.idega.block.cal.data.CalDAVCalendar)
-	 */
-	@Override
-	public Layer subscribeCalendar(User user, CalDAVCalendar calendar)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService#unSubscribeCalendar(com.idega.user.data.User, com.idega.block.cal.data.CalDAVCalendar)
-	 */
-	@Override
-	public Layer unSubscribeCalendar(User user, CalDAVCalendar calendar)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public DropdownMenu getUserFoldersDropdown(User user) {
+	public Collection<BwLocation> getLocations(User user) {
 		if (user == null) {
 			return null;
 		}
 		
-		List<BwCalendar> folders = getBedeworkCalendarManagementService()
-				.getCalendarFolders(user);
-		if (ListUtil.isEmpty(folders)) {
-			return null;
-		}
-		
 		BedeworkAPI bwAPI = new BedeworkAPI(user);
-		if (!bwAPI.openBedeworkAPI()) {
+		EventProperties<BwLocation> locationHandler = bwAPI.getLocationsHandler();
+		if (locationHandler == null) {
 			return null;
 		}
 		
-		org.bedework.calsvci.CalendarsI calendarsHandler = bwAPI.getCalendarsHandler();
-		if (calendarsHandler == null) {
-			bwAPI.closeBedeworkAPI();
-			return null;
-		}
-		
-		IWResourceBundle iwrb = getResourceBundle(
-				getBundle(BedeworkConstants.BUNDLE_IDENTIFIER));
-		
-		DropdownMenu foldersDropdownMenu = new DropdownMenu();
-		for (BwCalendar folder : folders) {
-			try {
-				if (calendarsHandler.isUserRoot(folder)) {
-					foldersDropdownMenu.addMenuElement(
-							folder.getPath(),
-							user.getName() + CoreConstants.SPACE + 
-							iwrb.getLocalizedString("main_folder", "main folder")
-							);
-					continue;
-				}
-			} catch (CalFacadeException e) {
-				getLogger().log(Level.WARNING, "Unable to check if folder is user root.");
-			}
-			
-			foldersDropdownMenu.addMenuElement(folder.getPath(), folder.getName());
+		Collection<BwLocation> locations = null;
+		try {
+			locations = locationHandler.get();
+		} catch (CalFacadeException e) {
+			getLogger().log(Level.WARNING, "Unable to get locations: ", e);
 		}
 		
 		bwAPI.closeBedeworkAPI();
-		return foldersDropdownMenu;
+		
+		return locations;
 	}
-
+	
 	@Override
-	public SelectionBox getGroupsSelectionBox(Set<Long> groupIDs) {
-		List<Group> groups = getBedeworkCalendarManagementService().getGroups(groupIDs);
-		if (ListUtil.isEmpty(groups)) {
+	public BwLocation getLocation(User user, String address) {
+		return getLocation(user, 
+				new BwString(getCurrentLocale().getLanguage(), address)
+		);
+	}
+	
+	@Override
+	public BwLocation getLocation(User user, BwString address) {
+		if (address == null) {
 			return null;
 		}
 		
-		SelectionBox selectionBox = new SelectionBox();
-		for (Group group : groups) {
-			selectionBox.addElement(group.getPrimaryKey().toString(), group.getName());
+		Collection<BwLocation> locations = getLocations(user);
+		if (ListUtil.isEmpty(locations)) {
+			return null;
 		}
 		
-		return selectionBox;
+		BwLocation requiredlocation = null;
+		BedeworkAPI api = new BedeworkAPI(user);
+		for (BwLocation location : locations) {
+			
+			api.reAttach(location);
+			
+			if (address.equals(location.getAddress())) {
+				return location;
+			}
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public BwLocation getLocation(User user, int ID) {
+		Collection<BwLocation> locations = getLocations(user);
+		if (ListUtil.isEmpty(locations)) {
+			return null;
+		}
+		
+		for (BwLocation location : locations) {
+			if (location.getId() == ID) {
+				return location;
+			}
+		}
+		
+		return null;
 	}
 
+
+
+	@Override
+	public boolean updateLocation(User user, Integer ID, String address,
+			String subAddress, boolean isPublic) {
+		BwLocation location = null;
+		
+		if (ID != null) {
+			location = getLocation(user, ID);
+		}
+		
+		return updateLocation(user, setLocation(user, location, address, 
+				subAddress, isPublic));
+	}
+
+
+
+	@Override
+	public boolean deleteLocation(User user, int locationID) {
+		return deleteLocation(user, getLocation(user, locationID));
+	}
 }

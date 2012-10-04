@@ -88,7 +88,6 @@ import java.util.Set;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwUser;
 
 import com.idega.calendar.data.CalendarEntity;
 import com.idega.core.persistence.GenericDao;
@@ -276,11 +275,11 @@ public interface CalendarDAO extends GenericDao{
 	/**
 	 * <p>Fetches from database subscriptions.
 	 * "Subscription" means, that entity is 
-	 * {@link BwCalendar#calTypeExtSub} type.
+	 * {@link BwCalendar#calTypeAlias} type.
 	 * </p>
 	 * FIXME remove inline query usage
 	 * @return {@link Collection} of {@link CalendarEntity} with type 
-	 * {@link BwCalendar#calTypeExtSub} or 
+	 * {@link BwCalendar#calTypeAlias} or 
 	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
@@ -289,10 +288,10 @@ public interface CalendarDAO extends GenericDao{
 	/**
 	 * <p>Fetches from database subscriptions.
 	 * "Subscription" means, that entity is 
-	 * {@link BwCalendar#calTypeExtSub} type.
+	 * {@link BwCalendar#calTypeAlias} type.
 	 * </p>
 	 * @return {@link Collection} of {@link CalendarEntity} with type 
-	 * {@link BwCalendar#calTypeExtSub} or 
+	 * {@link BwCalendar#calTypeAlias} or 
 	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */

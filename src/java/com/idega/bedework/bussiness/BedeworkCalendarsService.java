@@ -135,7 +135,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * @return {@link BwCalendar} or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public BwCalendar getUserCalendar(com.idega.user.data.User user, String calendarName);
+	public BwCalendar getCalendar(com.idega.user.data.User user, String calendarName);
 
 	/**
 	 * <p>Fetches {@link BwCalendar} of {@link com.idega.user.data.User} from database by:
@@ -146,7 +146,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * @return Fetched {@link BwCalendar} or <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public BwCalendar getUserCalendar(
+	public BwCalendar getCalendar(
 			com.idega.user.data.User user,
 			String calendarName, 
 			String calendarFolder
@@ -165,7 +165,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * {@link BwCalendar#calTypeOutbox}.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<org.bedework.calfacade.BwCalendar> getUserCalendars(com.idega.user.data.User user);
+	public List<org.bedework.calfacade.BwCalendar> getCalendars(com.idega.user.data.User user);
 	
 	/**
 	 * <p>Gets all folders, where user can write, edit calendars.</p>
@@ -174,7 +174,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * where {@link BwCalendar#calTypeFolder}.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<org.bedework.calfacade.BwCalendar> getAllUserCalendarFolders(com.idega.user.data.User user);
+	public List<org.bedework.calfacade.BwCalendar> getCalendarFolders(com.idega.user.data.User user);
 	
 	
 	/**
@@ -184,7 +184,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<org.bedework.calfacade.BwCalendar> getUserCalendarDirectories(com.idega.user.data.User user);
+	public List<org.bedework.calfacade.BwCalendar> getCalendarDirectories(com.idega.user.data.User user);
 	
 	/**
 	 * <p>Searches for all calendars, calendar folders where given 
@@ -193,7 +193,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * @return directories, where user can edit.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<BwCalendar> getAllUserEditableCalendarDirectories(com.idega.user.data.User user);
+	public List<BwCalendar> getEditableCalendarDirectories(com.idega.user.data.User user);
 
 	/**
 	 * <p>Bedework calendar system is based on directories, so to find all child calendars, folders
@@ -203,16 +203,16 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * <code>null</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<BwCalendar> getAllChildCalendarDirectories(BwCalendar calendar);
+	public List<BwCalendar> getCalendarChildDirectories(BwCalendar calendar);
 	
 	/**
 	 * <p>Fetches groups from database.</p>
 	 * @return {@link List} of {@link Group}s in database or <code>null</code>.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<com.idega.user.data.Group> getAllGroups(Set<Long> groupIDs);
+	public List<com.idega.user.data.Group> getGroups(Set<Long> groupIDs);
 
-	public List<CalendarEntity> getSubscribedCalendars(com.idega.user.data.User user);
+	public List<BwCalendar> getSubscribedCalendars(com.idega.user.data.User user);
 
 	public List<CalendarEntity> getUnSubscribedCalendars(com.idega.user.data.User user);
 
@@ -223,16 +223,16 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * @return <code>true</code> on success, <code>false</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public boolean createCalendar(com.idega.user.data.User user, String calendarName);
+	public boolean updateCalendar(com.idega.user.data.User user, String calendarName);
 	
 	public boolean createCalendar(com.idega.user.data.User user, String calendarName,
 			String folderPath, String summary, boolean isPublic, Set<Long> groupsIDs);
 	
-	public boolean createCalendar(com.idega.user.data.User user, String calendarName,
+	public boolean updateCalendar(com.idega.user.data.User user, String calendarName,
 			String folderPath, String summary, String description,
 			boolean isReadOnly, boolean isPublic);
 	
-	public boolean createFolder(com.idega.user.data.User user, String calendarName,
+	public boolean updateFolder(com.idega.user.data.User user, String calendarName,
 			String folderPath, String summary, String description,
 			boolean isReadOnly, boolean isPublic);
 	
@@ -263,7 +263,7 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * @return <code>true</code> on success, <code>false</code> on failure.
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public boolean createCalendarDirectory(
+	public boolean updateCalendarDirectory(
 			com.idega.user.data.User user, 
 			String calendarName, 
 			String folderPath, 
@@ -431,4 +431,8 @@ public interface BedeworkCalendarsService extends CalendarManagementService {
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public List<BwCalendar> getPersonalVisibleDirectories(com.idega.user.data.User user);
+
+	public Collection<CalendarEntity> getSubscriptions(com.idega.user.data.User user);
+
+	public BwCalendar getCalendarByPath(com.idega.user.data.User user, String path);
 }

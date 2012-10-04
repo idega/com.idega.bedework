@@ -1,5 +1,5 @@
 /**
- * @(#)CalSvcFactoryDefaultIdega.java    1.0.0 2:00:11 PM
+ * @(#)BedeworkConfirmDeleteWindow.java    1.0.0 9:51:46 AM
  *
  * Idega Software hf. Source Code Licence Agreement x
  *
@@ -80,74 +80,50 @@
  *     License that was purchased to become eligible to receive the Source 
  *     Code after Licensee receives the source code. 
  */
-package org.bedework.calsvci;
+package com.idega.bedework.presentation;
 
-import org.apache.log4j.Logger;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.CalSvcIdega;
+import java.util.logging.Level;
 
-import com.idega.bedework.BedeworkConstants;
+import com.idega.bedework.bussiness.view.BwCalBusiness;
+import com.idega.block.cal.business.CalBusiness;
+import com.idega.block.cal.presentation.ConfirmDeleteWindow;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.idegaweb.IWApplicationContext;
 
 /**
- * <p>Idega implemantation of {@link CalSvcFactory}.</p>
- * <p>
- * You can report about problems to: <a
- * href="mailto:martynas@idega.com">Martynas Stakė</a>
- * </p>
- * <p>
- * You can expect to find some test cases notice in the end of the file.
- * </p>
- * 
- * @version 1.0.0 Apr 10, 2012
+ * Class description goes here.
+ * <p>You can report about problems to: 
+ * <a href="mailto:martynas@idega.com">Martynas Stakė</a></p>
+ * <p>You can expect to find some test cases notice in the end of the file.</p>
+ *
+ * @version 1.0.0 Oct 1, 2012
  * @author martynasstake
  */
-public class CalSvcFactoryIdega implements CalSvcFactory {
+public class BedeworkConfirmDeleteWindow extends ConfirmDeleteWindow {
 	
-	private static final long serialVersionUID = 6017319362752508038L;
-	private static final Logger LOGGER = Logger.getLogger(CalSvcFactoryIdega.class);
+private BwCalBusiness bwCalBussinessBean;
+	
+	private BwCalBusiness getBwCalBussinessBean(IWApplicationContext iwc) {
+		if (this.bwCalBussinessBean == null) {
+			try {
+				this.bwCalBussinessBean = IBOLookup
+						.getServiceInstance(iwc, BwCalBusiness.class);
+			} catch (IBOLookupException e) {
+				getLogger().log(Level.WARNING, 
+						"Unable to get BwCalBussinessBean: ", e);
+			}
+		}
+		
+		return this.bwCalBussinessBean;
+	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.bedework.calsvci.CalSvcFactoryDefault#getSvc(org.bedework.calsvci
-	 * .CalSvcIPars)
+	/* (non-Javadoc)
+	 * @see com.idega.block.cal.presentation.ConfirmDeleteWindow#getCalendarBusiness(com.idega.idegaweb.IWApplicationContext)
 	 */
 	@Override
-	public CalSvcI getSvc(CalSvcIPars pars) throws CalFacadeException {
-		try {
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			Class<?> cl = loader.loadClass(BedeworkConstants.CLASS_IDEGA_SVCI);
-
-			if (cl == null) {
-				throw new CalFacadeException("Class "
-						+ BedeworkConstants.CLASS_IDEGA_SVCI + " not found");
-			}
-
-			Object o = cl.newInstance();
-
-			if (o == null) {
-				throw new CalFacadeException("Unable to instantiate class "
-						+ BedeworkConstants.CLASS_IDEGA_SVCI);
-			}
-
-			if (!(o instanceof CalSvcIdega)) {
-				throw new CalFacadeException("Class "
-						+ BedeworkConstants.CLASS_IDEGA_SVCI
-						+ " is not a subclass of " + CalSvcIdega.class.getName());
-			}
-
-			CalSvcI svc = (CalSvcI) o;
-
-			svc.init(pars);
-
-			return svc;
-		} catch (CalFacadeException ce) {
-			LOGGER.warn("Unable to initaite class "+"BedeworkConstants.IDEGA_SVCI_CLASS", ce);
-			throw ce;
-		} catch (Throwable t) {
-			LOGGER.warn("Unable to initaite class "+"BedeworkConstants.IDEGA_SVCI_CLASS", t);
-			throw new CalFacadeException(t);
-		}
+	public CalBusiness getCalendarBusiness(IWApplicationContext iwc) {
+		return getBwCalBussinessBean(iwc);
 	}
+	
 }

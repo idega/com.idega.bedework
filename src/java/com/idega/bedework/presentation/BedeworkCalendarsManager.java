@@ -84,7 +84,6 @@ package com.idega.bedework.presentation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.BedeworkCalendarPresentationComponentsService;
 import com.idega.bedework.bussiness.impl.BedeworkCalendarServiceBean;
 import com.idega.presentation.Block;
@@ -105,23 +104,6 @@ import com.idega.util.expression.ELUtil;
  * @author martynasstake
  */
 public class BedeworkCalendarsManager extends Block {
-
-	@Autowired
-	private BedeworkCalendarsService bcms;
-	
-	/**
-	 * <p>Initializes service if down.</p>
-	 * @return {@link BedeworkCalendarServiceBean} instance or 
-	 * <code>null</code>.
-	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
-	 */
-	private BedeworkCalendarsService getBedeworkCalendarManagementService() {
-		if (this.bcms == null) {
-			ELUtil.getInstance().autowire(this);
-		}
-		
-		return this.bcms;
-	}
 	
 	@Autowired
 	private BedeworkCalendarPresentationComponentsService bcpcs;

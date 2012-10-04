@@ -1,0 +1,16 @@
+@CHARSET "UTF-8";
+td.borderRight {
+	display: none;
+}
+
+table.ledgerTable {
+	display: none;
+}
+
+table.groupTable {
+	display: none;
+}
+
+table.repeatTable {
+	display: none;
+}
