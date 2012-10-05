@@ -75,8 +75,8 @@
           <hostPrincipalRoot>/principals/hosts</hostPrincipalRoot>
         </systemRoots>
         
-        <synchWsdlUri>http://localhost:8080/wsdls/synch/synchws.wsdl</synchWsdlUri>
-        <synchManagerUri>http://localhost:8080/synch/manager</synchManagerUri>
+        <synchWsdlUri>http://127.0.0.1:8080/wsdls/synch/synchws.wsdl</synchWsdlUri>
+        <synchManagerUri>http://127.0.0.1:8080/synch/manager</synchManagerUri>
         <!-- <synchManagerUri>http://localhost:8080/synch/manager</synchManagerUri> -->
         
         <!-- This must match the connector id in the synch config. 
@@ -545,7 +545,7 @@
           <browserResourceRoot>/caladminrsrc</browserResourceRoot>
           
           <!-- Where the server finds xsl etc -->    
-          <appRoot>http://localhost:8080/caladminrsrc</appRoot>
+          <appRoot>http://127.0.0.1:8080/caladminrsrc</appRoot>
         </CalAdmin>
 
         <!-- ==================================================================
@@ -578,7 +578,7 @@
           <browserResourceRoot>/eventsubmitrsrc</browserResourceRoot>
           
           <!-- Where the server finds xsl etc -->    
-          <appRoot>http://localhost:8080/eventsubmitrsrc</appRoot>
+          <appRoot>http://127.0.0.1:8080/eventsubmitrsrc</appRoot>
 
           <refreshAction>setup.do</refreshAction>
           <refreshInterval>900</refreshInterval>
@@ -614,7 +614,7 @@
           <browserResourceRoot>/calrsrc</browserResourceRoot>
           
           <!-- Where the server finds xsl etc -->    
-          <appRoot>http://localhost:8080/calrsrc</appRoot>
+          <appRoot>http://127.0.0.1:8080/calrsrc</appRoot>
 
           <refreshAction>setup.do</refreshAction>
           <refreshInterval>300</refreshInterval>
@@ -652,7 +652,7 @@
           <browserResourceRoot>/calfeedrsrc</browserResourceRoot>
           
           <!-- Where the server finds xsl etc -->    
-          <appRoot>http://localhost:8080/calfeedrsrc</appRoot>
+          <appRoot>http://127.0.0.1:8080/calfeedrsrc</appRoot>
 
           <refreshAction>setup.do</refreshAction>
           <refreshInterval>300</refreshInterval>
@@ -687,7 +687,7 @@
           <browserResourceRoot>/ucalrsrc</browserResourceRoot>
           
           <!-- Where the server finds xsl etc -->    
-          <appRoot>http://localhost:8080/ucalrsrc</appRoot>
+          <appRoot>http://127.0.0.1:8080/ucalrsrc</appRoot>
 
           <refreshAction>setup.do</refreshAction>
           <refreshInterval>300</refreshInterval>
@@ -729,7 +729,7 @@
           
           <!-- This corresponds to the deployment path in the properties file.
                Defined as a global deployment property  -->
-          <calSoapWsWSDLURI>http://localhost:8080/wsdls/calws-soap/calws-soap.wsdl</calSoapWsWSDLURI>
+          <calSoapWsWSDLURI>http://127.0.0.1:8080/wsdls/calws-soap/calws-soap.wsdl</calSoapWsWSDLURI>
         </Usercaldav>
 
         <!-- ==================================================================
