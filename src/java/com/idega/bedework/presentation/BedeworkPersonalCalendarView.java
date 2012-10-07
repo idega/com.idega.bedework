@@ -92,7 +92,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.bedework.BedeworkConstants;
 import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.view.BwCalBusiness;
-import com.idega.bedework.servlet.EventsExporter;
+import com.idega.bedework.media.EventsExporter;
 import com.idega.block.cal.business.CalBusiness;
 import com.idega.block.cal.presentation.CalendarEntryCreator;
 import com.idega.block.cal.presentation.CalendarView;
