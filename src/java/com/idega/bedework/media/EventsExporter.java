@@ -104,9 +104,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.bedework.bussiness.BedeworkAPI;
 import com.idega.bedework.bussiness.BedeworkCalendarsService;
 import com.idega.bedework.bussiness.BedeworkEventsService;
+import com.idega.business.IBOLookup;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.io.DownloadWriter;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
@@ -127,7 +129,8 @@ public class EventsExporter extends DownloadWriter {
 	public static final String 	PARAMETER_CALENDAR = "prm_calendar",
 								PARAMETER_DATE_TO = "prm_date_to",
 								PARAMETER_DATE_FROM = "prm_date_from",
-								PARAMETER_SHOW_ALL_MY_EVENTS = "prm_show_all_my_events";
+								PARAMETER_SHOW_ALL_MY_EVENTS = "prm_show_all_my_events",
+								PARAMETER_UNIQUE_ID = "unique_id";
 
 	private static Logger LOGGER = Logger.getLogger(EventsExporter.class.getName());
 
@@ -176,6 +179,19 @@ public class EventsExporter extends DownloadWriter {
 		}
 	}
 
+	private User getUser(IWContext iwc) {
+		User user = iwc.isLoggedOn() ? iwc.getCurrentUser() : null;
+		if (user == null && iwc.isParameterSet(PARAMETER_UNIQUE_ID)) {
+			try {
+				UserBusiness userBusiness = IBOLookup.getServiceInstance(iwc, UserBusiness.class);
+				user = userBusiness.getUserByUniqueId(iwc.getParameter(PARAMETER_UNIQUE_ID));
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting user by unique ID: " + iwc.getParameter(PARAMETER_UNIQUE_ID), e);
+			}
+		}
+		return user;
+	}
+
 	@Override
 	public void init(HttpServletRequest req, IWContext iwc) {
 		if (iwc == null) {
@@ -183,7 +199,7 @@ public class EventsExporter extends DownloadWriter {
 			return;
 		}
 
-		User user = iwc.isLoggedOn() ? iwc.getCurrentUser() : null;
+		User user = getUser(iwc);
 		if (user == null) {
 			LOGGER.warning("User is not logged in");
 			return;

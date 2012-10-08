@@ -19,11 +19,14 @@ import com.idega.block.cal.business.events.EventsProvider;
 import com.idega.block.cal.data.CalendarEntry;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.business.DefaultSpringBean;
+import com.idega.core.idgenerator.business.IdGeneratorFactory;
 import com.idega.dwr.business.DWRAnnotationPersistance;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.io.MediaWritable;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 
 @Service
@@ -58,6 +61,21 @@ public class BedeworkEventsProvider extends DefaultSpringBean implements EventsP
 		URIUtil uri = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
 		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(EventsExporter.class));
 		uri.setParameter(EventsExporter.PARAMETER_SHOW_ALL_MY_EVENTS, Boolean.TRUE.toString());
+
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc != null && iwc.isLoggedOn()) {
+			User user = iwc.getCurrentUser();
+			if (user != null) {
+				String uniqueId = user.getUniqueId();
+				if (StringUtil.isEmpty(uniqueId)) {
+					uniqueId = IdGeneratorFactory.getUUIDGenerator().generateId();
+					user.setUniqueId(uniqueId);
+					user.store();
+				}
+				uri.setParameter(EventsExporter.PARAMETER_UNIQUE_ID, uniqueId);
+			}
+		}
+
 		AdvancedProperty link = new AdvancedProperty(uri.getUri());
 		link.setValue(getResourceBundle(getBundle(BedeworkConstants.BUNDLE_IDENTIFIER)).getLocalizedString("export_events", "Export events"));
 		return link;
