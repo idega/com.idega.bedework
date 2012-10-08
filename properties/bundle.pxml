@@ -18,8 +18,6 @@
                   <name>component_property_file</name>
                   <type>java.lang.String</type>
                   <value>com.idega.bedework.presentation.PublicCalendar.pxml</value>
-                  <simple>false</simple>
-                  <reload>false</reload>
                 </key>
               </map>
             </value>
@@ -33,8 +31,6 @@
                   <name>component_property_file</name>
                   <type>java.lang.String</type>
                   <value>com.idega.bedework.presentation.BedeworkPersonalCalendarView.pxml</value>
-                  <simple>false</simple>
-                  <reload>false</reload>
                 </key>
               </map>
             </value>
@@ -48,23 +44,19 @@
                   <name>component_property_file</name>
                   <type>java.lang.String</type>
                   <value>com.idega.bedework.presentation.BedeworkCalendarsManager.pxml</value>
-                  <simple>false</simple>
-                  <reload>false</reload>
                 </key>
               </map>
             </value>
             <type>map</type>
           </key>
           <key>
-            <name>com.idega.bedework.presentation.BedeworkCalendarCreator</name>
+            <name>com.idega.bedework.presentation.BWCalendarCreator</name>
             <value>
               <map>
                 <key>
                   <name>component_property_file</name>
                   <type>java.lang.String</type>
-                  <value>com.idega.bedework.presentation.BedeworkCalendarCreator.pxml</value>
-                  <simple>false</simple>
-                  <reload>false</reload>
+                  <value>com.idega.bedework.presentation.BWCalendarCreator.pxml</value>
                 </key>
               </map>
             </value>
